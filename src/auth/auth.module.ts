@@ -1,11 +1,14 @@
-import { Module } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { AuthController } from './auth.contoller';
-import { UsersService } from 'src/users/user.service';
-import { JwtModule } from '@nestjs/jwt';
-import { PassportModule } from '@nestjs/passport';
-import { JwtStrategy } from './jwt.strategy';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { forwardRef, Module } from '@nestjs/common'
+import { AuthService } from './auth.service'
+import { AuthController } from './auth.controller'
+import { JwtModule } from '@nestjs/jwt'
+import { PassportModule } from '@nestjs/passport'
+import { ConfigModule } from '@nestjs/config'
+import { OrganizerModule } from 'src/organizer/organizer.module'
+import { HospitalModule } from 'src/hospital/hospital.module'
+import { PatientModule } from 'src/patient/patient.module'
+import { LabModule } from 'src/lab/lab.module'
+import { VisitDoctorModule } from 'src/visit-doctor/visit-doctor.module'
 
 @Module({
   imports: [
@@ -13,16 +16,18 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       isGlobal: true,
     }),
     PassportModule,
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      useFactory: async (configService: ConfigService) => ({
-        secret: configService.get('SECRET_KEY'),
-        signOptions: { expiresIn: '1h' },
-      }),
-      inject: [ConfigService],
+    JwtModule.register({
+      secret: process.env.JWT_SECRET,
+      signOptions: { expiresIn: '1h' },
     }),
+    forwardRef(() => OrganizerModule),
+    forwardRef(() => HospitalModule),
+    forwardRef(() => LabModule),
+    forwardRef(() => VisitDoctorModule),
+    forwardRef(() => PatientModule),
   ],
-  providers: [AuthService, UsersService, JwtStrategy],
+  providers: [AuthService],
   controllers: [AuthController],
+  exports: [AuthService, JwtModule],
 })
 export class AuthModule {}

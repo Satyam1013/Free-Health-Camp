@@ -1,15 +1,15 @@
-import { NestFactory } from '@nestjs/core';
-import { ConfigService } from '@nestjs/config';
-import { AppModule } from './app.module';
+import { NestFactory } from '@nestjs/core'
+import { ConfigService } from '@nestjs/config'
+import { AppModule } from './app.module'
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule)
 
   // Access PORT from ConfigService
-  const configService = app.get(ConfigService);
-  const port = configService.get<number>('PORT') || 3000;
+  const configService = app.get(ConfigService)
+  const port = configService.get<number>('PORT') || 3500
 
-  await app.listen(port);
-  console.log(`Application is running on port: ${port}`);
+  await app.listen(port)
+  console.log(`Application is running on port: ${port}`)
 }
-bootstrap();
+bootstrap()
