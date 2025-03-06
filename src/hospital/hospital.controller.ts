@@ -5,11 +5,12 @@ import { Request as ExpressRequest } from 'express'
 
 interface AuthenticatedRequest extends ExpressRequest {
   user: {
-    hospitalId: string
+    _id: string
+    role?: string
   }
 }
 
-@Controller('hospitals')
+@Controller('hospital')
 @UseGuards(AuthGuard)
 export class HospitalController {
   constructor(private readonly hospitalService: HospitalService) {}
@@ -28,7 +29,7 @@ export class HospitalController {
   // ✅ Hospital admins can only view their own hospital services (hospitalId from middleware)
   @Get('services')
   async getHospitalServices(@Req() req: AuthenticatedRequest) {
-    const hospitalId = req.user.hospitalId
+    const hospitalId = req.user._id
     return this.hospitalService.getHospitalServices(hospitalId)
   }
 }

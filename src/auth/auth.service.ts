@@ -51,11 +51,34 @@ export class AuthService {
 
   async login(userDto: any): Promise<{ access_token: string }> {
     const { mobile, password } = userDto
+    let user: any = null
+    let role = ''
 
-    // Find user in all collections
-    let user = await this.organizerModel.findOne({ mobile })
-    let role = 'Organizer'
+    // 1. Check if the mobile exists in the organizer collection (including staff and doctors)
+    const organizer = await this.organizerModel.findOne({
+      $or: [{ mobile }, { 'staff.mobile': mobile }, { 'doctors.mobile': mobile }],
+    })
 
+    if (organizer) {
+      user = organizer // Organizer logs in
+      role = 'Organizer'
+
+      // Check if the mobile belongs to staff
+      const staffMember = organizer.staff.find((staff) => staff.mobile === mobile)
+      if (staffMember) {
+        user = staffMember
+        role = 'Organizer' // Staff also gets Organizer role
+      }
+
+      // Check if the mobile belongs to a doctor
+      const doctor = organizer.doctors.find((doc) => doc.mobile === mobile)
+      if (doctor) {
+        user = doctor
+        role = 'Organizer' // Doctors also get Organizer role
+      }
+    }
+
+    // 2. If not found in Organizer, check other roles
     if (!user) {
       user = await this.visitDoctorModel.findOne({ mobile })
       role = 'VisitDoctor'
@@ -77,13 +100,13 @@ export class AuthService {
       throw new UnauthorizedException('Invalid mobile number or password')
     }
 
-    // Compare passwords
+    // 3. Compare passwords
     const isPasswordMatch = await bcrypt.compare(password, user.password)
     if (!isPasswordMatch) {
       throw new UnauthorizedException('Invalid mobile number or password')
     }
 
-    // Generate JWT token
+    // 4. Generate JWT token
     const payload = { _id: user._id, role: role }
     const access_token = this.jwtService.sign(payload)
 

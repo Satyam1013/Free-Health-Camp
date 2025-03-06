@@ -1,7 +1,62 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { Document } from 'mongoose'
 
-export type OrganizerDocument = Organizer & Document
+// Define Doctor Schema
+@Schema()
+class Doctor {
+  @Prop({ required: true })
+  name: string
+
+  @Prop({ required: true })
+  address: string
+
+  @Prop({ required: true, unique: true })
+  mobile: number
+
+  @Prop({ required: true })
+  password: string
+}
+
+const DoctorSchema = SchemaFactory.createForClass(Doctor)
+
+// Define Staff Schema
+@Schema()
+class Staff {
+  @Prop({ required: true })
+  name: string
+
+  @Prop({ required: true })
+  address: string
+
+  @Prop({ required: true, unique: true })
+  mobile: number
+
+  @Prop({ required: true })
+  password: string
+}
+
+const StaffSchema = SchemaFactory.createForClass(Staff)
+
+// Define Event Schema
+@Schema()
+class Event {
+  @Prop({ required: true })
+  eventName: string
+
+  @Prop({ required: true })
+  eventPlace: string
+
+  @Prop({ required: true })
+  eventDate: Date
+
+  @Prop({ required: true })
+  startTime: string
+
+  @Prop({ required: true })
+  endTime: string
+}
+
+const EventSchema = SchemaFactory.createForClass(Event)
 
 @Schema()
 export class Organizer {
@@ -20,29 +75,15 @@ export class Organizer {
   @Prop({ required: true })
   password: string
 
-  @Prop({
-    type: [{ name: String, address: String, mobile: Number, pass: String }],
-    default: [],
-  })
-  doctors: Array<{ name: string; address: string; mobile: number; pass: string }>
+  @Prop({ type: [DoctorSchema], required: true, default: [] })
+  doctors: Doctor[]
 
-  @Prop({
-    type: [{ name: String, address: String, mobile: Number, pass: String }],
-    default: [],
-  })
-  staff: Array<{ name: string; address: string; mobile: number; pass: string }>
+  @Prop({ type: [StaffSchema], required: true, default: [] })
+  staff: Staff[]
 
-  @Prop({
-    type: [{ eventName: String, eventPlace: String, eventDate: Date, startTime: String, endTime: String }],
-    default: [],
-  })
-  events: Array<{
-    eventName: string
-    eventPlace: string
-    eventDate: Date
-    startTime: string
-    endTime: string
-  }>
+  @Prop({ type: [EventSchema], required: true, default: [] })
+  events: Event[]
 }
 
+export type OrganizerDocument = Organizer & Document
 export const OrganizerSchema = SchemaFactory.createForClass(Organizer)

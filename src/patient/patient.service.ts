@@ -21,7 +21,7 @@ export class PatientService {
 
   async getDoctorsForEvent(
     organizerId: string,
-  ): Promise<Array<{ name: string; address: string; mobile: number; pass: string }>> {
+  ): Promise<Array<{ name: string; address: string; mobile: number; password: string }>> {
     const organizer = await this.organizerModel.findById(organizerId).exec()
 
     if (!organizer || !organizer.doctors) {
