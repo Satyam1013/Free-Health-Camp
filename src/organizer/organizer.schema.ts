@@ -58,6 +58,7 @@ class Event {
 
 const EventSchema = SchemaFactory.createForClass(Event)
 
+// Define Organizer Schema
 @Schema()
 export class Organizer {
   @Prop({ required: true })
@@ -70,18 +71,18 @@ export class Organizer {
   mobile: number
 
   @Prop({ required: true, default: 'Organizer' })
-  role: 'Organizer'
+  role: string
 
   @Prop({ required: true })
   password: string
 
-  @Prop({ type: [DoctorSchema], required: true, default: [] })
+  @Prop({ type: [DoctorSchema], default: [] })
   doctors: Doctor[]
 
-  @Prop({ type: [StaffSchema], required: true, default: [] })
+  @Prop({ type: [StaffSchema], default: [] })
   staff: Staff[]
 
-  @Prop({ type: [EventSchema], required: true, default: [] })
+  @Prop({ type: [EventSchema], default: [] })
   events: Event[]
 }
 

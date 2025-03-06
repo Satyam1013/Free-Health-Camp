@@ -1,50 +1,88 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable, BadRequestException, InternalServerErrorException } from '@nestjs/common'
+import * as bcrypt from 'bcrypt'
 import { InjectModel } from '@nestjs/mongoose'
-import { Model } from 'mongoose'
 import { VisitDoctor, VisitDoctorDocument } from './visit-doctor.schema'
-import { CreateVisitDoctorDto } from './visit-doctor.dto'
-import { UpdateVisitDoctorDto } from './visit-doctor.dto'
+import { Model } from 'mongoose'
+import { Patient } from 'src/patient/patient.schema'
 
 @Injectable()
 export class VisitDoctorService {
-  constructor(@InjectModel(VisitDoctor.name) private readonly visitDoctorModel: Model<VisitDoctorDocument>) {}
+  constructor(
+    @InjectModel(VisitDoctor.name) private visitDoctorModel: Model<VisitDoctorDocument>,
+    @InjectModel(Patient.name) private patientModel: Model<Patient>,
+  ) {}
 
-  async create(createVisitDoctorDto: CreateVisitDoctorDto): Promise<VisitDoctor> {
-    const visitDoctor = new this.visitDoctorModel(createVisitDoctorDto)
-    return visitDoctor.save()
-  }
+  async createStaff(visitDoctorId: string, staffData: any) {
+    try {
+      const visitDoctor = await this.visitDoctorModel.findById(visitDoctorId)
+      if (!visitDoctor) {
+        throw new BadRequestException('Invalid visitDoctor')
+      }
+      const isDuplicateStaff = visitDoctor.staff.some((staff) => staff.mobile === staffData.mobile)
 
-  async findAll(): Promise<VisitDoctor[]> {
-    return this.visitDoctorModel.find().exec()
-  }
+      if (isDuplicateStaff) {
+        throw new BadRequestException('Mobile number already exists in doctors or staff')
+      }
 
-  async findOne(id: string): Promise<VisitDoctor> {
-    const visitDoctor = await this.visitDoctorModel.findById(id).exec()
-    if (!visitDoctor) {
-      throw new NotFoundException(`VisitDoctor with ID ${id} not found`)
-    }
-    return visitDoctor
-  }
-
-  async update(id: string, updateVisitDoctorDto: UpdateVisitDoctorDto): Promise<VisitDoctor> {
-    const updatedVisitDoctor = await this.visitDoctorModel
-      .findByIdAndUpdate(id, updateVisitDoctorDto, {
-        new: true,
-        runValidators: true,
+      // ✅ Check if mobile already exists in visitDoctor, Doctors, or Staff
+      const isMobileExists = await this.visitDoctorModel.findOne({
+        $or: [{ 'staff.mobile': staffData.mobile }, { mobile: staffData.mobile }],
       })
-      .exec()
 
-    if (!updatedVisitDoctor) {
-      throw new NotFoundException(`VisitDoctor with ID ${id} not found`)
+      if (isMobileExists) {
+        throw new BadRequestException('Mobile number already exists')
+      }
+
+      staffData.password = await bcrypt.hash(staffData.password, 10)
+
+      visitDoctor.staff.push(staffData)
+      await visitDoctor.save()
+
+      return visitDoctor
+    } catch (error) {
+      if (error.name === 'ValidationError') {
+        throw new BadRequestException(error.message)
+      }
+      throw new InternalServerErrorException('Something went wrong')
     }
-    return updatedVisitDoctor
   }
 
-  async remove(id: string): Promise<VisitDoctor> {
-    const deletedVisitDoctor = await this.visitDoctorModel.findByIdAndDelete(id).exec()
-    if (!deletedVisitDoctor) {
-      throw new NotFoundException(`VisitDoctor with ID ${id} not found`)
+  async getBookedPatients(doctorId: string) {
+    return this.patientModel.find({ 'bookedDoctors.doctorId': doctorId }).exec()
+  }
+
+  async getPatients(doctorId: string) {
+    const visitDoctor = await this.visitDoctorModel.findById(doctorId)
+
+    if (!visitDoctor) {
+      throw new BadRequestException('Doctor not found')
     }
-    return deletedVisitDoctor
+
+    return visitDoctor.patients
+  }
+
+  /**
+   * 🏥 UPDATE PATIENT STATUS
+   */
+  async updatePatientStatus(
+    doctorId: string,
+    patientId: string,
+    updateData: { status?: string; nextVisitDate?: string },
+  ) {
+    const visitDoctor = await this.visitDoctorModel.findById(doctorId)
+
+    if (!visitDoctor) {
+      throw new BadRequestException('Doctor not found')
+    }
+
+    const patient = visitDoctor.patients.find((p) => p.patientId === patientId)
+    if (!patient) {
+      throw new BadRequestException('Patient not found')
+    }
+
+    Object.assign(patient, updateData) // ✅ Update status or next visit date
+    await visitDoctor.save()
+
+    return { message: 'Patient status updated', patient }
   }
 }

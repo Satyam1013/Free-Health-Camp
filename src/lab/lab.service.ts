@@ -7,13 +7,8 @@ import { Lab } from './lab.schema'
 export class LabService {
   constructor(@InjectModel(Lab.name) private labModel: Model<Lab>) {}
 
-  async createLab(labData: any): Promise<Lab> {
-    const lab = new this.labModel(labData)
-    return lab.save()
-  }
-
-  async getLabsByCity(city: string): Promise<Lab[]> {
-    return this.labModel.find({ labLocation: city }).exec()
+  async getLabsByCity(city: string) {
+    return this.labModel.find({ city }).select('name city services').exec()
   }
 
   async getLabTests(labId: string): Promise<string[]> {

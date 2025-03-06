@@ -1,11 +1,37 @@
-import { PartialType } from '@nestjs/mapped-types'
+import { IsString, IsNotEmpty, IsOptional } from 'class-validator'
 
 export class CreateVisitDoctorDto {
-  readonly name: string
-  readonly specialization: string
-  readonly experience: number
-  readonly hospital: string
-  readonly contact: string
+  @IsString()
+  @IsNotEmpty()
+  username: string
+
+  @IsString()
+  @IsNotEmpty()
+  mobile: string
+
+  @IsString()
+  @IsNotEmpty()
+  address: string
+
+  @IsString()
+  @IsNotEmpty()
+  password: string
 }
 
-export class UpdateVisitDoctorDto extends PartialType(CreateVisitDoctorDto) {}
+export class UpdateVisitDoctorDto {
+  @IsOptional()
+  @IsString()
+  username?: string
+
+  @IsOptional()
+  @IsString()
+  mobile?: string
+
+  @IsString()
+  @IsNotEmpty()
+  address: string
+
+  @IsOptional()
+  @IsString()
+  password?: string
+}

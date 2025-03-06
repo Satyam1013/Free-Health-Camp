@@ -14,8 +14,8 @@ export class Patient {
   @Prop()
   address: string
 
-  @Prop({ required: true })
-  role: 'Patient'
+  @Prop({ required: true, default: 'Patient' })
+  role: string
 
   @Prop({ required: true, unique: true })
   mobile: number
@@ -49,14 +49,21 @@ export class Patient {
   }>
 
   @Prop({
-    type: [{ doctorId: String, name: String, address: String, mobile: String }],
+    type: [
+      {
+        doctorId: String,
+        bookingDate: Date,
+        nextVisitDate: { type: String, required: false },
+        status: String,
+      },
+    ],
     default: [],
   })
   bookedDoctors: Array<{
     doctorId: string
-    name: string
-    address: string
-    mobile: string
+    bookingDate: Date
+    nextVisitDate?: string
+    status: string
   }>
 
   @Prop({

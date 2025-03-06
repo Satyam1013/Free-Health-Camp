@@ -7,14 +7,14 @@ export class Lab {
   @Prop({ required: true })
   username: string
 
-  @Prop()
+  @Prop({ required: true })
   city: string
 
   @Prop()
   address: string
 
-  @Prop({ required: true })
-  role: 'Lab'
+  @Prop({ required: true, default: 'Lab' })
+  role: string
 
   @Prop({ required: true, unique: true })
   mobile: number

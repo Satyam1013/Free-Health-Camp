@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common'
+import { Controller, Get, Param, UseGuards } from '@nestjs/common'
 import { LabService } from './lab.service'
 import { AuthGuard } from 'src/auth/auth.guard'
 
@@ -6,11 +6,6 @@ import { AuthGuard } from 'src/auth/auth.guard'
 @UseGuards(AuthGuard)
 export class LabController {
   constructor(private readonly labService: LabService) {}
-
-  @Post('create')
-  async createLab(@Body() labData: any) {
-    return this.labService.createLab(labData)
-  }
 
   @Get(':city')
   async getLabsByCity(@Param('city') city: string) {

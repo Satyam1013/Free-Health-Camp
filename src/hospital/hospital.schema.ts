@@ -7,14 +7,14 @@ export class Hospital {
   @Prop({ required: true })
   username: string
 
-  @Prop()
+  @Prop({ required: true })
   city: string
 
   @Prop()
   address: string
 
-  @Prop({ required: true })
-  role: 'Hospital'
+  @Prop({ required: true, default: 'Hospital' })
+  role: string
 
   @Prop({ required: true, unique: true })
   mobile: number
