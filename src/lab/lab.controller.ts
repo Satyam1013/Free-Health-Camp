@@ -11,9 +11,4 @@ export class LabController {
   async getLabsByCity(@Param('city') city: string) {
     return this.labService.getLabsByCity(city)
   }
-
-  @Get(':labId/tests')
-  async getLabTests(@Param('labId') labId: string) {
-    return this.labService.getLabTests(labId)
-  }
 }

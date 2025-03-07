@@ -8,11 +8,6 @@ export class LabService {
   constructor(@InjectModel(Lab.name) private labModel: Model<Lab>) {}
 
   async getLabsByCity(city: string) {
-    return this.labModel.find({ city }).select('name city services').exec()
-  }
-
-  async getLabTests(labId: string): Promise<string[]> {
-    const lab = await this.labModel.findById(labId).exec()
-    return lab ? lab.availableTests : []
+    return this.labModel.find({ city }).select('labName city availableTests').exec()
   }
 }

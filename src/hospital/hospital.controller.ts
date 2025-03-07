@@ -1,4 +1,4 @@
-import { Controller, Get, Param, Request, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Param, Request, UseGuards } from '@nestjs/common'
 import { HospitalService } from './hospital.service'
 import { AuthGuard } from 'src/auth/auth.guard'
 import { Request as ExpressRequest } from 'express'
@@ -20,10 +20,9 @@ export class HospitalController {
     return this.hospitalService.getHospitalsByCity(city)
   }
 
-  // ✅ Hospital admins can only view their own hospital services (hospitalId from middleware)
-  @Get('services')
-  async getHospitalServices(@Request() req: AuthenticatedRequest) {
+  @Get('create-staff')
+  async createStaff(@Request() req: AuthenticatedRequest, @Body() staffData: any) {
     const hospitalId = req.user._id
-    return this.hospitalService.getHospitalServices(hospitalId)
+    return this.hospitalService.createStaff(hospitalId, staffData)
   }
 }

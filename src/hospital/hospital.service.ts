@@ -1,7 +1,8 @@
-import { Injectable } from '@nestjs/common'
+import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import { Hospital } from './hospital.schema'
+import * as bcrypt from 'bcrypt'
 
 @Injectable()
 export class HospitalService {
@@ -14,8 +15,38 @@ export class HospitalService {
       .exec()
   }
 
-  async getHospitalServices(hospitalId: string): Promise<string[]> {
-    const hospital = await this.hospitalModel.findById(hospitalId).exec()
-    return hospital ? hospital.availableServices : []
+  async createStaff(hospitalId: string, staffData: any) {
+    try {
+      const hospital = await this.hospitalModel.findById(hospitalId)
+      if (!hospital) {
+        throw new BadRequestException('Invalid hospital')
+      }
+      const isDuplicateStaff = hospital.staff.some((staff) => staff.mobile === staffData.mobile)
+
+      if (isDuplicateStaff) {
+        throw new BadRequestException('Mobile number already exists in doctors or staff')
+      }
+
+      // ✅ Check if mobile already exists in hospital, Doctors, or Staff
+      const isMobileExists = await this.hospitalModel.findOne({
+        $or: [{ 'staff.mobile': staffData.mobile }, { mobile: staffData.mobile }],
+      })
+
+      if (isMobileExists) {
+        throw new BadRequestException('Mobile number already exists')
+      }
+
+      staffData.password = await bcrypt.hash(staffData.password, 10)
+
+      hospital.staff.push(staffData)
+      await hospital.save()
+
+      return hospital
+    } catch (error) {
+      if (error.name === 'ValidationError') {
+        throw new BadRequestException(error.message)
+      }
+      throw new InternalServerErrorException('Something went wrong')
+    }
   }
 }

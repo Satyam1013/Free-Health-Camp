@@ -1,41 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { Document } from 'mongoose'
-
-// Define Doctor Schema
-@Schema()
-class Doctor {
-  @Prop({ required: true })
-  name: string
-
-  @Prop({ required: true })
-  address: string
-
-  @Prop({ required: true, unique: true })
-  mobile: number
-
-  @Prop({ required: true })
-  password: string
-}
-
-const DoctorSchema = SchemaFactory.createForClass(Doctor)
-
-// Define Staff Schema
-@Schema()
-class Staff {
-  @Prop({ required: true })
-  name: string
-
-  @Prop({ required: true })
-  address: string
-
-  @Prop({ required: true, unique: true })
-  mobile: number
-
-  @Prop({ required: true })
-  password: string
-}
-
-const StaffSchema = SchemaFactory.createForClass(Staff)
+import { Doctor, DoctorSchema, Staff, StaffSchema } from 'src/common/doctor-staff.schema'
 
 // Define Event Schema
 @Schema()

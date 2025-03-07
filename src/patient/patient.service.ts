@@ -51,7 +51,7 @@ export class PatientService {
 
     const visitDoctors = await this.visitDoctorModel.find({ city }).exec()
 
-    const labs = await this.labModel.find({ city }).select('availableTests').exec()
+    const labs = await this.labModel.find({ city }).select('labName availableTests').exec()
 
     const hospitals = await this.hospitalModel.find({ city }).select('availableServices').exec()
 
