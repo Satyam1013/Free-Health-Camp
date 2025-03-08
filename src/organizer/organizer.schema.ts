@@ -41,6 +41,9 @@ export class Organizer {
   @Prop({ required: true })
   password: string
 
+  @Prop({ required: true })
+  address: string
+
   @Prop({ type: [DoctorSchema], default: [] })
   doctors: Doctor[]
 
