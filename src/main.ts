@@ -8,7 +8,7 @@ async function bootstrap() {
 
   app.use(
     cors({
-      origin: ['https://free-health-camp.onrender.com', 'http://localhost:3500'],
+      origin: '*',
       methods: ['GET', 'POST', 'PUT', 'DELETE'],
       allowedHeaders: ['Content-Type', 'Authorization'],
     }),
