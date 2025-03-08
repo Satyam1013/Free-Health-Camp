@@ -6,8 +6,8 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "build": "tsc && nest build",
     "start": "node --max-old-space-size=4096 dist/main.js",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
@@ -51,7 +51,7 @@
     "@types/jest": "^29.5.2",
     "@types/jsonwebtoken": "^9.0.8",
     "@types/mongoose": "^5.11.96",
-    "@types/node": "^20.3.1",
+    "@types/node": "^20.17.24",
     "@types/passport-jwt": "^4.0.1",
     "@types/supertest": "^6.0.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
