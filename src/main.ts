@@ -1,15 +1,18 @@
 import { NestFactory } from '@nestjs/core'
 import { ConfigService } from '@nestjs/config'
 import { AppModule } from './app.module'
+import * as cors from 'cors'
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule)
 
-  app.enableCors({
-    origin: '*',
-    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-    allowedHeaders: 'Content-Type, Authorization',
-  })
+  app.use(
+    cors({
+      origin: ['https://free-health-camp.onrender.com', 'http://localhost:3500'],
+      methods: ['GET', 'POST', 'PUT', 'DELETE'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+    }),
+  )
 
   // Access PORT from ConfigService
   const configService = app.get(ConfigService)
