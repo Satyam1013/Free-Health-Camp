@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "build": "tsc && nest build",
+    "build": "nest build",
     "start": "node --max-old-space-size=4096 dist/main.js",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
@@ -51,7 +51,7 @@
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.14",
-    "@types/jsonwebtoken": "^9.0.8",
+    "@types/jsonwebtoken": "^9.0.9",
     "@types/mocha": "^10.0.10",
     "@types/mongoose": "^5.11.96",
     "@types/node": "^20.17.24",
