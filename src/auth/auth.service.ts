@@ -49,68 +49,72 @@ export class AuthService {
     }
   }
 
-  async login(userDto: any): Promise<{ access_token: string }> {
+  async login(userDto: any): Promise<{ access_token: string; role: string }> {
     const { mobile, password } = userDto
     let user: any = null
     let role = ''
 
-    // 1. Check if the mobile exists in the organizer collection (including staff and doctors)
-    const organizer = await this.organizerModel.findOne({
-      $or: [{ mobile }, { 'staff.mobile': mobile }, { 'doctors.mobile': mobile }],
-    })
+    // 1️⃣ Check if the mobile exists in the Organizer collection
+    const organizer = await this.organizerModel.findOne({ mobile })
 
     if (organizer) {
-      user = organizer // Organizer logs in
+      user = organizer
       role = 'Organizer'
-
-      // Check if the mobile belongs to staff
-      const staffMember = organizer.staff.find((staff) => staff.mobile === mobile)
-      if (staffMember) {
-        user = staffMember
-        role = 'Organizer' // Staff also gets Organizer role
+    } else {
+      // 2️⃣ Check inside events for Doctors & Staff
+      const event = await this.organizerModel.findOne({ 'events.doctors.mobile': mobile })
+      if (event) {
+        user = event.events
+          .find((ev) => ev.doctors.some((doc) => doc.mobile === mobile))
+          ?.doctors.find((doc) => doc.mobile === mobile)
+        role = 'Doctor'
       }
 
-      // Check if the mobile belongs to a doctor
-      const doctor = organizer.doctors.find((doc) => doc.mobile === mobile)
-      if (doctor) {
-        user = doctor
-        role = 'Organizer' // Doctors also get Organizer role
+      if (!user) {
+        const eventWithStaff = await this.organizerModel.findOne({ 'events.staff.mobile': mobile })
+        if (eventWithStaff) {
+          user = eventWithStaff.events
+            .find((ev) => ev.staff.some((staff) => staff.mobile === mobile))
+            ?.staff.find((staff) => staff.mobile === mobile)
+          role = 'Staff'
+        }
       }
     }
 
-    // 2. If not found in Organizer, check other roles
+    // 3️⃣ Check Other Roles (VisitDoctor, Lab, Hospital, Patient)
     if (!user) {
       user = await this.visitDoctorModel.findOne({ mobile })
-      role = 'VisitDoctor'
+      if (user) role = 'VisitDoctor'
     }
     if (!user) {
       user = await this.labModel.findOne({ mobile })
-      role = 'Lab'
+      if (user) role = 'Lab'
     }
     if (!user) {
       user = await this.hospitalModel.findOne({ mobile })
-      role = 'Hospital'
+      if (user) role = 'Hospital'
     }
     if (!user) {
       user = await this.patientModel.findOne({ mobile })
-      role = 'Patient'
+      if (user) role = 'Patient'
     }
 
+    // 4️⃣ If User Not Found, Throw Unauthorized Error
     if (!user) {
       throw new UnauthorizedException('Invalid mobile number or password')
     }
 
-    // 3. Compare passwords
+    // 5️⃣ Compare Passwords
     const isPasswordMatch = await bcrypt.compare(password, user.password)
     if (!isPasswordMatch) {
       throw new UnauthorizedException('Invalid mobile number or password')
     }
 
-    // 4. Generate JWT token
-    const payload = { _id: user._id, role: role }
+    // 6️⃣ Generate JWT Token
+    const payload = { _id: user._id, role }
     const access_token = this.jwtService.sign(payload)
 
-    return { access_token }
+    return { access_token, role }
   }
 
   private getModelByRole(role: string) {

@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Request, UseGuards } from '@nestjs/common'
+import { Controller, Post, Body, Request, UseGuards, Param, Get } from '@nestjs/common'
 import { OrganizerService } from './organizer.service'
 import { AuthGuard } from 'src/auth/auth.guard'
 import { Request as ExpressRequest } from 'express'
@@ -15,21 +15,58 @@ interface AuthenticatedRequest extends ExpressRequest {
 export class OrganizerController {
   constructor(private readonly organizerService: OrganizerService) {}
 
-  @Post('create-doctor')
-  async addDoctor(@Request() req: AuthenticatedRequest, @Body() doctorData: any) {
+  // ✅ Add Doctor to an Event
+  @Post('create-doctor/:eventId')
+  async addDoctor(@Request() req: AuthenticatedRequest, @Param('eventId') eventId: string, @Body() doctorData: any) {
     const organizerId = req.user._id
-    return this.organizerService.createDoctor(organizerId, doctorData)
+    return this.organizerService.createDoctor(organizerId, eventId, doctorData)
   }
 
-  @Post('create-staff')
-  async addStaff(@Request() req: AuthenticatedRequest, @Body() staffData: any) {
+  // ✅ Add Staff to an Event
+  @Post('create-staff/:eventId')
+  async addStaff(@Request() req: AuthenticatedRequest, @Param('eventId') eventId: string, @Body() staffData: any) {
     const organizerId = req.user._id
-    return this.organizerService.createStaff(organizerId, staffData)
+    return this.organizerService.createStaff(organizerId, eventId, staffData)
   }
 
+  // ✅ Create a New Event
   @Post('create-event')
   async addEvent(@Request() req: AuthenticatedRequest, @Body() eventData: any) {
     const organizerId = req.user._id
     return this.organizerService.createEvent(organizerId, eventData)
+  }
+
+  @Get('events')
+  async getAllEvents(@Request() req: AuthenticatedRequest) {
+    const organizerId = req.user._id
+    return this.organizerService.getAllEvents(organizerId)
+  }
+
+  @Post('edit-event/:eventId')
+  async editEvent(@Request() req: AuthenticatedRequest, @Param('eventId') eventId: string, @Body() updatedData: any) {
+    const organizerId = req.user._id
+    return this.organizerService.editEvent(organizerId, eventId, updatedData)
+  }
+
+  @Post('edit-doctor/:eventId/:doctorId')
+  async editDoctor(
+    @Request() req: AuthenticatedRequest,
+    @Param('eventId') eventId: string,
+    @Param('doctorId') doctorId: string,
+    @Body() updatedData: any,
+  ) {
+    const organizerId = req.user._id
+    return this.organizerService.editDoctor(organizerId, eventId, doctorId, updatedData)
+  }
+
+  @Post('edit-staff/:eventId/:staffId')
+  async editStaff(
+    @Request() req: AuthenticatedRequest,
+    @Param('eventId') eventId: string,
+    @Param('staffId') staffId: string,
+    @Body() updatedData: any,
+  ) {
+    const organizerId = req.user._id
+    return this.organizerService.editStaff(organizerId, eventId, staffId, updatedData)
   }
 }

@@ -47,16 +47,15 @@ export class PatientService {
   }
 
   async getAvailableDoctorsAndServices(city: string) {
-    const organizers = await this.organizerModel.find({ city }).select('doctors').exec()
+    const organizers = await this.organizerModel.find({ city }).select('events').exec()
 
+    const freeCampDoctors = organizers.flatMap((org) => org.events.flatMap((event) => event.doctors || []))
     const visitDoctors = await this.visitDoctorModel.find({ city }).exec()
-
     const labs = await this.labModel.find({ city }).select('labName availableTests').exec()
-
     const hospitals = await this.hospitalModel.find({ city }).select('availableServices').exec()
 
     return {
-      freeCampDoctors: organizers.flatMap((org) => org.doctors || []),
+      freeCampDoctors,
       visitDoctors,
       labServices: labs.flatMap((lab) => lab.availableTests || []),
       hospitalServices: hospitals.flatMap((hospital) => hospital.availableServices || []),

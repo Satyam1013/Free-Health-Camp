@@ -1,8 +1,12 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
+import { Types } from 'mongoose'
 
 // Define Doctor Schema
 @Schema()
 export class Doctor {
+  @Prop({ type: Types.ObjectId, auto: true })
+  _id: Types.ObjectId
+
   @Prop({ required: true })
   name: string
 
@@ -21,6 +25,9 @@ export const DoctorSchema = SchemaFactory.createForClass(Doctor)
 // Define Staff Schema
 @Schema()
 export class Staff {
+  @Prop({ type: Types.ObjectId, auto: true })
+  _id: Types.ObjectId
+
   @Prop({ required: true })
   name: string
 

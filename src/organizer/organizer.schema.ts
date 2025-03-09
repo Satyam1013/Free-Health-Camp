@@ -1,10 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
-import { Document } from 'mongoose'
+import { Document, Types } from 'mongoose'
 import { Doctor, DoctorSchema, Staff, StaffSchema } from 'src/common/doctor-staff.schema'
 
 // Define Event Schema
 @Schema()
 class Event {
+  @Prop({ type: Types.ObjectId, auto: true })
+  _id: Types.ObjectId
+
   @Prop({ required: true })
   eventName: string
 
@@ -19,6 +22,12 @@ class Event {
 
   @Prop({ required: true })
   endTime: string
+
+  @Prop({ type: [DoctorSchema], default: [] })
+  doctors: Doctor[]
+
+  @Prop({ type: [StaffSchema], default: [] })
+  staff: Staff[]
 }
 
 const EventSchema = SchemaFactory.createForClass(Event)
@@ -43,12 +52,6 @@ export class Organizer {
 
   @Prop({ required: true })
   address: string
-
-  @Prop({ type: [DoctorSchema], default: [] })
-  doctors: Doctor[]
-
-  @Prop({ type: [StaffSchema], default: [] })
-  staff: Staff[]
 
   @Prop({ type: [EventSchema], default: [] })
   events: Event[]
