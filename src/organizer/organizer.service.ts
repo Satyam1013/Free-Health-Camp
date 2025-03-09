@@ -3,10 +3,14 @@ import { InjectModel } from '@nestjs/mongoose'
 import { Model, Types } from 'mongoose'
 import { Organizer, OrganizerDocument } from './organizer.schema'
 import * as bcrypt from 'bcrypt'
+import { MobileValidationService } from 'src/common/mobile-validation.service'
 
 @Injectable()
 export class OrganizerService {
-  constructor(@InjectModel(Organizer.name) private organizerModel: Model<OrganizerDocument>) {}
+  constructor(
+    @InjectModel(Organizer.name) private organizerModel: Model<OrganizerDocument>,
+    private readonly mobileValidationService: MobileValidationService,
+  ) {}
 
   // ✅ Create Event
   async createEvent(organizerId: string, eventData: any) {
@@ -40,20 +44,18 @@ export class OrganizerService {
   // ✅ Add Doctor to Event
   async createDoctor(organizerId: string, eventId: string, doctorData: any) {
     try {
+      await this.mobileValidationService.checkDuplicateMobile(doctorData.mobile)
+
       const organizer = await this.organizerModel.findById(organizerId)
       if (!organizer) throw new BadRequestException('Invalid Organizer')
 
       const event = organizer.events.find((ev) => ev._id.toString() === eventId)
       if (!event) throw new BadRequestException('Invalid Event')
 
-      const isDuplicate =
-        event.doctors.some((doc) => doc.mobile === doctorData.mobile) ||
-        event.staff.some((staff) => staff.mobile === doctorData.mobile)
-      if (isDuplicate) throw new BadRequestException('Mobile number already exists in this event')
-
       doctorData.password = await bcrypt.hash(doctorData.password, 10)
       event.doctors.push(doctorData)
       await organizer.save()
+
       return event
     } catch {
       throw new InternalServerErrorException('Something went wrong')
@@ -63,20 +65,19 @@ export class OrganizerService {
   // ✅ Add Staff to Event
   async createStaff(organizerId: string, eventId: string, staffData: any) {
     try {
+      await this.mobileValidationService.checkDuplicateMobile(staffData.mobile)
+
       const organizer = await this.organizerModel.findById(organizerId)
       if (!organizer) throw new BadRequestException('Invalid Organizer')
 
       const event = organizer.events.find((ev) => ev._id.toString() === eventId)
       if (!event) throw new BadRequestException('Invalid Event')
 
-      const isDuplicate =
-        event.doctors.some((doc) => doc.mobile === staffData.mobile) ||
-        event.staff.some((staff) => staff.mobile === staffData.mobile)
-      if (isDuplicate) throw new BadRequestException('Mobile number already exists in this event')
-
       staffData.password = await bcrypt.hash(staffData.password, 10)
+
       event.staff.push(staffData)
       await organizer.save()
+
       return event
     } catch {
       throw new InternalServerErrorException('Something went wrong')

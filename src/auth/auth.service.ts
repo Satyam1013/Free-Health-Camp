@@ -8,6 +8,7 @@ import { VisitDoctor, VisitDoctorDocument } from '../visit-doctor/visit-doctor.s
 import { Lab, LabDocument } from '../lab/lab.schema'
 import { Hospital, HospitalDocument } from '../hospital/hospital.schema'
 import { Patient, PatientDocument } from '../patient/patient.schema'
+import { MobileValidationService } from 'src/common/mobile-validation.service'
 
 @Injectable()
 export class AuthService {
@@ -17,6 +18,7 @@ export class AuthService {
     @InjectModel(Lab.name) private labModel: Model<LabDocument>,
     @InjectModel(Hospital.name) private hospitalModel: Model<HospitalDocument>,
     @InjectModel(Patient.name) private patientModel: Model<PatientDocument>,
+    private readonly mobileValidationService: MobileValidationService,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -29,11 +31,8 @@ export class AuthService {
       throw new BadRequestException('Invalid role provided')
     }
 
-    // Check if user already exists
-    const existingUser = await model.findOne({ mobile })
-    if (existingUser) {
-      throw new BadRequestException('User with this mobile number already exists')
-    }
+    // 🔍 Check mobile existence across ALL roles
+    await this.mobileValidationService.checkDuplicateMobile(mobile)
 
     // Create new user
     const newUser = new model({
