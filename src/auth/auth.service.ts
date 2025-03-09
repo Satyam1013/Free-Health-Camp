@@ -49,14 +49,13 @@ export class AuthService {
     }
   }
 
-  async login(userDto: any): Promise<{ access_token: string; role: string }> {
+  async login(userDto: any): Promise<{ access_token: string; userDetails: any }> {
     const { mobile, password } = userDto
     let user: any = null
     let role = ''
 
     // 1️⃣ Check if the mobile exists in the Organizer collection
     const organizer = await this.organizerModel.findOne({ mobile })
-
     if (organizer) {
       user = organizer
       role = 'Organizer'
@@ -114,7 +113,11 @@ export class AuthService {
     const payload = { _id: user._id, role }
     const access_token = this.jwtService.sign(payload)
 
-    return { access_token, role }
+    // 7️⃣ Remove sensitive data before sending response
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { password: _, ...userDetails } = user.toObject ? user.toObject() : user
+
+    return { access_token, userDetails }
   }
 
   private getModelByRole(role: string) {

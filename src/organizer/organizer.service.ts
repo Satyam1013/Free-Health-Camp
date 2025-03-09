@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
-import { Model } from 'mongoose'
+import { Model, Types } from 'mongoose'
 import { Organizer, OrganizerDocument } from './organizer.schema'
 import * as bcrypt from 'bcrypt'
 
@@ -22,10 +22,16 @@ export class OrganizerService {
         if (hoursDifference < 24) throw new BadRequestException('Only 1 event can be created within 24 hours')
       }
 
-      const newEvent = { ...eventData, doctors: [], staff: [] }
+      // ✅ Explicitly assign an ObjectId to ensure `_id` is generated
+      const newEvent = { _id: new Types.ObjectId(), ...eventData, doctors: [], staff: [] }
+
       organizer.events.push(newEvent)
       await organizer.save()
-      return organizer.events[organizer.events.length - 1]
+
+      return {
+        message: 'Event created successfully',
+        event: newEvent,
+      }
     } catch {
       throw new InternalServerErrorException('Something went wrong')
     }

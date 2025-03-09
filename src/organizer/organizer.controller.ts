@@ -15,6 +15,13 @@ interface AuthenticatedRequest extends ExpressRequest {
 export class OrganizerController {
   constructor(private readonly organizerService: OrganizerService) {}
 
+  // ✅ Create a New Event
+  @Post('create-event')
+  async addEvent(@Request() req: AuthenticatedRequest, @Body() eventData: any) {
+    const organizerId = req.user._id
+    return this.organizerService.createEvent(organizerId, eventData)
+  }
+
   // ✅ Add Doctor to an Event
   @Post('create-doctor/:eventId')
   async addDoctor(@Request() req: AuthenticatedRequest, @Param('eventId') eventId: string, @Body() doctorData: any) {
@@ -27,13 +34,6 @@ export class OrganizerController {
   async addStaff(@Request() req: AuthenticatedRequest, @Param('eventId') eventId: string, @Body() staffData: any) {
     const organizerId = req.user._id
     return this.organizerService.createStaff(organizerId, eventId, staffData)
-  }
-
-  // ✅ Create a New Event
-  @Post('create-event')
-  async addEvent(@Request() req: AuthenticatedRequest, @Body() eventData: any) {
-    const organizerId = req.user._id
-    return this.organizerService.createEvent(organizerId, eventData)
   }
 
   @Get('events')
