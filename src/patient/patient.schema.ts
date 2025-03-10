@@ -1,30 +1,43 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { Document } from 'mongoose'
+import { BookingStatus } from 'src/common/doctor-staff.schema'
 
 export type PatientDocument = Patient & Document
 
 @Schema()
 export class Patient {
-  @Prop({ required: true })
-  username: string
-
-  @Prop()
-  age: number
-
-  @Prop()
-  address: string
-
-  @Prop({ required: true, default: 'Patient' })
-  role: string
-
   @Prop({ required: true, unique: true })
   mobile: number
 
   @Prop({ required: true })
   password: string
 
+  @Prop({ required: true })
+  username: string
+
+  @Prop({ unique: true })
+  email: string
+
+  @Prop()
+  age: number
+
+  @Prop({ required: true, default: 'Patient' })
+  role: string
+
+  @Prop()
+  address: string
+
   @Prop({ type: String, required: true })
   city: string
+
+  @Prop({ type: Date })
+  bookingDate?: Date
+
+  @Prop({ type: Date })
+  nextVisitDate?: Date
+
+  @Prop({ default: BookingStatus.Pending })
+  status?: BookingStatus
 
   @Prop({
     type: [
@@ -32,7 +45,7 @@ export class Patient {
         eventId: String,
         eventName: String,
         eventPlace: String,
-        eventDate: String,
+        eventDate: Date,
         startTime: String,
         endTime: String,
       },
@@ -43,27 +56,9 @@ export class Patient {
     eventId: string
     eventName: string
     eventPlace: string
-    eventDate: string
+    eventDate: Date
     startTime: string
     endTime: string
-  }>
-
-  @Prop({
-    type: [
-      {
-        doctorId: String,
-        bookingDate: Date,
-        nextVisitDate: { type: String, required: false },
-        status: String,
-      },
-    ],
-    default: [],
-  })
-  bookedDoctors: Array<{
-    doctorId: string
-    bookingDate: Date
-    nextVisitDate?: string
-    status: string
   }>
 
   @Prop({

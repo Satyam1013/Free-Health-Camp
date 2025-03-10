@@ -4,11 +4,14 @@ import { Model, Types } from 'mongoose'
 import { Organizer, OrganizerDocument } from './organizer.schema'
 import * as bcrypt from 'bcrypt'
 import { MobileValidationService } from 'src/common/mobile-validation.service'
+import { Patient, PatientDocument } from 'src/patient/patient.schema'
+import { BookingStatus } from 'src/common/doctor-staff.schema'
 
 @Injectable()
 export class OrganizerService {
   constructor(
     @InjectModel(Organizer.name) private organizerModel: Model<OrganizerDocument>,
+    @InjectModel(Patient.name) private patientModel: Model<PatientDocument>,
     private readonly mobileValidationService: MobileValidationService,
   ) {}
 
@@ -52,8 +55,10 @@ export class OrganizerService {
       const event = organizer.events.find((ev) => ev._id.toString() === eventId)
       if (!event) throw new BadRequestException('Invalid Event')
 
-      doctorData.password = await bcrypt.hash(doctorData.password, 10)
-      event.doctors.push(doctorData)
+      const newDoctor = { _id: new Types.ObjectId(), ...doctorData }
+
+      newDoctor.password = await bcrypt.hash(newDoctor.password, 10)
+      event.doctors.push(newDoctor)
       await organizer.save()
 
       return event
@@ -73,9 +78,11 @@ export class OrganizerService {
       const event = organizer.events.find((ev) => ev._id.toString() === eventId)
       if (!event) throw new BadRequestException('Invalid Event')
 
-      staffData.password = await bcrypt.hash(staffData.password, 10)
+      const newStaff = { _id: new Types.ObjectId(), ...staffData }
 
-      event.staff.push(staffData)
+      newStaff.password = await bcrypt.hash(newStaff.password, 10)
+
+      event.staff.push(newStaff)
       await organizer.save()
 
       return event
@@ -145,6 +152,57 @@ export class OrganizerService {
       return staff
     } catch {
       throw new InternalServerErrorException('Something went wrong')
+    }
+  }
+
+  async bookDoctor(organizerId: string, eventId: string, doctorId: string, patientId: string, patientData: any) {
+    try {
+      const organizer = await this.organizerModel.findById(organizerId)
+      if (!organizer) throw new BadRequestException('Invalid Organizer')
+
+      const event = organizer.events.find((ev) => ev._id.toString() === eventId)
+      if (!event) throw new BadRequestException('Invalid Event')
+
+      const doctor = event.doctors.find((doc) => doc._id.toString() === doctorId)
+      if (!doctor) throw new BadRequestException('Doctor not found')
+
+      // ✅ Fetch patient details from the database
+      const patient = await this.patientModel.findById(patientId)
+      if (!patient) throw new BadRequestException('Patient not found')
+
+      // ✅ Ensure patient._id is an ObjectId
+      const patientObjectId = new Types.ObjectId(patient._id.toString())
+
+      // ✅ Ensure all _id comparisons are correctly typed
+      const isAlreadyBooked = doctor.patients.some((p) => {
+        const doctorPatientId = new Types.ObjectId(p._id.toString())
+        return doctorPatientId.equals(patientObjectId)
+      })
+
+      if (isAlreadyBooked) throw new BadRequestException('Patient already booked with this doctor')
+
+      const newPatient = {
+        _id: patientObjectId,
+        name: patient.username,
+        mobile: patient.mobile,
+        address: patient.address,
+        bookingDate: new Date(patientData.bookingDate),
+        nextVisitDate: new Date(patientData.nextVisitDate),
+        status: BookingStatus.Booked,
+      }
+
+      doctor.patients.push(newPatient)
+      await organizer.save()
+
+      const safeDoctor = {
+        _id: doctor._id,
+        name: doctor.name,
+        address: doctor.address,
+      }
+
+      return { message: 'Doctor booked successfully', doctor: safeDoctor }
+    } catch (error) {
+      throw new InternalServerErrorException(error.message || 'Something went wrong')
     }
   }
 }

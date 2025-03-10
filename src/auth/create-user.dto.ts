@@ -4,6 +4,10 @@ export enum UserRole {
   LAB = 'Lab',
   VISIT_DOCTOR = 'VisitDoctor',
   PATIENT = 'Patient',
+
+  // ✅ Sub-Roles
+  ORGANIZER_DOCTOR = 'Organizer_Doctor',
+  ORGANIZER_STAFF = 'Organizer_Staff',
 }
 
 export class CreateUserDto {

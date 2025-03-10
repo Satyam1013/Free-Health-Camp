@@ -1,4 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
+import { Types } from 'mongoose'
+import { BookingStatus } from 'src/common/doctor-staff.schema'
 
 export type VisitDoctorDocument = VisitDoctor & Document
 
@@ -37,22 +39,24 @@ export class VisitDoctor {
   @Prop({
     type: [
       {
-        patientId: String,
-        patientName: String,
-        mobile: String,
-        status: String,
-        bookingDate: Date,
-        nextVisitDate: String,
+        _id: { type: Types.ObjectId, auto: true },
+        name: { type: String, required: true },
+        mobile: { type: Number, required: true },
+        address: { type: String, required: true },
+        bookingDate: { type: Date, default: Date.now },
+        nextVisitDate: { type: String, required: false },
+        status: { type: String, enum: Object.values(BookingStatus), default: BookingStatus.Pending },
       },
     ],
   })
   patients: Array<{
-    patientId: string
-    patientName: string
-    mobile: string
-    status: string
+    _id: Types.ObjectId
+    name: string
+    mobile: number
+    address: string
     bookingDate: Date
     nextVisitDate?: string
+    status: BookingStatus
   }>
 }
 

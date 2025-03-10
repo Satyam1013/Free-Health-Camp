@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/mongoose'
 import { VisitDoctor, VisitDoctorDocument } from './visit-doctor.schema'
 import { Model } from 'mongoose'
 import { Patient } from 'src/patient/patient.schema'
+import { BookingStatus } from 'src/common/doctor-staff.schema'
 
 @Injectable()
 export class VisitDoctorService {
@@ -67,7 +68,7 @@ export class VisitDoctorService {
   async updatePatientStatus(
     doctorId: string,
     patientId: string,
-    updateData: { status?: string; nextVisitDate?: string },
+    updateData: { status?: BookingStatus; nextVisitDate?: string },
   ) {
     const visitDoctor = await this.visitDoctorModel.findById(doctorId)
 
@@ -75,7 +76,7 @@ export class VisitDoctorService {
       throw new BadRequestException('Doctor not found')
     }
 
-    const patient = visitDoctor.patients.find((p) => p.patientId === patientId)
+    const patient = visitDoctor.patients.find((p) => p._id.toString() === patientId)
     if (!patient) {
       throw new BadRequestException('Patient not found')
     }
@@ -84,5 +85,39 @@ export class VisitDoctorService {
     await visitDoctor.save()
 
     return { message: 'Patient status updated', patient }
+  }
+
+  async bookVisitDoctor(patientId: string, doctorId: string) {
+    const doctor = await this.visitDoctorModel.findById(doctorId)
+    if (!doctor) {
+      throw new BadRequestException('Doctor not found')
+    }
+
+    const patient = await this.patientModel.findById(patientId)
+    if (!patient) {
+      throw new BadRequestException('Patient not found')
+    }
+
+    // Check if the patient is already booked with this doctor
+    const isAlreadyBooked = doctor.patients.some((p) => p._id.toString() === patientId)
+    if (isAlreadyBooked) {
+      throw new BadRequestException('This patient has already booked an appointment with this doctor')
+    }
+
+    // Add patient ID to the visit doctor patients list
+    const newPatient = {
+      _id: patient._id,
+      name: patient.username,
+      mobile: patient.mobile,
+      address: patient.address,
+      bookingDate: new Date(),
+      nextVisitDate: null,
+      status: BookingStatus.Booked,
+    }
+
+    doctor.patients.push(newPatient)
+    await doctor.save()
+
+    return { message: 'Doctor booked successfully', doctor }
   }
 }

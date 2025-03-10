@@ -9,6 +9,7 @@ import { Lab, LabDocument } from '../lab/lab.schema'
 import { Hospital, HospitalDocument } from '../hospital/hospital.schema'
 import { Patient, PatientDocument } from '../patient/patient.schema'
 import { MobileValidationService } from 'src/common/mobile-validation.service'
+import { UserRole } from './create-user.dto'
 
 @Injectable()
 export class AuthService {
@@ -51,30 +52,32 @@ export class AuthService {
   async login(userDto: any): Promise<{ access_token: string; userDetails: any }> {
     const { mobile, password } = userDto
     let user: any = null
-    let role = ''
+    let role: UserRole | '' = ''
 
     // 1️⃣ Check if the mobile exists in the Organizer collection
     const organizer = await this.organizerModel.findOne({ mobile })
     if (organizer) {
       user = organizer
-      role = 'Organizer'
+      role = UserRole.ORGANIZER
     } else {
-      // 2️⃣ Check inside events for Doctors & Staff
-      const event = await this.organizerModel.findOne({ 'events.doctors.mobile': mobile })
-      if (event) {
-        user = event.events
-          .find((ev) => ev.doctors.some((doc) => doc.mobile === mobile))
-          ?.doctors.find((doc) => doc.mobile === mobile)
-        role = 'Doctor'
-      }
+      // 2️⃣ Check inside events for Doctors & Staff under Organizer
+      const event = await this.organizerModel.findOne({
+        $or: [{ 'events.doctors.mobile': mobile }, { 'events.staff.mobile': mobile }],
+      })
 
-      if (!user) {
-        const eventWithStaff = await this.organizerModel.findOne({ 'events.staff.mobile': mobile })
-        if (eventWithStaff) {
-          user = eventWithStaff.events
-            .find((ev) => ev.staff.some((staff) => staff.mobile === mobile))
-            ?.staff.find((staff) => staff.mobile === mobile)
-          role = 'Staff'
+      if (event) {
+        const foundEvent = event.events.find(
+          (ev) => ev.doctors.some((doc) => doc.mobile === mobile) || ev.staff.some((staff) => staff.mobile === mobile),
+        )
+
+        if (foundEvent) {
+          user = foundEvent.doctors.find((doc) => doc.mobile === mobile)
+          role = user ? UserRole.ORGANIZER_DOCTOR : ''
+
+          if (!user) {
+            user = foundEvent.staff.find((staff) => staff.mobile === mobile)
+            role = user ? UserRole.ORGANIZER_STAFF : ''
+          }
         }
       }
     }
@@ -82,19 +85,19 @@ export class AuthService {
     // 3️⃣ Check Other Roles (VisitDoctor, Lab, Hospital, Patient)
     if (!user) {
       user = await this.visitDoctorModel.findOne({ mobile })
-      if (user) role = 'VisitDoctor'
+      if (user) role = UserRole.VISIT_DOCTOR
     }
     if (!user) {
       user = await this.labModel.findOne({ mobile })
-      if (user) role = 'Lab'
+      if (user) role = UserRole.LAB
     }
     if (!user) {
       user = await this.hospitalModel.findOne({ mobile })
-      if (user) role = 'Hospital'
+      if (user) role = UserRole.HOSPITAL
     }
     if (!user) {
       user = await this.patientModel.findOne({ mobile })
-      if (user) role = 'Patient'
+      if (user) role = UserRole.PATIENT
     }
 
     // 4️⃣ If User Not Found, Throw Unauthorized Error
@@ -108,28 +111,34 @@ export class AuthService {
       throw new UnauthorizedException('Invalid mobile number or password')
     }
 
-    // 6️⃣ Generate JWT Token
-    const payload = { _id: user._id, role }
+    // 6️⃣ Ensure Sub-Roles Can Log in as Organizer
+    const isOrganizerRole = [UserRole.ORGANIZER_DOCTOR, UserRole.ORGANIZER_STAFF].includes(role as UserRole)
+    const finalRole = isOrganizerRole ? UserRole.ORGANIZER : role
+
+    // 7️⃣ Generate JWT Token
+    const payload = { _id: user._id, role: finalRole }
     const access_token = this.jwtService.sign(payload)
 
-    // 7️⃣ Remove sensitive data before sending response
+    // 8️⃣ Remove Sensitive Data
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password: _, ...userDetails } = user.toObject ? user.toObject() : user
 
     return { access_token, userDetails }
   }
 
-  private getModelByRole(role: string) {
+  private getModelByRole(role: UserRole) {
     switch (role) {
-      case 'Organizer':
+      case UserRole.ORGANIZER:
+      case UserRole.ORGANIZER_DOCTOR:
+      case UserRole.ORGANIZER_STAFF:
         return this.organizerModel
-      case 'VisitDoctor':
+      case UserRole.VISIT_DOCTOR:
         return this.visitDoctorModel
-      case 'Lab':
+      case UserRole.LAB:
         return this.labModel
-      case 'Hospital':
+      case UserRole.HOSPITAL:
         return this.hospitalModel
-      case 'Patient':
+      case UserRole.PATIENT:
         return this.patientModel
       default:
         return null

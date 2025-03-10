@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import { VisitDoctor } from 'src/visit-doctor/visit-doctor.schema'
@@ -16,35 +16,6 @@ export class PatientService {
     @InjectModel(Lab.name) private labModel: Model<Lab>,
     @InjectModel(Hospital.name) private hospitalModel: Model<Hospital>,
   ) {}
-
-  async bookVisitDoctor(patientId: string, doctorId: string) {
-    const doctor = await this.visitDoctorModel.findById(doctorId)
-    if (!doctor) {
-      throw new BadRequestException('Doctor not found')
-    }
-
-    const patient = await this.patientModel.findById(patientId)
-    if (!patient) {
-      throw new BadRequestException('Patient not found')
-    }
-
-    // Check if already booked
-    const isAlreadyBooked = patient.bookedDoctors.some((d) => d.doctorId === doctorId)
-    if (isAlreadyBooked) {
-      throw new BadRequestException('You have already booked this doctor')
-    }
-
-    // Add doctor to patient's bookedDoctors list
-    patient.bookedDoctors.push({
-      doctorId,
-      bookingDate: new Date(),
-      status: 'Booked',
-    })
-
-    await patient.save()
-
-    return { message: 'Doctor booked successfully', patient }
-  }
 
   async getAvailableDoctorsAndServices(city: string) {
     const organizers = await this.organizerModel.find({ city }).select('events').exec()

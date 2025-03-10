@@ -69,4 +69,16 @@ export class OrganizerController {
     const organizerId = req.user._id
     return this.organizerService.editStaff(organizerId, eventId, staffId, updatedData)
   }
+
+  @Post('/:organizerId/:eventId/:doctorId/book')
+  async bookDoctor(
+    @Request() req: AuthenticatedRequest,
+    @Param('organizerId') organizerId: string,
+    @Param('eventId') eventId: string,
+    @Param('doctorId') doctorId: string,
+    @Body() patientData: any,
+  ) {
+    const patientId = req.user._id
+    return this.organizerService.bookDoctor(organizerId, eventId, doctorId, patientId, patientData)
+  }
 }
