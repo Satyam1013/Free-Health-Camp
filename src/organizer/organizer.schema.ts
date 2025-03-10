@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { Document, Types } from 'mongoose'
+import { UserRole } from 'src/auth/create-user.dto'
 import { Doctor, DoctorSchema, Staff, StaffSchema } from 'src/common/doctor-staff.schema'
 
 // Define Event Schema
@@ -44,8 +45,8 @@ export class Organizer {
   @Prop({ required: true, unique: true })
   mobile: number
 
-  @Prop({ required: true, default: 'Organizer' })
-  role: string
+  @Prop({ required: true, enum: Object.values(UserRole), default: UserRole.ORGANIZER })
+  role: UserRole
 
   @Prop({ required: true })
   password: string
