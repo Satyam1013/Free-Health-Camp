@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Param, Post, Put, Request } from '@nestjs/common'
+import { Body, Controller, Get, Param, Post, Put, Request, UseGuards } from '@nestjs/common'
 import { VisitDoctorService } from './visit-doctor.service'
 import { Request as ExpressRequest } from 'express'
-import { BookingStatus } from 'src/common/doctor-staff.schema'
+import { AuthGuard } from 'src/auth/auth.guard'
 
 interface AuthenticatedRequest extends ExpressRequest {
   user: {
@@ -11,6 +11,7 @@ interface AuthenticatedRequest extends ExpressRequest {
 }
 
 @Controller('visit-doctor')
+@UseGuards(AuthGuard)
 export class VisitDoctorController {
   constructor(private readonly visitDoctorService: VisitDoctorService) {}
 
@@ -34,14 +35,18 @@ export class VisitDoctorController {
   async updatePatientStatus(
     @Param('doctorId') doctorId: string,
     @Param('patientId') patientId: string,
-    @Body() updateData: { status?: BookingStatus; nextVisitDate?: string },
+    @Body() updateData: any,
   ) {
     return this.visitDoctorService.updatePatientStatus(doctorId, patientId, updateData)
   }
 
   @Post(':doctorId/book')
-  async bookDoctor(@Request() req: AuthenticatedRequest, @Param('doctorId') doctorId: string) {
+  async bookDoctor(
+    @Request() req: AuthenticatedRequest,
+    @Param('doctorId') doctorId: string,
+    @Body() patientData: any,
+  ) {
     const patientId = req.user._id
-    return this.visitDoctorService.bookVisitDoctor(patientId, doctorId)
+    return this.visitDoctorService.bookVisitDoctor(patientId, doctorId, patientData)
   }
 }

@@ -2,15 +2,15 @@ import { Injectable, BadRequestException, InternalServerErrorException } from '@
 import * as bcrypt from 'bcrypt'
 import { InjectModel } from '@nestjs/mongoose'
 import { VisitDoctor, VisitDoctorDocument } from './visit-doctor.schema'
-import { Model } from 'mongoose'
-import { Patient } from 'src/patient/patient.schema'
+import { Model, Types } from 'mongoose'
+import { Patient, PatientDocument } from 'src/patient/patient.schema'
 import { BookingStatus } from 'src/common/doctor-staff.schema'
 
 @Injectable()
 export class VisitDoctorService {
   constructor(
     @InjectModel(VisitDoctor.name) private visitDoctorModel: Model<VisitDoctorDocument>,
-    @InjectModel(Patient.name) private patientModel: Model<Patient>,
+    @InjectModel(Patient.name) private patientModel: Model<PatientDocument>,
   ) {}
 
   async createStaff(visitDoctorId: string, staffData: any) {
@@ -87,37 +87,49 @@ export class VisitDoctorService {
     return { message: 'Patient status updated', patient }
   }
 
-  async bookVisitDoctor(patientId: string, doctorId: string) {
-    const doctor = await this.visitDoctorModel.findById(doctorId)
-    if (!doctor) {
-      throw new BadRequestException('Doctor not found')
+  async bookVisitDoctor(patientId: string, doctorId: string, patientData: any) {
+    try {
+      const doctor = await this.visitDoctorModel.findById(doctorId)
+      if (!doctor) {
+        throw new BadRequestException('Doctor not found')
+      }
+
+      const patient = await this.patientModel.findById(patientId)
+      if (!patient) {
+        throw new BadRequestException('Patient not found')
+      }
+
+      const patientObjectId = new Types.ObjectId(patient._id.toString())
+
+      // Check if the patient is already booked with this doctor
+      const isAlreadyBooked = doctor.patients.some((p) => p._id.toString() === patientId)
+      if (isAlreadyBooked) {
+        throw new BadRequestException('This patient has already booked an appointment with this doctor')
+      }
+
+      // Add patient ID to the visit doctor patients list
+      const newPatient = {
+        _id: patientObjectId,
+        name: patient.username,
+        mobile: patient.mobile,
+        address: patient.address,
+        bookingDate: new Date(patientData.bookingDate),
+        nextVisitDate: new Date(patientData.nextVisitDate),
+        status: BookingStatus.Booked,
+      }
+
+      doctor.patients.push(newPatient)
+      await doctor.save()
+
+      const safeDoctor = {
+        _id: doctor._id,
+        name: doctor.username,
+        address: doctor.address,
+      }
+
+      return { message: 'Doctor booked successfully', doctor: safeDoctor }
+    } catch (error) {
+      throw new InternalServerErrorException(error.message || 'Something went wrong')
     }
-
-    const patient = await this.patientModel.findById(patientId)
-    if (!patient) {
-      throw new BadRequestException('Patient not found')
-    }
-
-    // Check if the patient is already booked with this doctor
-    const isAlreadyBooked = doctor.patients.some((p) => p._id.toString() === patientId)
-    if (isAlreadyBooked) {
-      throw new BadRequestException('This patient has already booked an appointment with this doctor')
-    }
-
-    // Add patient ID to the visit doctor patients list
-    const newPatient = {
-      _id: patient._id,
-      name: patient.username,
-      mobile: patient.mobile,
-      address: patient.address,
-      bookingDate: new Date(),
-      nextVisitDate: null,
-      status: BookingStatus.Booked,
-    }
-
-    doctor.patients.push(newPatient)
-    await doctor.save()
-
-    return { message: 'Doctor booked successfully', doctor }
   }
 }

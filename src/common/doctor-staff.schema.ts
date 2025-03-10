@@ -37,7 +37,7 @@ export class Doctor {
         mobile: { type: Number, required: true },
         address: { type: String, required: true },
         bookingDate: { type: Date, default: Date.now },
-        nextVisitDate: { type: String, required: false },
+        nextVisitDate: { type: Date, required: false },
         status: { type: String, enum: Object.values(BookingStatus), default: BookingStatus.Pending },
       },
     ],

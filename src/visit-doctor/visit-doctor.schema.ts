@@ -10,6 +10,9 @@ export class VisitDoctor {
   username: string
 
   @Prop({ required: true })
+  address: string
+
+  @Prop({ required: true })
   city: string
 
   @Prop({ required: true, default: 'VisitDoctor' })
@@ -44,7 +47,7 @@ export class VisitDoctor {
         mobile: { type: Number, required: true },
         address: { type: String, required: true },
         bookingDate: { type: Date, default: Date.now },
-        nextVisitDate: { type: String, required: false },
+        nextVisitDate: { type: Date, required: false },
         status: { type: String, enum: Object.values(BookingStatus), default: BookingStatus.Pending },
       },
     ],
@@ -55,7 +58,7 @@ export class VisitDoctor {
     mobile: number
     address: string
     bookingDate: Date
-    nextVisitDate?: string
+    nextVisitDate?: Date
     status: BookingStatus
   }>
 }
