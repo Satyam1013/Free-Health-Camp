@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Request, UseGuards, Param, Get } from '@nestjs/common'
+import { Controller, Post, Body, Request, UseGuards, Param, Get, Put } from '@nestjs/common'
 import { OrganizerService } from './organizer.service'
 import { AuthGuard } from 'src/auth/auth.guard'
 import { Request as ExpressRequest } from 'express'
@@ -42,13 +42,13 @@ export class OrganizerController {
     return this.organizerService.getAllEvents(organizerId)
   }
 
-  @Post('edit-event/:eventId')
+  @Put('edit-event/:eventId')
   async editEvent(@Request() req: AuthenticatedRequest, @Param('eventId') eventId: string, @Body() updatedData: any) {
     const organizerId = req.user._id
     return this.organizerService.editEvent(organizerId, eventId, updatedData)
   }
 
-  @Post('edit-doctor/:eventId/:doctorId')
+  @Put('edit-doctor/:eventId/:doctorId')
   async editDoctor(
     @Request() req: AuthenticatedRequest,
     @Param('eventId') eventId: string,
@@ -59,7 +59,7 @@ export class OrganizerController {
     return this.organizerService.editDoctor(organizerId, eventId, doctorId, updatedData)
   }
 
-  @Post('edit-staff/:eventId/:staffId')
+  @Put('edit-staff/:eventId/:staffId')
   async editStaff(
     @Request() req: AuthenticatedRequest,
     @Param('eventId') eventId: string,
