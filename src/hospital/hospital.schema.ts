@@ -1,27 +1,14 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
+import { UserRole } from 'src/auth/create-user.dto'
+import { BaseModel } from 'src/common/common.schema'
 import { Doctor, DoctorSchema, Staff, StaffSchema } from 'src/common/doctor-staff.schema'
 
 export type HospitalDocument = Hospital & Document
 
 @Schema()
-export class Hospital {
-  @Prop({ required: true, unique: true })
-  mobile: number
-
-  @Prop({ required: true })
-  password: string
-
-  @Prop({ type: String, required: true })
-  hospitalName: string
-
-  @Prop({ required: true })
-  city: string
-
-  @Prop()
-  address: string
-
-  @Prop({ required: true, default: 'Hospital' })
-  role: string
+export class Hospital extends BaseModel {
+  @Prop({ required: true, default: UserRole.HOSPITAL })
+  role: UserRole
 
   @Prop({ type: [DoctorSchema], default: [] })
   doctors: Doctor[]

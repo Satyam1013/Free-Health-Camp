@@ -248,7 +248,6 @@ export class OrganizerService {
         mobile: patient.mobile,
         address: patient.address,
         bookingDate: new Date(patientData.bookingDate),
-        nextVisitDate: new Date(patientData.nextVisitDate),
         status: BookingStatus.Booked,
       }
 

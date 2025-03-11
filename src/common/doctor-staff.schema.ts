@@ -37,8 +37,7 @@ export class Doctor {
         mobile: { type: Number, required: true },
         address: { type: String, required: true },
         bookingDate: { type: Date, default: Date.now },
-        nextVisitDate: { type: Date, required: false },
-        status: { type: String, enum: Object.values(BookingStatus), default: BookingStatus.Pending },
+        status: { type: String, default: BookingStatus.Pending },
       },
     ],
   })
@@ -48,7 +47,6 @@ export class Doctor {
     mobile: number
     address: string
     bookingDate: Date
-    nextVisitDate?: Date
     status: BookingStatus
   }>
 }
@@ -73,7 +71,7 @@ export class Staff {
   @Prop({ required: true })
   password: string
 
-  @Prop({ required: true, enum: Object.values(UserRole), default: UserRole.ORGANIZER_STAFF })
+  @Prop({ required: true, default: UserRole.ORGANIZER_STAFF })
   role: UserRole
 }
 

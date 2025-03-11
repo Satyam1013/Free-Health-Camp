@@ -18,18 +18,22 @@ export class PatientService {
   ) {}
 
   async getAvailableDoctorsAndServices(city: string) {
-    const organizers = await this.organizerModel.find({ city }).select('events').exec()
+    const regex = new RegExp(`^${city}$`, 'i')
 
+    const organizers = await this.organizerModel.find({ city: regex }).select('events').exec()
     const freeCampDoctors = organizers.flatMap((org) => org.events.flatMap((event) => event.doctors || []))
-    const visitDoctors = await this.visitDoctorModel.find({ city }).exec()
-    const labs = await this.labModel.find({ city }).select('labName availableTests').exec()
-    const hospitals = await this.hospitalModel.find({ city }).select('availableServices').exec()
+
+    const visitDoctors = await this.visitDoctorModel.find({ city: regex }).exec()
+
+    const labs = await this.labModel.find({ city: regex }).select('username availableTests').exec()
+
+    const hospitals = await this.hospitalModel.find({ city: regex }).select('username availableServices').exec()
 
     return {
       freeCampDoctors,
       visitDoctors,
-      labServices: labs.flatMap((lab) => lab.availableTests || []),
-      hospitalServices: hospitals.flatMap((hospital) => hospital.availableServices || []),
+      labs,
+      hospitals,
     }
   }
 }
