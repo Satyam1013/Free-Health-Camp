@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { Types } from 'mongoose'
 import { UserRole } from 'src/auth/create-user.dto'
+import { Gender } from './common.schema'
 
 export enum BookingStatus {
   Booked = 'Booked',
@@ -32,20 +33,24 @@ export class Doctor {
   @Prop({
     type: [
       {
-        _id: { type: Types.ObjectId, auto: true },
-        name: { type: String, required: true },
-        mobile: { type: Number, required: true },
-        address: { type: String, required: true },
-        bookingDate: { type: Date, default: Date.now },
-        status: { type: String, default: BookingStatus.Pending },
+        _id: Types.ObjectId,
+        name: String,
+        email: String,
+        mobile: Number,
+        gender: String,
+        age: Number,
+        bookingDate: Date,
+        status: String,
       },
     ],
   })
   patients: Array<{
     _id: Types.ObjectId
     name: string
+    email: string
     mobile: number
-    address: string
+    age: number
+    gender: Gender
     bookingDate: Date
     status: BookingStatus
   }>

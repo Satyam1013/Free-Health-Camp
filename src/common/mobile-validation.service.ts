@@ -18,7 +18,7 @@ export class MobileValidationService {
     @InjectModel(Patient.name) private patientModel: Model<PatientDocument>,
   ) {}
 
-  async checkDuplicateMobile(mobile: string): Promise<void> {
+  async checkDuplicateMobile(mobile: number): Promise<void> {
     const existingUser = await Promise.all([
       this.organizerModel.findOne({ mobile }),
       this.visitDoctorModel.findOne({ mobile }),

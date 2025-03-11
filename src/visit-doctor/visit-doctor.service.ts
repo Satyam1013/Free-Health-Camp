@@ -111,8 +111,10 @@ export class VisitDoctorService {
       const newPatient = {
         _id: patientObjectId,
         name: patient.username,
+        email: patient.email,
         mobile: patient.mobile,
-        address: patient.address,
+        gender: patient.gender,
+        age: patient.age,
         bookingDate: new Date(patientData.bookingDate),
         nextVisitDate: new Date(patientData.nextVisitDate),
         status: BookingStatus.Booked,

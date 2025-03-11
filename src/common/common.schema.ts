@@ -16,3 +16,8 @@ export class BaseModel {
   @Prop({ required: true })
   city: string
 }
+
+export enum Gender {
+  MALE = 'Male',
+  FEMALE = 'Female',
+}

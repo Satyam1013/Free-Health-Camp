@@ -9,7 +9,8 @@ import { Lab, LabDocument } from '../lab/lab.schema'
 import { Hospital, HospitalDocument } from '../hospital/hospital.schema'
 import { Patient, PatientDocument } from '../patient/patient.schema'
 import { MobileValidationService } from 'src/common/mobile-validation.service'
-import { UserRole } from './create-user.dto'
+import { CreateUserDto, UserRole } from './create-user.dto'
+import { LoginDto } from './login.dto'
 
 @Injectable()
 export class AuthService {
@@ -23,8 +24,8 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async signup(userDto: any): Promise<{ message: string; username: string }> {
-    const { mobile, password, role, ...otherData } = userDto
+  async signup(signupDto: CreateUserDto): Promise<{ message: string; username: string }> {
+    const { mobile, password, role, ...otherData } = signupDto
 
     // Choose the correct model based on role
     const model = this.getModelByRole(role) as Model<any>
@@ -49,8 +50,8 @@ export class AuthService {
     }
   }
 
-  async login(userDto: any): Promise<{ access_token: string; userDetails: any }> {
-    const { mobile, password } = userDto
+  async login(loginDto: LoginDto): Promise<{ access_token: string; userDetails: any }> {
+    const { mobile, password } = loginDto
     let user: any = null
     let role: UserRole | '' = ''
 
