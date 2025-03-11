@@ -155,6 +155,66 @@ export class OrganizerService {
     }
   }
 
+  // ✅ Delete Event
+  async deleteEvent(organizerId: string, eventId: string) {
+    try {
+      const organizer = await this.organizerModel.findById(organizerId)
+      if (!organizer) throw new NotFoundException('Organizer not found')
+
+      const eventIndex = organizer.events.findIndex((ev) => ev._id.toString() === eventId)
+      if (eventIndex === -1) throw new NotFoundException('Event not found')
+
+      organizer.events.splice(eventIndex, 1)
+      await organizer.save()
+
+      return { message: 'Event deleted successfully' }
+    } catch (error) {
+      throw new InternalServerErrorException(error.message || 'Something went wrong')
+    }
+  }
+
+  // ✅ Delete Doctor
+  async deleteDoctor(organizerId: string, eventId: string, doctorId: string) {
+    try {
+      const organizer = await this.organizerModel.findById(organizerId)
+      if (!organizer) throw new NotFoundException('Organizer not found')
+
+      const event = organizer.events.find((ev) => ev._id.toString() === eventId)
+      if (!event) throw new NotFoundException('Event not found')
+
+      const doctorIndex = event.doctors.findIndex((doc) => doc._id.toString() === doctorId)
+      if (doctorIndex === -1) throw new NotFoundException('Doctor not found')
+
+      event.doctors.splice(doctorIndex, 1)
+      await organizer.save()
+
+      return { message: 'Doctor deleted successfully' }
+    } catch (error) {
+      throw new InternalServerErrorException(error.message || 'Something went wrong')
+    }
+  }
+
+  // ✅ Delete Staff
+  async deleteStaff(organizerId: string, eventId: string, staffId: string) {
+    try {
+      const organizer = await this.organizerModel.findById(organizerId)
+      if (!organizer) throw new NotFoundException('Organizer not found')
+
+      const event = organizer.events.find((ev) => ev._id.toString() === eventId)
+      if (!event) throw new NotFoundException('Event not found')
+
+      const staffIndex = event.staff.findIndex((st) => st._id.toString() === staffId)
+      if (staffIndex === -1) throw new NotFoundException('Staff not found')
+
+      event.staff.splice(staffIndex, 1)
+      await organizer.save()
+
+      return { message: 'Staff deleted successfully' }
+    } catch (error) {
+      throw new InternalServerErrorException(error.message || 'Something went wrong')
+    }
+  }
+
   async bookDoctor(organizerId: string, eventId: string, doctorId: string, patientId: string, patientData: any) {
     try {
       const organizer = await this.organizerModel.findById(organizerId)

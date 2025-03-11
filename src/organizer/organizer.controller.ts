@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Request, UseGuards, Param, Get, Put } from '@nestjs/common'
+import { Controller, Post, Body, Request, UseGuards, Param, Get, Put, Delete } from '@nestjs/common'
 import { OrganizerService } from './organizer.service'
 import { AuthGuard } from 'src/auth/auth.guard'
 import { Request as ExpressRequest } from 'express'
@@ -70,6 +70,36 @@ export class OrganizerController {
     return this.organizerService.editStaff(organizerId, eventId, staffId, updatedData)
   }
 
+  // ✅ Delete Event
+  @Delete('delete-event/:eventId')
+  async deleteEvent(@Request() req: AuthenticatedRequest, @Param('eventId') eventId: string) {
+    const organizerId = req.user._id
+    return this.organizerService.deleteEvent(organizerId, eventId)
+  }
+
+  // ✅ Delete Doctor from an Event
+  @Delete('delete-doctor/:eventId/:doctorId')
+  async deleteDoctor(
+    @Request() req: AuthenticatedRequest,
+    @Param('eventId') eventId: string,
+    @Param('doctorId') doctorId: string,
+  ) {
+    const organizerId = req.user._id
+    return this.organizerService.deleteDoctor(organizerId, eventId, doctorId)
+  }
+
+  // ✅ Delete Staff from an Event
+  @Delete('delete-staff/:eventId/:staffId')
+  async deleteStaff(
+    @Request() req: AuthenticatedRequest,
+    @Param('eventId') eventId: string,
+    @Param('staffId') staffId: string,
+  ) {
+    const organizerId = req.user._id
+    return this.organizerService.deleteStaff(organizerId, eventId, staffId)
+  }
+
+  // ✅ Book Doctor from an Event
   @Post('/:organizerId/:eventId/:doctorId/book')
   async bookDoctor(
     @Request() req: AuthenticatedRequest,
