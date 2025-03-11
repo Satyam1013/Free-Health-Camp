@@ -6,6 +6,7 @@ import * as bcrypt from 'bcrypt'
 import { MobileValidationService } from 'src/common/mobile-validation.service'
 import { Patient, PatientDocument } from 'src/patient/patient.schema'
 import { BookingStatus } from 'src/common/doctor-staff.schema'
+import { Cron } from '@nestjs/schedule'
 
 @Injectable()
 export class OrganizerService {
@@ -263,6 +264,30 @@ export class OrganizerService {
       return { message: 'Doctor booked successfully', doctor: safeDoctor }
     } catch (error) {
       throw new InternalServerErrorException(error.message || 'Something went wrong')
+    }
+  }
+
+  // ✅ Cron job to delete expired events (Runs every night at 2 AM)
+  @Cron('0 2 * * *') // Cron syntax: 0 minute, 2 hour, every day
+  async deleteExpiredEvents() {
+    try {
+      const now = new Date()
+      const organizers = await this.organizerModel.find()
+
+      for (const organizer of organizers) {
+        const initialEventCount = organizer.events.length
+
+        // Remove events where endTime is in the past
+        organizer.events = organizer.events.filter((event) => new Date(event.endTime) > now)
+
+        if (organizer.events.length !== initialEventCount) {
+          await organizer.save()
+        }
+      }
+
+      console.log('Expired events deleted successfully')
+    } catch (error) {
+      console.error('Error deleting expired events:', error.message)
     }
   }
 }

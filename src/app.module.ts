@@ -7,6 +7,7 @@ import { HospitalModule } from './hospital/hospital.module'
 import { LabModule } from './lab/lab.module'
 import { PatientModule } from './patient/patient.module'
 import { VisitDoctorModule } from './visit-doctor/visit-doctor.module'
+import { ScheduleModule } from '@nestjs/schedule'
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { VisitDoctorModule } from './visit-doctor/visit-doctor.module'
       inject: [ConfigService],
     }),
 
+    ScheduleModule.forRoot(),
     AuthModule,
     OrganizerModule,
     HospitalModule,
