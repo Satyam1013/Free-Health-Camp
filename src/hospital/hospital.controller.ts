@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Request, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Post, Request, UseGuards } from '@nestjs/common'
 import { HospitalService } from './hospital.service'
 import { AuthGuard } from 'src/auth/auth.guard'
 import { Request as ExpressRequest } from 'express'
@@ -15,9 +15,16 @@ interface AuthenticatedRequest extends ExpressRequest {
 export class HospitalController {
   constructor(private readonly hospitalService: HospitalService) {}
 
-  @Get(':city')
-  async getHospitalsByCity(@Param('city') city: string) {
-    return this.hospitalService.getHospitalsByCity(city)
+  @Post('create-available-test')
+  async createAvailableServices(@Request() req: AuthenticatedRequest, @Body() servicesData: any) {
+    const hospitalId = req.user._id
+    return this.hospitalService.createAvailableServices(hospitalId, servicesData)
+  }
+
+  @Get('available-tests')
+  async getAvailableServices(@Request() req: AuthenticatedRequest) {
+    const hospitalId = req.user._id
+    return this.hospitalService.getAvailableServices(hospitalId)
   }
 
   @Get('create-staff')

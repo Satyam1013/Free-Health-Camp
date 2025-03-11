@@ -49,4 +49,32 @@ export class HospitalService {
       throw new InternalServerErrorException('Something went wrong')
     }
   }
+
+  async createAvailableServices(hospitalId: string, servicesData: any) {
+    try {
+      const lab = await this.hospitalModel.findById(hospitalId)
+      if (!lab) {
+        throw new Error('Lab not found')
+      }
+
+      lab.availableServices.push(servicesData.testName)
+
+      await lab.save()
+      return { message: 'Test added successfully', lab }
+    } catch (error) {
+      return { message: 'Error adding test', error: error.message }
+    }
+  }
+
+  async getAvailableServices(hospitalId: string) {
+    try {
+      const lab = await this.hospitalModel.findById(hospitalId)
+      if (!lab) {
+        throw new Error('Lab not found')
+      }
+      return lab.availableServices
+    } catch (error) {
+      return { message: 'Error fetching available tests', error: error.message }
+    }
+  }
 }

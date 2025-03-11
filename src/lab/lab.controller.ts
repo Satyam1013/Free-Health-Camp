@@ -1,14 +1,29 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common'
+import { Body, Controller, Get, Post, Request, UseGuards } from '@nestjs/common'
 import { LabService } from './lab.service'
 import { AuthGuard } from 'src/auth/auth.guard'
+import { Request as ExpressRequest } from 'express'
+
+interface AuthenticatedRequest extends ExpressRequest {
+  user: {
+    _id: string
+    role?: string
+  }
+}
 
 @Controller('labs')
 @UseGuards(AuthGuard)
 export class LabController {
   constructor(private readonly labService: LabService) {}
 
-  @Get(':city')
-  async getLabsByCity(@Param('city') city: string) {
-    return this.labService.getLabsByCity(city)
+  @Post('create-available-test')
+  async addAvailableTest(@Request() req: AuthenticatedRequest, @Body() testData: any) {
+    const labId = req.user._id
+    return this.labService.createAvailableTest(labId, testData)
+  }
+
+  @Get('available-tests')
+  async getAvailableTest(@Request() req: AuthenticatedRequest) {
+    const labId = req.user._id
+    return this.labService.getAvailableTest(labId)
   }
 }
