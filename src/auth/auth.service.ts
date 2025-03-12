@@ -59,7 +59,7 @@ export class AuthService {
     try {
       const { mobile, password } = loginDto
       let user: any = null
-      let role: UserRole | '' = ''
+      let role: UserRole | null = null
 
       // 1️⃣ Check if the mobile exists in the Organizer collection
       const organizer = await this.organizerModel.findOne({ mobile })
@@ -80,11 +80,11 @@ export class AuthService {
 
           if (foundEvent) {
             user = foundEvent.doctors.find((doc) => doc.mobile === mobile)
-            role = user ? UserRole.ORGANIZER_DOCTOR : ''
+            role = UserRole.ORGANIZER_DOCTOR
 
             if (!user) {
               user = foundEvent.staff.find((staff) => staff.mobile === mobile)
-              role = user ? UserRole.ORGANIZER_STAFF : ''
+              role = UserRole.ORGANIZER_STAFF
             }
           }
         }
@@ -92,9 +92,20 @@ export class AuthService {
 
       // 3️⃣ Check Other Roles (VisitDoctor, Lab, Hospital, Patient)
       if (!user) {
-        user = await this.visitDoctorModel.findOne({ mobile })
-        if (user) role = UserRole.VISIT_DOCTOR
+        const visitDoctor = await this.visitDoctorModel.findOne({
+          visitDetails: { $elemMatch: { 'staff.mobile': mobile } },
+        })
+
+        if (visitDoctor) {
+          const foundVisit = visitDoctor.visitDetails.find((visit) => visit.staff.some((s) => s.mobile === mobile))
+
+          if (foundVisit) {
+            user = foundVisit.staff.find((s) => s.mobile === mobile)
+            role = UserRole.VISIT_DOCTOR_STAFF
+          }
+        }
       }
+
       if (!user) {
         user = await this.labModel.findOne({ mobile })
         if (user) role = UserRole.LAB
@@ -145,6 +156,7 @@ export class AuthService {
       case UserRole.ORGANIZER_STAFF:
         return this.organizerModel
       case UserRole.VISIT_DOCTOR:
+      case UserRole.VISIT_DOCTOR_STAFF:
         return this.visitDoctorModel
       case UserRole.LAB:
         return this.labModel

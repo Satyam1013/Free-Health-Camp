@@ -15,10 +15,20 @@ interface AuthenticatedRequest extends ExpressRequest {
 export class VisitDoctorController {
   constructor(private readonly visitDoctorService: VisitDoctorService) {}
 
-  @Get('create-staff')
-  async createStaff(@Request() req: AuthenticatedRequest, @Body() staffData: any) {
+  @Post('create-visit-detail')
+  async addEvent(@Request() req: AuthenticatedRequest, @Body() visitDetailData: any) {
     const visitDoctorId = req.user._id
-    return this.visitDoctorService.createStaff(visitDoctorId, staffData)
+    return this.visitDoctorService.createVisitDetail(visitDoctorId, visitDetailData)
+  }
+
+  @Post('create-staff/:visitDetailId')
+  async addStaff(
+    @Request() req: AuthenticatedRequest,
+    @Param('visitDetailId') visitDetailId: string,
+    @Body() staffData: any,
+  ) {
+    const visitDoctorId = req.user._id
+    return this.visitDoctorService.createStaff(visitDoctorId, visitDetailId, staffData)
   }
 
   @Get(':doctorId/booked-patients')

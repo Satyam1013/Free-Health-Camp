@@ -5,45 +5,85 @@ import { VisitDoctor, VisitDoctorDocument } from './visit-doctor.schema'
 import { Model, Types } from 'mongoose'
 import { Patient, PatientDocument } from 'src/patient/patient.schema'
 import { BookingStatus } from 'src/common/doctor-staff.schema'
+import { MobileValidationService } from 'src/common/mobile-validation.service'
 
 @Injectable()
 export class VisitDoctorService {
   constructor(
     @InjectModel(VisitDoctor.name) private visitDoctorModel: Model<VisitDoctorDocument>,
     @InjectModel(Patient.name) private patientModel: Model<PatientDocument>,
+    private readonly mobileValidationService: MobileValidationService,
   ) {}
 
-  async createStaff(visitDoctorId: string, staffData: any) {
+  async createVisitDetail(visitDetailId: string, visitDetailData: any) {
     try {
-      const visitDoctor = await this.visitDoctorModel.findById(visitDoctorId)
-      if (!visitDoctor) {
-        throw new BadRequestException('Invalid visitDoctor')
-      }
-      const isDuplicateStaff = visitDoctor.staff.some((staff) => staff.mobile === staffData.mobile)
+      const visitDoctor = await this.visitDoctorModel.findById(visitDetailId)
+      if (!visitDoctor) throw new BadRequestException('Invalid visitDoctor')
 
-      if (isDuplicateStaff) {
-        throw new BadRequestException('Mobile number already exists in doctors or staff')
-      }
-
-      // ✅ Check if mobile already exists in visitDoctor, Doctors, or Staff
-      const isMobileExists = await this.visitDoctorModel.findOne({
-        $or: [{ 'staff.mobile': staffData.mobile }, { mobile: staffData.mobile }],
-      })
-
-      if (isMobileExists) {
-        throw new BadRequestException('Mobile number already exists')
+      // ✅ Check if last event was created within 24 hours
+      const lastEvent = visitDoctor.visitDetails[visitDoctor.visitDetails.length - 1]
+      if (lastEvent) {
+        const lastEventDate = new Date(lastEvent.eventDate)
+        const now = new Date()
+        const hoursDifference = (now.getTime() - lastEventDate.getTime()) / (1000 * 60 * 60)
+        if (hoursDifference < 24) throw new BadRequestException('Only 1 event can be created within 24 hours')
       }
 
-      staffData.password = await bcrypt.hash(staffData.password, 10)
+      // ✅ Ensure startTime and endTime are properly parsed as Date objects
+      const startTime = new Date(`${visitDetailData.eventDate}T${visitDetailData.startTime}:00.000Z`)
+      const endTime = new Date(`${visitDetailData.eventDate}T${visitDetailData.endTime}:00.000Z`)
 
-      visitDoctor.staff.push(staffData)
+      if (startTime >= endTime) throw new BadRequestException('Start time must be before end time')
+
+      // ✅ Explicitly assign an ObjectId to ensure `_id` is generated
+      const newEvent = {
+        _id: new Types.ObjectId(),
+        ...visitDetailData,
+        staff: [],
+      }
+
+      visitDoctor.visitDetails.push(newEvent)
       await visitDoctor.save()
 
-      return visitDoctor
-    } catch (error) {
-      if (error.name === 'ValidationError') {
-        throw new BadRequestException(error.message)
+      return {
+        message: 'Event created successfully',
+        event: newEvent,
       }
+    } catch {
+      throw new InternalServerErrorException('Something went wrong')
+    }
+  }
+
+  async createStaff(visitDoctorId: string, visitDetailId: string, staffData: any) {
+    try {
+      // ✅ Check if mobile exists across all collections
+      await this.mobileValidationService.checkDuplicateMobile(staffData.mobile)
+
+      // ✅ Find VisitDoctor
+      const visitDoctor = await this.visitDoctorModel.findById(visitDoctorId)
+      if (!visitDoctor) throw new BadRequestException('Invalid VisitDoctor')
+
+      // ✅ Find the correct visitDetail entry
+      const visitDetail = visitDoctor.visitDetails.find((visit) => visit._id.toString() === visitDetailId)
+      if (!visitDetail) throw new BadRequestException('Invalid VisitDetail')
+
+      // ✅ Prepare new staff object with hashed password
+      const newStaff = { _id: new Types.ObjectId(), ...staffData }
+      newStaff.password = await bcrypt.hash(newStaff.password, 10)
+
+      // ✅ Push staff to visitDetail.staff
+      visitDetail.staff.push(newStaff)
+      await visitDoctor.save()
+
+      return {
+        message: 'Staff added successfully',
+        staff: {
+          _id: newStaff._id,
+          name: newStaff.name,
+          mobile: newStaff.mobile,
+        },
+      }
+    } catch {
       throw new InternalServerErrorException('Something went wrong')
     }
   }

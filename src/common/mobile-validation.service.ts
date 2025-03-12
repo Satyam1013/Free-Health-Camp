@@ -27,6 +27,7 @@ export class MobileValidationService {
       this.patientModel.findOne({ mobile }),
       this.organizerModel.findOne({ 'events.doctors.mobile': mobile }),
       this.organizerModel.findOne({ 'events.staff.mobile': mobile }),
+      this.visitDoctorModel.findOne({ 'visitDetails.staff.mobile': mobile }),
     ])
 
     if (existingUser.some((user) => user !== null)) {

@@ -10,6 +10,7 @@ export enum UserRole {
   // ✅ Sub-Roles
   ORGANIZER_DOCTOR = 'OrganizerDoctor',
   ORGANIZER_STAFF = 'OrganizerStaff',
+  VISIT_DOCTOR_STAFF = 'VisitDoctorStaff',
 }
 
 export class CreateUserDto {

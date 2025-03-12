@@ -5,10 +5,12 @@ import { VisitDoctorService } from './visit-doctor.service'
 import { VisitDoctorController } from './visit-doctor.controller'
 import { AuthModule } from 'src/auth/auth.module'
 import { PatientModule } from 'src/patient/patient.module'
+import { MobileValidationModule } from 'src/common/mobile-validation.module'
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: VisitDoctor.name, schema: VisitDoctorSchema }]),
+    MobileValidationModule,
     forwardRef(() => AuthModule),
     forwardRef(() => PatientModule),
   ],
