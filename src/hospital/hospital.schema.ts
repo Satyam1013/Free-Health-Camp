@@ -10,6 +10,9 @@ export class Hospital extends BaseModel {
   @Prop({ required: true, default: UserRole.HOSPITAL })
   role: UserRole
 
+  @Prop({ required: true })
+  workId: string
+
   @Prop({ type: [DoctorSchema], default: [] })
   doctors: Doctor[]
 
