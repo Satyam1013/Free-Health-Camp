@@ -33,10 +33,4 @@ export class CreateUserDto {
   @IsNotEmpty({ message: 'Mobile number is required' })
   @IsNumber({}, { message: 'Mobile must be a number' })
   mobile: number
-
-  @IsString()
-  address: string
-
-  @IsString()
-  city: string
 }

@@ -16,7 +16,7 @@ export class VisitDoctorController {
   constructor(private readonly visitDoctorService: VisitDoctorService) {}
 
   @Post('create-visit-detail')
-  async addEvent(@Request() req: AuthenticatedRequest, @Body() visitDetailData: any) {
+  async addVisitDetail(@Request() req: AuthenticatedRequest, @Body() visitDetailData: any) {
     const visitDoctorId = req.user._id
     return this.visitDoctorService.createVisitDetail(visitDoctorId, visitDetailData)
   }

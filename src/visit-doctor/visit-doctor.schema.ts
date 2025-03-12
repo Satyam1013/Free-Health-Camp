@@ -33,10 +33,10 @@ class VisitDetails {
   _id: Types.ObjectId
 
   @Prop({ required: true })
-  eventName: string
+  visitName: string
 
   @Prop({ required: true })
-  eventPlace: string
+  visitPlace: string
 
   @Prop({ required: true })
   eventDate: Date
