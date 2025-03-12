@@ -1,4 +1,4 @@
-import { IsEnum, IsInt, IsNotEmpty, IsString, MinLength } from 'class-validator'
+import { IsEnum, IsNotEmpty, IsNumber, IsString, MinLength } from 'class-validator'
 
 export enum UserRole {
   ORGANIZER = 'Organizer',
@@ -19,14 +19,14 @@ export class CreateUserDto {
 
   @IsString()
   @IsNotEmpty()
-  @MinLength(6, { message: 'Password must be at least 6 characters long' })
+  @MinLength(4, { message: 'Password must be at least 4 characters long' })
   password: string
 
   @IsEnum(UserRole, { message: 'Invalid role' })
   role: UserRole
 
-  @IsInt({ message: 'Mobile number must be a valid integer' })
-  @IsNotEmpty()
+  @IsNotEmpty({ message: 'Mobile number is required' })
+  @IsNumber({}, { message: 'Mobile must be a number' })
   mobile: number
 
   @IsString()

@@ -21,7 +21,7 @@ export class Doctor {
   @Prop({ required: true })
   address: string
 
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true })
   mobile: number
 
   @Prop({ required: true })
@@ -70,7 +70,7 @@ export class Staff {
   @Prop({ required: true })
   address: string
 
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true })
   mobile: number
 
   @Prop({ required: true })

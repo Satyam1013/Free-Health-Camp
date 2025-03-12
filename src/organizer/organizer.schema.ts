@@ -19,11 +19,11 @@ class Event {
   @Prop({ required: true })
   eventDate: Date
 
-  @Prop({ required: true })
-  startTime: string
+  @Prop({ type: Date, required: true })
+  startTime: Date
 
-  @Prop({ required: true })
-  endTime: string
+  @Prop({ type: Date, required: true })
+  endTime: Date
 
   @Prop({ type: [DoctorSchema], default: [] })
   doctors: Doctor[]

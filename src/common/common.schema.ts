@@ -1,7 +1,7 @@
 import { Prop } from '@nestjs/mongoose'
 
 export class BaseModel {
-  @Prop({ required: true })
+  @Prop({ required: true, unique: true })
   mobile: number
 
   @Prop({ required: true })

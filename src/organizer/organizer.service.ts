@@ -22,6 +22,7 @@ export class OrganizerService {
       const organizer = await this.organizerModel.findById(organizerId)
       if (!organizer) throw new BadRequestException('Invalid Organizer')
 
+      // ✅ Check if last event was created within 24 hours
       const lastEvent = organizer.events[organizer.events.length - 1]
       if (lastEvent) {
         const lastEventDate = new Date(lastEvent.eventDate)
@@ -30,8 +31,19 @@ export class OrganizerService {
         if (hoursDifference < 24) throw new BadRequestException('Only 1 event can be created within 24 hours')
       }
 
+      // ✅ Ensure startTime and endTime are properly parsed as Date objects
+      const startTime = new Date(`${eventData.eventDate}T${eventData.startTime}:00.000Z`)
+      const endTime = new Date(`${eventData.eventDate}T${eventData.endTime}:00.000Z`)
+
+      if (startTime >= endTime) throw new BadRequestException('Start time must be before end time')
+
       // ✅ Explicitly assign an ObjectId to ensure `_id` is generated
-      const newEvent = { _id: new Types.ObjectId(), ...eventData, doctors: [], staff: [] }
+      const newEvent = {
+        _id: new Types.ObjectId(),
+        ...eventData,
+        doctors: [],
+        staff: [],
+      }
 
       organizer.events.push(newEvent)
       await organizer.save()
