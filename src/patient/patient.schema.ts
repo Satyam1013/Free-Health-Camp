@@ -8,7 +8,7 @@ export type PatientDocument = Patient & Document
 
 @Schema()
 export class Patient {
-  @Prop({ required: true })
+  @Prop({ required: true, unique: true })
   mobile: number
 
   @Prop({ required: true })
@@ -23,7 +23,7 @@ export class Patient {
   @Prop({ type: String, enum: Gender, required: true })
   gender: Gender
 
-  @Prop({ unique: true, required: true })
+  @Prop({ required: true, unique: true })
   email: string
 
   @Prop({ required: true, default: UserRole.PATIENT })
@@ -37,50 +37,6 @@ export class Patient {
 
   @Prop({ default: BookingStatus.Pending })
   status?: BookingStatus
-
-  @Prop({
-    type: [
-      {
-        eventId: String,
-        eventName: String,
-        eventPlace: String,
-        eventDate: Date,
-        startTime: String,
-        endTime: String,
-      },
-    ],
-    default: [],
-  })
-  bookedEvents: Array<{
-    eventId: string
-    eventName: string
-    eventPlace: string
-    eventDate: Date
-    startTime: string
-    endTime: string
-  }>
-
-  @Prop({
-    type: [{ labId: String, name: String, address: String, services: [String] }],
-    default: [],
-  })
-  bookedLabs: Array<{
-    labId: string
-    name: string
-    address: string
-    services: string[]
-  }>
-
-  @Prop({
-    type: [{ hospitalId: String, name: String, address: String, services: [String] }],
-    default: [],
-  })
-  bookedHospitals: Array<{
-    hospitalId: string
-    name: string
-    address: string
-    services: string[]
-  }>
 }
 
 export const PatientSchema = SchemaFactory.createForClass(Patient)
