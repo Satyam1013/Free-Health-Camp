@@ -31,7 +31,7 @@ export class MobileValidationService {
     ])
 
     if (existingUser.some((user) => user !== null)) {
-      throw new BadRequestException('Mobile number already exists in another role')
+      throw new BadRequestException('Mobile number already exists!')
     }
   }
 }

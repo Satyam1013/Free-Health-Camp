@@ -59,7 +59,7 @@ export class AuthService {
     try {
       const { mobile, password } = loginDto
       let user: any = null
-      let role: UserRole | null = null
+      let role: UserRole | '' = ''
 
       // 1️⃣ Check if the mobile exists in the Organizer collection
       const organizer = await this.organizerModel.findOne({ mobile })
@@ -92,8 +92,16 @@ export class AuthService {
 
       // 3️⃣ Check Other Roles (VisitDoctor, Lab, Hospital, Patient)
       if (!user) {
+        user = await this.visitDoctorModel.findOne({ mobile })
+        if (user) {
+          role = UserRole.VISIT_DOCTOR
+        }
+      }
+
+      // If not a VisitDoctor, check inside visitDetails for Staff
+      if (!user) {
         const visitDoctor = await this.visitDoctorModel.findOne({
-          visitDetails: { $elemMatch: { 'staff.mobile': mobile } },
+          'visitDetails.staff.mobile': mobile,
         })
 
         if (visitDoctor) {
