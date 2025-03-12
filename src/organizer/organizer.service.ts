@@ -74,7 +74,14 @@ export class OrganizerService {
       event.doctors.push(newDoctor)
       await organizer.save()
 
-      return event
+      return {
+        message: 'Doctor added successfully',
+        doctor: {
+          _id: newDoctor._id,
+          name: newDoctor.name,
+          mobile: newDoctor.mobile,
+        },
+      }
     } catch {
       throw new InternalServerErrorException('Something went wrong')
     }
@@ -98,7 +105,14 @@ export class OrganizerService {
       event.staff.push(newStaff)
       await organizer.save()
 
-      return event
+      return {
+        message: 'Staff added successfully',
+        staff: {
+          _id: newStaff._id,
+          name: newStaff.name,
+          mobile: newStaff.mobile,
+        },
+      }
     } catch {
       throw new InternalServerErrorException('Something went wrong')
     }
