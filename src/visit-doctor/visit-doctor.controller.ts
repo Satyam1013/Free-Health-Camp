@@ -31,32 +31,40 @@ export class VisitDoctorController {
     return this.visitDoctorService.createStaff(visitDoctorId, visitDetailId, staffData)
   }
 
-  @Get(':doctorId/booked-patients')
+  @Get('visit-details')
+  async getAllVisitDetails(@Request() req: AuthenticatedRequest) {
+    const visitDoctorId = req.user._id
+    return this.visitDoctorService.getAllVisitDetails(visitDoctorId)
+  }
+
+  @Get(':doctorId/:visitId/booked-patients')
   async getBookedPatients(@Param('doctorId') doctorId: string) {
     return this.visitDoctorService.getBookedPatients(doctorId)
   }
 
-  @Get(':doctorId/patients')
-  async getPatients(@Param('doctorId') doctorId: string) {
-    return this.visitDoctorService.getPatients(doctorId)
+  @Get(':doctorId/:visitId/patients')
+  async getPatients(@Param('doctorId') doctorId: string, @Param('visitId') visitId: string) {
+    return this.visitDoctorService.getPatients(doctorId, visitId)
   }
 
-  @Put(':doctorId/patient/:patientId')
+  @Put(':doctorId/:visitId/patient/:patientId')
   async updatePatientStatus(
     @Param('doctorId') doctorId: string,
+    @Param('visitId') visitId: string,
     @Param('patientId') patientId: string,
     @Body() updateData: any,
   ) {
-    return this.visitDoctorService.updatePatientStatus(doctorId, patientId, updateData)
+    return this.visitDoctorService.updatePatientStatus(doctorId, visitId, patientId, updateData)
   }
 
-  @Post(':doctorId/book')
+  @Post(':doctorId/:visitId/book')
   async bookDoctor(
     @Request() req: AuthenticatedRequest,
     @Param('doctorId') doctorId: string,
+    @Param('visitDetailId') visitDetailId: string,
     @Body() patientData: any,
   ) {
     const patientId = req.user._id
-    return this.visitDoctorService.bookVisitDoctor(patientId, doctorId, patientData)
+    return this.visitDoctorService.bookVisitDoctor(patientId, doctorId, visitDetailId, patientData)
   }
 }

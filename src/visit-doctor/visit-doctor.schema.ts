@@ -28,6 +28,38 @@ class Staff {
 export const StaffSchema = SchemaFactory.createForClass(Staff)
 
 @Schema()
+class Patient {
+  @Prop({ type: Types.ObjectId, auto: true })
+  _id: Types.ObjectId
+
+  @Prop({ required: true })
+  name: string
+
+  @Prop()
+  email: string
+
+  @Prop({ required: true })
+  mobile: number
+
+  @Prop({ required: true })
+  age: number
+
+  @Prop({ required: true })
+  gender: Gender
+
+  @Prop({ required: true })
+  bookingDate: Date
+
+  @Prop()
+  nextVisitDate?: Date
+
+  @Prop({ required: true })
+  status: BookingStatus
+}
+
+export const PatientSchema = SchemaFactory.createForClass(Patient)
+
+@Schema()
 class VisitDetails {
   @Prop({ type: Types.ObjectId, auto: true })
   _id: Types.ObjectId
@@ -49,6 +81,9 @@ class VisitDetails {
 
   @Prop({ type: [StaffSchema], default: [] })
   staff: Staff[]
+
+  @Prop({ type: [PatientSchema], default: [] })
+  patients: Patient[]
 }
 
 const VisitSchema = SchemaFactory.createForClass(VisitDetails)
@@ -65,34 +100,6 @@ export class VisitDoctor extends BaseModel {
 
   @Prop({ type: [VisitSchema], default: [] })
   visitDetails: VisitDetails[]
-
-  @Prop({
-    type: [
-      {
-        _id: { type: Types.ObjectId, auto: true },
-        name: String,
-        email: String,
-        mobile: Number,
-        gender: String,
-        age: Number,
-        bookingDate: Date,
-        nextVisitDate: Date,
-        status: String,
-      },
-    ],
-    default: [],
-  })
-  patients: Array<{
-    _id: Types.ObjectId
-    name: string
-    email: string
-    mobile: number
-    age: number
-    gender: Gender
-    bookingDate: Date
-    nextVisitDate?: Date
-    status: BookingStatus
-  }>
 }
 
 export const VisitDoctorSchema = SchemaFactory.createForClass(VisitDoctor)

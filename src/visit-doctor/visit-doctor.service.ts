@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, InternalServerErrorException } from '@nestjs/common'
+import { Injectable, BadRequestException, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import * as bcrypt from 'bcrypt'
 import { InjectModel } from '@nestjs/mongoose'
 import { VisitDoctor, VisitDoctorDocument } from './visit-doctor.schema'
@@ -88,18 +88,28 @@ export class VisitDoctorService {
     }
   }
 
+  async getAllVisitDetails(visitDoctorId: string) {
+    const visitDoctor = await this.visitDoctorModel.findById(visitDoctorId).select('visitDetails')
+    if (!visitDoctor) throw new NotFoundException('Visit Doctor not found')
+    return visitDoctor.visitDetails
+  }
+
   async getBookedPatients(doctorId: string) {
     return this.patientModel.find({ 'bookedDoctors.doctorId': doctorId }).exec()
   }
-
-  async getPatients(doctorId: string) {
+  async getPatients(doctorId: string, visitId: string) {
     const visitDoctor = await this.visitDoctorModel.findById(doctorId)
 
     if (!visitDoctor) {
       throw new BadRequestException('Doctor not found')
     }
 
-    return visitDoctor.patients
+    const visit = visitDoctor.visitDetails.find((v) => v._id.toString() === visitId)
+    if (!visit) {
+      throw new BadRequestException('Visit not found')
+    }
+
+    return visit.patients
   }
 
   /**
@@ -107,6 +117,7 @@ export class VisitDoctorService {
    */
   async updatePatientStatus(
     doctorId: string,
+    visitId: string,
     patientId: string,
     updateData: { status?: BookingStatus; nextVisitDate?: string },
   ) {
@@ -116,7 +127,12 @@ export class VisitDoctorService {
       throw new BadRequestException('Doctor not found')
     }
 
-    const patient = visitDoctor.patients.find((p) => p._id.toString() === patientId)
+    const visit = visitDoctor.visitDetails.find((v) => v._id.toString() === visitId)
+    if (!visit) {
+      throw new BadRequestException('Visit not found')
+    }
+
+    const patient = visit.patients.find((p) => p._id.toString() === patientId)
     if (!patient) {
       throw new BadRequestException('Patient not found')
     }
@@ -127,11 +143,16 @@ export class VisitDoctorService {
     return { message: 'Patient status updated', patient }
   }
 
-  async bookVisitDoctor(patientId: string, doctorId: string, patientData: any) {
+  async bookVisitDoctor(patientId: string, doctorId: string, visitDetailId: string, patientData: any) {
     try {
       const doctor = await this.visitDoctorModel.findById(doctorId)
       if (!doctor) {
         throw new BadRequestException('Doctor not found')
+      }
+
+      const visitDetail = doctor.visitDetails.find((v) => v._id.toString() === visitDetailId)
+      if (!visitDetail) {
+        throw new BadRequestException('Visit Detail not found')
       }
 
       const patient = await this.patientModel.findById(patientId)
@@ -141,13 +162,13 @@ export class VisitDoctorService {
 
       const patientObjectId = new Types.ObjectId(patient._id.toString())
 
-      // Check if the patient is already booked with this doctor
-      const isAlreadyBooked = doctor.patients.some((p) => p._id.toString() === patientId)
+      // Check if the patient is already booked in this visit
+      const isAlreadyBooked = visitDetail.patients.some((p) => p._id.toString() === patientId)
       if (isAlreadyBooked) {
-        throw new BadRequestException('This patient has already booked an appointment with this doctor')
+        throw new BadRequestException('This patient has already booked an appointment for this visit')
       }
 
-      // Add patient ID to the visit doctor patients list
+      // Add patient ID to the visit's patient list
       const newPatient = {
         _id: patientObjectId,
         name: patient.username,
@@ -160,7 +181,7 @@ export class VisitDoctorService {
         status: BookingStatus.Booked,
       }
 
-      doctor.patients.push(newPatient)
+      visitDetail.patients.push(newPatient)
       await doctor.save()
 
       const safeDoctor = {
@@ -169,7 +190,7 @@ export class VisitDoctorService {
         address: doctor.address,
       }
 
-      return { message: 'Doctor booked successfully', doctor: safeDoctor }
+      return { message: 'Visit Doctor booked successfully', safeDoctor }
     } catch (error) {
       throw new InternalServerErrorException(error.message || 'Something went wrong')
     }

@@ -59,7 +59,7 @@ export class AuthService {
     try {
       const { mobile, password } = loginDto
       let user: any = null
-      let role: UserRole | '' = ''
+      let role: UserRole | null = null
 
       // 1️⃣ Check if the mobile exists in the Organizer collection
       const organizer = await this.organizerModel.findOne({ mobile })
