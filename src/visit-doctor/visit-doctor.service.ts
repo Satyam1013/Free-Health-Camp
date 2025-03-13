@@ -15,6 +15,11 @@ export class VisitDoctorService {
     private readonly mobileValidationService: MobileValidationService,
   ) {}
 
+  private async findVisitDoctor(visitDoctorId: string) {
+    const visitDoctor = await this.visitDoctorModel.findById(visitDoctorId)
+    if (!visitDoctor) throw new NotFoundException('Doctor not found')
+    return visitDoctor
+  }
   async createVisitDetail(visitDetailId: string, visitDetailData: any) {
     try {
       const visitDoctor = await this.visitDoctorModel.findById(visitDetailId)
@@ -29,10 +34,13 @@ export class VisitDoctorService {
         if (hoursDifference < 24) throw new BadRequestException('Only 1 event can be created within 24 hours')
       }
 
-      // ✅ Ensure startTime and endTime are properly parsed as Date objects
-      const startTime = new Date(`${visitDetailData.eventDate}T${visitDetailData.startTime}:00.000Z`)
-      const endTime = new Date(`${visitDetailData.eventDate}T${visitDetailData.endTime}:00.000Z`)
+      // ✅ Parse dates correctly
+      const eventDate = new Date(visitDetailData.eventDate)
+      const startTime = new Date(visitDetailData.startTime)
+      const endTime = new Date(visitDetailData.endTime)
 
+      // ✅ Ensure startTime and endTime are valid
+      if (startTime < eventDate) throw new BadRequestException('Start time cannot be before the event date')
       if (startTime >= endTime) throw new BadRequestException('Start time must be before end time')
 
       // ✅ Explicitly assign an ObjectId to ensure `_id` is generated
@@ -40,6 +48,7 @@ export class VisitDoctorService {
         _id: new Types.ObjectId(),
         ...visitDetailData,
         staff: [],
+        patients: [],
       }
 
       visitDoctor.visitDetails.push(newEvent)
@@ -49,29 +58,24 @@ export class VisitDoctorService {
         message: 'Event created successfully',
         event: newEvent,
       }
-    } catch {
-      throw new InternalServerErrorException('Something went wrong')
+    } catch (error) {
+      throw new InternalServerErrorException(error.message || 'Something went wrong')
     }
   }
 
   async createStaff(visitDoctorId: string, visitDetailId: string, staffData: any) {
     try {
-      // ✅ Check if mobile exists across all collections
       await this.mobileValidationService.checkDuplicateMobile(staffData.mobile)
 
-      // ✅ Find VisitDoctor
       const visitDoctor = await this.visitDoctorModel.findById(visitDoctorId)
       if (!visitDoctor) throw new BadRequestException('Invalid VisitDoctor')
 
-      // ✅ Find the correct visitDetail entry
       const visitDetail = visitDoctor.visitDetails.find((visit) => visit._id.toString() === visitDetailId)
       if (!visitDetail) throw new BadRequestException('Invalid VisitDetail')
 
-      // ✅ Prepare new staff object with hashed password
       const newStaff = { _id: new Types.ObjectId(), ...staffData }
       newStaff.password = await bcrypt.hash(newStaff.password, 10)
 
-      // ✅ Push staff to visitDetail.staff
       visitDetail.staff.push(newStaff)
       await visitDoctor.save()
 
@@ -89,63 +93,40 @@ export class VisitDoctorService {
   }
 
   async getAllVisitDetails(visitDoctorId: string) {
-    const visitDoctor = await this.visitDoctorModel.findById(visitDoctorId).select('visitDetails')
-    if (!visitDoctor) throw new NotFoundException('Visit Doctor not found')
-    return visitDoctor.visitDetails
-  }
-
-  async getBookedPatients(doctorId: string) {
-    return this.patientModel.find({ 'bookedDoctors.doctorId': doctorId }).exec()
-  }
-  async getPatients(doctorId: string, visitId: string) {
-    const visitDoctor = await this.visitDoctorModel.findById(doctorId)
-
-    if (!visitDoctor) {
-      throw new BadRequestException('Doctor not found')
+    try {
+      const visitDoctor = await this.visitDoctorModel.findById(visitDoctorId).select('visitDetails')
+      if (!visitDoctor) throw new NotFoundException('Visit Doctor not found')
+      return visitDoctor.visitDetails
+    } catch (error) {
+      throw new InternalServerErrorException(error.message || 'Something went wrong')
     }
-
-    const visit = visitDoctor.visitDetails.find((v) => v._id.toString() === visitId)
-    if (!visit) {
-      throw new BadRequestException('Visit not found')
-    }
-
-    return visit.patients
   }
 
   /**
-   * 🏥 UPDATE PATIENT STATUS
+   * 🏥 UPDATE PATIENT
    */
-  async updatePatientStatus(
-    doctorId: string,
-    visitId: string,
-    patientId: string,
-    updateData: { status?: BookingStatus; nextVisitDate?: string },
-  ) {
-    const visitDoctor = await this.visitDoctorModel.findById(doctorId)
+  async updatePatient(visitDoctorId: string, visitDetailId: string, patientId: string, updateData: any) {
+    try {
+      const visitDoctor = await this.findVisitDoctor(visitDoctorId)
 
-    if (!visitDoctor) {
-      throw new BadRequestException('Doctor not found')
+      const visit = visitDoctor.visitDetails.find((v) => v._id.toString() === visitDetailId)
+      if (!visit) throw new BadRequestException('Visit not found')
+
+      const patient = visit.patients.find((p) => p._id.toString() === patientId)
+      if (!patient) throw new BadRequestException('Patient not found')
+
+      Object.assign(patient, updateData)
+      await visitDoctor.save()
+
+      return { message: 'Patient status updated', patient }
+    } catch (error) {
+      throw new InternalServerErrorException(error.message || 'Something went wrong')
     }
-
-    const visit = visitDoctor.visitDetails.find((v) => v._id.toString() === visitId)
-    if (!visit) {
-      throw new BadRequestException('Visit not found')
-    }
-
-    const patient = visit.patients.find((p) => p._id.toString() === patientId)
-    if (!patient) {
-      throw new BadRequestException('Patient not found')
-    }
-
-    Object.assign(patient, updateData) // ✅ Update status or next visit date
-    await visitDoctor.save()
-
-    return { message: 'Patient status updated', patient }
   }
 
-  async bookVisitDoctor(patientId: string, doctorId: string, visitDetailId: string, patientData: any) {
+  async bookVisitDoctor(patientId: string, visitDoctorId: string, visitDetailId: string, patientData: any) {
     try {
-      const doctor = await this.visitDoctorModel.findById(doctorId)
+      const doctor = await this.visitDoctorModel.findById(visitDoctorId)
       if (!doctor) {
         throw new BadRequestException('Doctor not found')
       }
@@ -191,6 +172,76 @@ export class VisitDoctorService {
       }
 
       return { message: 'Visit Doctor booked successfully', safeDoctor }
+    } catch (error) {
+      throw new InternalServerErrorException(error.message || 'Something went wrong')
+    }
+  }
+
+  async updateVisitDetails(visitDoctorId: string, visitDetailId: string, updateData: any) {
+    try {
+      const visitDoctor = await this.findVisitDoctor(visitDoctorId)
+
+      const visitDetail = visitDoctor.visitDetails.find((v) => v._id.toString() === visitDetailId)
+      if (!visitDetail) throw new BadRequestException('Visit detail not found')
+
+      Object.assign(visitDetail, updateData)
+      await visitDoctor.save()
+
+      return { message: 'Visit details updated successfully', visitDetail }
+    } catch (error) {
+      throw new InternalServerErrorException(error.message || 'Something went wrong')
+    }
+  }
+
+  async updateStaff(visitDoctorId: string, visitDetailId: string, staffId: string, updateData: any) {
+    try {
+      const visitDoctor = await this.findVisitDoctor(visitDoctorId)
+
+      const visitDetail = visitDoctor.visitDetails.find((v) => v._id.toString() === visitDetailId)
+      if (!visitDetail) throw new BadRequestException('Visit detail not found')
+
+      const staff = visitDetail.staff.find((s) => s._id.toString() === staffId)
+      if (!staff) throw new BadRequestException('Staff not found')
+
+      Object.assign(staff, updateData)
+      await visitDoctor.save()
+
+      return { message: 'Staff updated successfully', staff }
+    } catch (error) {
+      throw new InternalServerErrorException(error.message || 'Something went wrong')
+    }
+  }
+
+  async deleteVisitDetails(visitDoctorId: string, visitDetailId: string) {
+    try {
+      const visitDoctor = await this.findVisitDoctor(visitDoctorId)
+
+      const visitIndex = visitDoctor.visitDetails.findIndex((v) => v._id.toString() === visitDetailId)
+      if (visitIndex === -1) throw new BadRequestException('Visit detail not found')
+
+      visitDoctor.visitDetails.splice(visitIndex, 1)
+      await visitDoctor.save()
+
+      return { message: 'Visit detail deleted successfully' }
+    } catch (error) {
+      throw new InternalServerErrorException(error.message || 'Something went wrong')
+    }
+  }
+
+  async deleteStaff(visitDoctorId: string, visitDetailId: string, staffId: string) {
+    try {
+      const visitDoctor = await this.findVisitDoctor(visitDoctorId)
+
+      const visitDetail = visitDoctor.visitDetails.find((v) => v._id.toString() === visitDetailId)
+      if (!visitDetail) throw new BadRequestException('Visit detail not found')
+
+      const staffIndex = visitDetail.staff.findIndex((s) => s._id.toString() === staffId)
+      if (staffIndex === -1) throw new BadRequestException('Staff not found')
+
+      visitDetail.staff.splice(staffIndex, 1)
+      await visitDoctor.save()
+
+      return { message: 'Staff deleted successfully' }
     } catch (error) {
       throw new InternalServerErrorException(error.message || 'Something went wrong')
     }

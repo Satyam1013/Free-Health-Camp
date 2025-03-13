@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, Request, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Post, Put, Request, UseGuards } from '@nestjs/common'
 import { VisitDoctorService } from './visit-doctor.service'
 import { Request as ExpressRequest } from 'express'
 import { AuthGuard } from 'src/auth/auth.guard'
@@ -37,34 +37,64 @@ export class VisitDoctorController {
     return this.visitDoctorService.getAllVisitDetails(visitDoctorId)
   }
 
-  @Get(':doctorId/:visitId/booked-patients')
-  async getBookedPatients(@Param('doctorId') doctorId: string) {
-    return this.visitDoctorService.getBookedPatients(doctorId)
-  }
-
-  @Get(':doctorId/:visitId/patients')
-  async getPatients(@Param('doctorId') doctorId: string, @Param('visitId') visitId: string) {
-    return this.visitDoctorService.getPatients(doctorId, visitId)
-  }
-
-  @Put(':doctorId/:visitId/patient/:patientId')
-  async updatePatientStatus(
-    @Param('doctorId') doctorId: string,
-    @Param('visitId') visitId: string,
+  @Put(':visitDetailId/patient/:patientId')
+  async updatePatient(
+    @Request() req: AuthenticatedRequest,
+    @Param('visitDetailId') visitDetailId: string,
     @Param('patientId') patientId: string,
     @Body() updateData: any,
   ) {
-    return this.visitDoctorService.updatePatientStatus(doctorId, visitId, patientId, updateData)
+    const visitDoctorId = req.user._id
+    return this.visitDoctorService.updatePatient(visitDoctorId, visitDetailId, patientId, updateData)
   }
 
-  @Post(':doctorId/:visitId/book')
+  @Post(':visitDoctorId/:visitDetailId/book')
   async bookDoctor(
     @Request() req: AuthenticatedRequest,
-    @Param('doctorId') doctorId: string,
+    @Param('visitDoctorId') visitDoctorId: string,
     @Param('visitDetailId') visitDetailId: string,
     @Body() patientData: any,
   ) {
     const patientId = req.user._id
-    return this.visitDoctorService.bookVisitDoctor(patientId, doctorId, visitDetailId, patientData)
+    return this.visitDoctorService.bookVisitDoctor(patientId, visitDoctorId, visitDetailId, patientData)
+  }
+
+  /** ✅ NEW ENDPOINTS ADDED ✅ **/
+
+  @Put(':visitDetailId/update')
+  async updateVisitDetails(
+    @Request() req: AuthenticatedRequest,
+    @Param('visitDetailId') visitDetailId: string,
+    @Body() updateData: any,
+  ) {
+    const visitDoctorId = req.user._id
+    return this.visitDoctorService.updateVisitDetails(visitDoctorId, visitDetailId, updateData)
+  }
+
+  @Put(':visitDetailId/staff/:staffId/update')
+  async updateStaff(
+    @Request() req: AuthenticatedRequest,
+    @Param('visitDetailId') visitDetailId: string,
+    @Param('staffId') staffId: string,
+    @Body() updateData: any,
+  ) {
+    const visitDoctorId = req.user._id
+    return this.visitDoctorService.updateStaff(visitDoctorId, visitDetailId, staffId, updateData)
+  }
+
+  @Delete(':visitDetailId/delete')
+  async deleteVisitDetails(@Request() req: AuthenticatedRequest, @Param('visitDetailId') visitDetailId: string) {
+    const visitDoctorId = req.user._id
+    return this.visitDoctorService.deleteVisitDetails(visitDoctorId, visitDetailId)
+  }
+
+  @Delete(':visitDetailId/staff/:staffId/delete')
+  async deleteStaff(
+    @Request() req: AuthenticatedRequest,
+    @Param('visitDetailId') visitDetailId: string,
+    @Param('staffId') staffId: string,
+  ) {
+    const visitDoctorId = req.user._id
+    return this.visitDoctorService.deleteStaff(visitDoctorId, visitDetailId, staffId)
   }
 }

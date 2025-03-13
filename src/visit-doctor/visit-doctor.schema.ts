@@ -71,6 +71,9 @@ class VisitDetails {
   visitPlace: string
 
   @Prop({ required: true })
+  doctorFee: number
+
+  @Prop({ required: true })
   eventDate: Date
 
   @Prop({ type: Date, required: true })
