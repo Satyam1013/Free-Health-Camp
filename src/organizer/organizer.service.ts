@@ -242,14 +242,30 @@ export class OrganizerService {
     }
   }
 
-  async bookDoctor(organizerId: string, eventId: string, doctorId: string, patientId: string, patientData: any) {
+  async bookDoctor(city: string, eventId: string, doctorId: string, patientId: string, patientData: any) {
     try {
-      const organizer = await this.organizerModel.findById(organizerId)
-      if (!organizer) throw new BadRequestException('Invalid Organizer')
+      const regex = new RegExp(`^${city}$`, 'i')
 
-      const event = organizer.events.find((ev) => ev._id.toString() === eventId)
-      if (!event) throw new BadRequestException('Invalid Event')
+      // ✅ Find all organizers in the given city
+      const organizers = await this.organizerModel.find({ city: regex })
+      if (!organizers.length) throw new BadRequestException('No organizers found in this city')
 
+      // ✅ Find the event within any organizer
+      let organizer: any = null
+      let event: any = null
+
+      for (const org of organizers) {
+        const foundEvent = org.events.find((ev) => ev._id.toString() === eventId)
+        if (foundEvent) {
+          organizer = org
+          event = foundEvent
+          break
+        }
+      }
+
+      if (!event) throw new BadRequestException('Event not found in this city')
+
+      // ✅ Find the doctor in the event
       const doctor = event.doctors.find((doc) => doc._id.toString() === doctorId)
       if (!doctor) throw new BadRequestException('Doctor not found')
 
@@ -279,8 +295,16 @@ export class OrganizerService {
         status: BookingStatus.Booked,
       }
 
+      // ✅ Add patient to the doctor's list
       doctor.patients.push(newPatient)
       await organizer.save()
+
+      // ✅ Add eventId to patient's bookEvents if not already present
+      const eventObjectId = new Types.ObjectId(eventId)
+      if (!patient.bookEvents.some((id) => id.equals(eventObjectId))) {
+        patient.bookEvents.push(eventObjectId)
+        await patient.save()
+      }
 
       const safeDoctor = {
         _id: doctor._id,

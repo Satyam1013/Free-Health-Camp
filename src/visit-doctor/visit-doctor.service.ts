@@ -158,7 +158,6 @@ export class VisitDoctorService {
         gender: patient.gender,
         age: patient.age,
         bookingDate: new Date(patientData.bookingDate),
-        nextVisitDate: new Date(patientData.nextVisitDate),
         status: BookingStatus.Booked,
       }
 

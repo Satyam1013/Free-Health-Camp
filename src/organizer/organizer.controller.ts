@@ -100,15 +100,15 @@ export class OrganizerController {
   }
 
   // ✅ Book Doctor from an Event
-  @Post('/:organizerId/:eventId/:doctorId/book')
+  @Post('city/:eventId/:doctorId/book')
   async bookDoctor(
     @Request() req: AuthenticatedRequest,
-    @Param('organizerId') organizerId: string,
+    @Param('city') city: string,
     @Param('eventId') eventId: string,
     @Param('doctorId') doctorId: string,
     @Body() patientData: any,
   ) {
     const patientId = req.user._id
-    return this.organizerService.bookDoctor(organizerId, eventId, doctorId, patientId, patientData)
+    return this.organizerService.bookDoctor(city, eventId, doctorId, patientId, patientData)
   }
 }

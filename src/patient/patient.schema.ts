@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
-import { Document } from 'mongoose'
+import { Document, Types } from 'mongoose'
 import { UserRole } from 'src/auth/create-user.dto'
 import { Gender } from 'src/common/common.schema'
 import { BookingStatus } from 'src/common/doctor-staff.schema'
@@ -37,6 +37,9 @@ export class Patient {
 
   @Prop({ default: BookingStatus.Pending })
   status?: BookingStatus
+
+  @Prop({ type: [{ type: Types.ObjectId, ref: 'Event' }] })
+  bookEvents?: Types.ObjectId[]
 }
 
 export const PatientSchema = SchemaFactory.createForClass(Patient)
