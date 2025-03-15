@@ -11,6 +11,9 @@ export enum UserRole {
   ORGANIZER_DOCTOR = 'OrganizerDoctor',
   ORGANIZER_STAFF = 'OrganizerStaff',
   VISIT_DOCTOR_STAFF = 'VisitDoctorStaff',
+  LAB_STAFF = 'LabStaff',
+  HOSPITAL_DOCTOR = 'HospitalDoctor',
+  HOSPITAL_STAFF = 'HospitalStaff',
 }
 
 export class CreateUserDto {

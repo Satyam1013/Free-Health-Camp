@@ -3,16 +3,13 @@ import { InjectModel } from '@nestjs/mongoose'
 import { Model, Types } from 'mongoose'
 import { Organizer, OrganizerDocument } from './organizer.schema'
 import * as bcrypt from 'bcrypt'
-import { MobileValidationService } from 'src/common/mobile-validation.service'
-import { Patient, PatientDocument } from 'src/patient/patient.schema'
-import { BookingStatus } from 'src/common/doctor-staff.schema'
+import { MobileValidationService } from 'src/mobile-validation/mobile-validation.service'
 import { Cron } from '@nestjs/schedule'
 
 @Injectable()
 export class OrganizerService {
   constructor(
     @InjectModel(Organizer.name) private organizerModel: Model<OrganizerDocument>,
-    @InjectModel(Patient.name) private patientModel: Model<PatientDocument>,
     private readonly mobileValidationService: MobileValidationService,
   ) {}
 
@@ -237,82 +234,6 @@ export class OrganizerService {
       await organizer.save()
 
       return { message: 'Staff deleted successfully' }
-    } catch (error) {
-      throw new InternalServerErrorException(error.message || 'Something went wrong')
-    }
-  }
-
-  async bookDoctor(city: string, eventId: string, doctorId: string, patientId: string, patientData: any) {
-    try {
-      const regex = new RegExp(`^${city}$`, 'i')
-
-      // ✅ Find all organizers in the given city
-      const organizers = await this.organizerModel.find({ city: regex })
-      if (!organizers.length) throw new BadRequestException('No organizers found in this city')
-
-      // ✅ Find the event within any organizer
-      let organizer: any = null
-      let event: any = null
-
-      for (const org of organizers) {
-        const foundEvent = org.events.find((ev) => ev._id.toString() === eventId)
-        if (foundEvent) {
-          organizer = org
-          event = foundEvent
-          break
-        }
-      }
-
-      if (!event) throw new BadRequestException('Event not found in this city')
-
-      // ✅ Find the doctor in the event
-      const doctor = event.doctors.find((doc) => doc._id.toString() === doctorId)
-      if (!doctor) throw new BadRequestException('Doctor not found')
-
-      // ✅ Fetch patient details from the database
-      const patient = await this.patientModel.findById(patientId)
-      if (!patient) throw new BadRequestException('Patient not found')
-
-      // ✅ Ensure patient._id is an ObjectId
-      const patientObjectId = new Types.ObjectId(patient._id.toString())
-
-      // ✅ Ensure all _id comparisons are correctly typed
-      const isAlreadyBooked = doctor.patients.some((p) => {
-        const doctorPatientId = new Types.ObjectId(p._id.toString())
-        return doctorPatientId.equals(patientObjectId)
-      })
-
-      if (isAlreadyBooked) throw new BadRequestException('Patient already booked with this doctor')
-
-      const newPatient = {
-        _id: patientObjectId,
-        name: patient.username,
-        email: patient.email,
-        mobile: patient.mobile,
-        gender: patient.gender,
-        age: patient.age,
-        bookingDate: new Date(patientData.bookingDate),
-        status: BookingStatus.Booked,
-      }
-
-      // ✅ Add patient to the doctor's list
-      doctor.patients.push(newPatient)
-      await organizer.save()
-
-      // ✅ Add eventId to patient's bookEvents if not already present
-      const eventObjectId = new Types.ObjectId(eventId)
-      if (!patient.bookEvents.some((id) => id.equals(eventObjectId))) {
-        patient.bookEvents.push(eventObjectId)
-        await patient.save()
-      }
-
-      const safeDoctor = {
-        _id: doctor._id,
-        name: doctor.name,
-        address: doctor.address,
-      }
-
-      return { message: 'Doctor booked successfully', doctor: safeDoctor }
     } catch (error) {
       throw new InternalServerErrorException(error.message || 'Something went wrong')
     }

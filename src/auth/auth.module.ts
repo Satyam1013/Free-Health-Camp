@@ -9,7 +9,7 @@ import { HospitalModule } from 'src/hospital/hospital.module'
 import { PatientModule } from 'src/patient/patient.module'
 import { LabModule } from 'src/lab/lab.module'
 import { VisitDoctorModule } from 'src/visit-doctor/visit-doctor.module'
-import { MobileValidationModule } from 'src/common/mobile-validation.module'
+import { MobileValidationModule } from 'src/mobile-validation/mobile-validation.module'
 
 @Module({
   imports: [

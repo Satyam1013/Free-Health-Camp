@@ -1,7 +1,13 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { UserRole } from 'src/auth/create-user.dto'
-import { BaseModel } from 'src/common/common.schema'
-import { Staff, StaffSchema } from 'src/common/doctor-staff.schema'
+import { AvailableService, AvailableServiceSchema, BaseModel } from 'src/common/common.schema'
+import { Staff, StaffSchema } from '../common/common.schema'
+
+@Schema()
+export class LabStaff extends Staff {
+  @Prop({ required: true, default: UserRole.LAB_STAFF })
+  role: UserRole
+}
 
 export type LabDocument = Lab & Document
 
@@ -14,10 +20,10 @@ export class Lab extends BaseModel {
   workId: string
 
   @Prop({ type: [StaffSchema], default: [] })
-  staff: Staff[]
+  staff: LabStaff[]
 
-  @Prop({ type: [String], default: [] })
-  availableTests: string[]
+  @Prop({ type: [AvailableServiceSchema], default: [] })
+  availableServices: AvailableService[]
 }
 
 export const LabSchema = SchemaFactory.createForClass(Lab)

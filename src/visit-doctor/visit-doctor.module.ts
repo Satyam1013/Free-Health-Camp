@@ -5,7 +5,7 @@ import { VisitDoctorService } from './visit-doctor.service'
 import { VisitDoctorController } from './visit-doctor.controller'
 import { AuthModule } from 'src/auth/auth.module'
 import { PatientModule } from 'src/patient/patient.module'
-import { MobileValidationModule } from 'src/common/mobile-validation.module'
+import { MobileValidationModule } from 'src/mobile-validation/mobile-validation.module'
 
 @Module({
   imports: [

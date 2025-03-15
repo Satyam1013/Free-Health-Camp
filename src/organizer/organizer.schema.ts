@@ -2,7 +2,19 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { Document, Types } from 'mongoose'
 import { UserRole } from 'src/auth/create-user.dto'
 import { BaseModel } from 'src/common/common.schema'
-import { Doctor, DoctorSchema, Staff, StaffSchema } from 'src/common/doctor-staff.schema'
+import { Doctor, DoctorSchema, Staff, StaffSchema } from '../common/common.schema'
+
+@Schema()
+export class OrganizerDoctor extends Doctor {
+  @Prop({ required: true, enum: Object.values(UserRole), default: UserRole.ORGANIZER_DOCTOR })
+  role: UserRole
+}
+
+@Schema()
+export class OrganizerStaff extends Staff {
+  @Prop({ required: true, default: UserRole.ORGANIZER_STAFF })
+  role: UserRole
+}
 
 // Define Event Schema
 @Schema()
@@ -26,10 +38,10 @@ class Event {
   endTime: Date
 
   @Prop({ type: [DoctorSchema], default: [] })
-  doctors: Doctor[]
+  doctors: OrganizerDoctor[]
 
   @Prop({ type: [StaffSchema], default: [] })
-  staff: Staff[]
+  staff: OrganizerStaff[]
 }
 
 const EventSchema = SchemaFactory.createForClass(Event)

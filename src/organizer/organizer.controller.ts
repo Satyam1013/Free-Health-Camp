@@ -91,17 +91,4 @@ export class OrganizerController {
     const organizerId = req.user._id
     return this.organizerService.deleteStaff(organizerId, eventId, staffId)
   }
-
-  // ✅ Book Doctor from an Event
-  @Post('/:city/:eventId/:doctorId/book')
-  async bookDoctor(
-    @Request() req: AuthenticatedRequest,
-    @Param('city') city: string,
-    @Param('eventId') eventId: string,
-    @Param('doctorId') doctorId: string,
-    @Body() patientData: any,
-  ) {
-    const patientId = req.user._id
-    return this.organizerService.bookDoctor(city, eventId, doctorId, patientId, patientData)
-  }
 }

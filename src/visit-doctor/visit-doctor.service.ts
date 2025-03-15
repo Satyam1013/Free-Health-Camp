@@ -4,8 +4,7 @@ import { InjectModel } from '@nestjs/mongoose'
 import { VisitDoctor, VisitDoctorDocument } from './visit-doctor.schema'
 import { Model, Types } from 'mongoose'
 import { Patient, PatientDocument } from 'src/patient/patient.schema'
-import { BookingStatus } from 'src/common/doctor-staff.schema'
-import { MobileValidationService } from 'src/common/mobile-validation.service'
+import { MobileValidationService } from 'src/mobile-validation/mobile-validation.service'
 
 @Injectable()
 export class VisitDoctorService {
@@ -102,75 +101,24 @@ export class VisitDoctorService {
     }
   }
 
-  /**
-   * 🏥 UPDATE PATIENT
-   */
-  async updatePatient(visitDoctorId: string, visitDetailId: string, patientId: string, updateData: any) {
+  async updatePatient(visitDoctorId: string, serviceId: string, patientId: string, updateData: any) {
     try {
-      const visitDoctor = await this.findVisitDoctor(visitDoctorId)
-
-      const visit = visitDoctor.visitDetails.find((v) => v._id.toString() === visitDetailId)
-      if (!visit) throw new BadRequestException('Visit not found')
-
-      const patient = visit.patients.find((p) => p._id.toString() === patientId)
+      // ✅ Find the patient
+      const patient = await this.patientModel.findById(patientId)
       if (!patient) throw new BadRequestException('Patient not found')
 
-      Object.assign(patient, updateData)
-      await visitDoctor.save()
+      // ✅ Find the booked event for this provider and service
+      const bookedEvent = patient.bookEvents.find(
+        (event) => event.providerId.toString() === visitDoctorId && event.serviceId.toString() === serviceId,
+      )
 
-      return { message: 'Patient status updated', patient }
-    } catch (error) {
-      throw new InternalServerErrorException(error.message || 'Something went wrong')
-    }
-  }
+      if (!bookedEvent) throw new BadRequestException('No booking found for this service and provider')
 
-  async bookVisitDoctor(patientId: string, visitDoctorId: string, visitDetailId: string, patientData: any) {
-    try {
-      const doctor = await this.visitDoctorModel.findById(visitDoctorId)
-      if (!doctor) {
-        throw new BadRequestException('Doctor not found')
-      }
+      // ✅ Update the booked event data (status, nextVisitDate, etc.)
+      Object.assign(bookedEvent, updateData)
+      await patient.save()
 
-      const visitDetail = doctor.visitDetails.find((v) => v._id.toString() === visitDetailId)
-      if (!visitDetail) {
-        throw new BadRequestException('Visit Detail not found')
-      }
-
-      const patient = await this.patientModel.findById(patientId)
-      if (!patient) {
-        throw new BadRequestException('Patient not found')
-      }
-
-      const patientObjectId = new Types.ObjectId(patient._id.toString())
-
-      // Check if the patient is already booked in this visit
-      const isAlreadyBooked = visitDetail.patients.some((p) => p._id.toString() === patientId)
-      if (isAlreadyBooked) {
-        throw new BadRequestException('This patient has already booked an appointment for this visit')
-      }
-
-      // Add patient ID to the visit's patient list
-      const newPatient = {
-        _id: patientObjectId,
-        name: patient.username,
-        email: patient.email,
-        mobile: patient.mobile,
-        gender: patient.gender,
-        age: patient.age,
-        bookingDate: new Date(patientData.bookingDate),
-        status: BookingStatus.Booked,
-      }
-
-      visitDetail.patients.push(newPatient)
-      await doctor.save()
-
-      const safeDoctor = {
-        _id: doctor._id,
-        name: doctor.username,
-        address: doctor.address,
-      }
-
-      return { message: 'Visit Doctor booked successfully', safeDoctor }
+      return { message: 'Patient status updated successfully', updatedBooking: bookedEvent }
     } catch (error) {
       throw new InternalServerErrorException(error.message || 'Something went wrong')
     }

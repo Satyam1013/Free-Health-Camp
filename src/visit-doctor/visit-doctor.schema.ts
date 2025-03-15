@@ -1,63 +1,15 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { Types, Document } from 'mongoose'
 import { UserRole } from 'src/auth/create-user.dto'
-import { BaseModel, Gender } from 'src/common/common.schema'
-import { BookingStatus } from 'src/common/doctor-staff.schema'
+import { BaseModel, Staff } from 'src/common/common.schema'
 
 @Schema()
-class Staff {
-  @Prop({ type: Types.ObjectId, auto: true })
-  _id: Types.ObjectId
-
-  @Prop({ required: true })
-  name: string
-
-  @Prop({ required: true })
-  address: string
-
-  @Prop({ required: true })
-  mobile: number
-
-  @Prop({ required: true })
-  password: string
-
+class StaffVisitDoctor extends Staff {
   @Prop({ required: true, default: UserRole.VISIT_DOCTOR_STAFF })
   role: UserRole
 }
 
 export const StaffSchema = SchemaFactory.createForClass(Staff)
-
-@Schema()
-class Patient {
-  @Prop({ type: Types.ObjectId, auto: true })
-  _id: Types.ObjectId
-
-  @Prop({ required: true })
-  name: string
-
-  @Prop()
-  email: string
-
-  @Prop({ required: true })
-  mobile: number
-
-  @Prop({ required: true })
-  age: number
-
-  @Prop({ required: true })
-  gender: Gender
-
-  @Prop({ required: true })
-  bookingDate: Date
-
-  @Prop()
-  nextVisitDate?: Date
-
-  @Prop({ required: true })
-  status: BookingStatus
-}
-
-export const PatientSchema = SchemaFactory.createForClass(Patient)
 
 @Schema()
 class VisitDetails {
@@ -83,10 +35,7 @@ class VisitDetails {
   endTime: Date
 
   @Prop({ type: [StaffSchema], default: [] })
-  staff: Staff[]
-
-  @Prop({ type: [PatientSchema], default: [] })
-  patients: Patient[]
+  staff: StaffVisitDoctor[]
 }
 
 const VisitSchema = SchemaFactory.createForClass(VisitDetails)

@@ -30,26 +30,15 @@ export class VisitDoctorController {
     return this.visitDoctorService.getAllVisitDetails(visitDoctorId)
   }
 
-  @Put(':visitDetailId/patient/:patientId')
+  @Put(':serviceId/patient/:patientId')
   async updatePatient(
     @Request() req: AuthenticatedRequest,
-    @Param('visitDetailId') visitDetailId: string,
+    @Param('serviceId') serviceId: string,
     @Param('patientId') patientId: string,
     @Body() updateData: any,
   ) {
     const visitDoctorId = req.user._id
-    return this.visitDoctorService.updatePatient(visitDoctorId, visitDetailId, patientId, updateData)
-  }
-
-  @Post(':visitDoctorId/:visitDetailId/book')
-  async bookDoctor(
-    @Request() req: AuthenticatedRequest,
-    @Param('visitDoctorId') visitDoctorId: string,
-    @Param('visitDetailId') visitDetailId: string,
-    @Body() patientData: any,
-  ) {
-    const patientId = req.user._id
-    return this.visitDoctorService.bookVisitDoctor(patientId, visitDoctorId, visitDetailId, patientData)
+    return this.visitDoctorService.updatePatient(visitDoctorId, serviceId, patientId, updateData)
   }
 
   /** ✅ NEW ENDPOINTS ADDED ✅ **/

@@ -8,7 +8,7 @@ import { VisitDoctor, VisitDoctorDocument } from '../visit-doctor/visit-doctor.s
 import { Lab, LabDocument } from '../lab/lab.schema'
 import { Hospital, HospitalDocument } from '../hospital/hospital.schema'
 import { Patient, PatientDocument } from '../patient/patient.schema'
-import { MobileValidationService } from 'src/common/mobile-validation.service'
+import { MobileValidationService } from 'src/mobile-validation/mobile-validation.service'
 import { CreateUserDto, UserRole } from './create-user.dto'
 import { LoginDto } from './login.dto'
 
@@ -114,17 +114,36 @@ export class AuthService {
         }
       }
 
+      // ✅ Check Lab & Lab Staff
       if (!user) {
         user = await this.labModel.findOne({ mobile })
         if (user) role = UserRole.LAB
       }
       if (!user) {
+        const lab = await this.labModel.findOne({ 'staff.mobile': mobile })
+        if (lab) {
+          user = lab.staff.find((s) => s.mobile === mobile)
+          role = UserRole.LAB_STAFF
+        }
+      }
+
+      // ✅ Check Hospital, Hospital Doctor & Hospital Staff
+      if (!user) {
         user = await this.hospitalModel.findOne({ mobile })
         if (user) role = UserRole.HOSPITAL
       }
       if (!user) {
-        user = await this.patientModel.findOne({ mobile })
-        if (user) role = UserRole.PATIENT
+        const hospital = await this.hospitalModel.findOne({
+          $or: [{ 'staff.mobile': mobile }, { 'doctors.mobile': mobile }],
+        })
+        if (hospital) {
+          user = hospital.staff.find((s) => s.mobile === mobile)
+          role = user ? UserRole.HOSPITAL_STAFF : UserRole.HOSPITAL_DOCTOR
+
+          if (!user) {
+            user = hospital.doctors.find((d) => d.mobile === mobile)
+          }
+        }
       }
 
       // 4️⃣ If User Not Found, Throw Unauthorized Error
@@ -138,9 +157,19 @@ export class AuthService {
         throw new UnauthorizedException('Invalid mobile number or password')
       }
 
-      // 6️⃣ Ensure Sub-Roles Can Log in as Organizer
+      // 6️⃣ Ensure Staff & Doctors Can Log in as Their Main Role
       const isOrganizerRole = [UserRole.ORGANIZER_DOCTOR, UserRole.ORGANIZER_STAFF].includes(role as UserRole)
-      const finalRole = isOrganizerRole ? UserRole.ORGANIZER : role
+      const isLabStaff = role === UserRole.LAB_STAFF
+      const isHospitalStaff = role === UserRole.HOSPITAL_STAFF
+      const isHospitalDoctor = role === UserRole.HOSPITAL_DOCTOR
+
+      const finalRole = isOrganizerRole
+        ? UserRole.ORGANIZER
+        : isLabStaff
+          ? UserRole.LAB
+          : isHospitalStaff || isHospitalDoctor
+            ? UserRole.HOSPITAL
+            : role
 
       // 7️⃣ Generate JWT Token
       const payload = { _id: user._id, role: finalRole }
@@ -167,8 +196,11 @@ export class AuthService {
       case UserRole.VISIT_DOCTOR_STAFF:
         return this.visitDoctorModel
       case UserRole.LAB:
+      case UserRole.LAB_STAFF:
         return this.labModel
       case UserRole.HOSPITAL:
+      case UserRole.HOSPITAL_DOCTOR:
+      case UserRole.HOSPITAL_STAFF:
         return this.hospitalModel
       case UserRole.PATIENT:
         return this.patientModel
