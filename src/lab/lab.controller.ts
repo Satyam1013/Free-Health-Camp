@@ -1,14 +1,7 @@
 import { Body, Controller, Get, Post, Request, UseGuards } from '@nestjs/common'
 import { LabService } from './lab.service'
 import { AuthGuard } from 'src/auth/auth.guard'
-import { Request as ExpressRequest } from 'express'
-
-interface AuthenticatedRequest extends ExpressRequest {
-  user: {
-    _id: string
-    role?: string
-  }
-}
+import { AuthenticatedRequest } from 'src/common/authenticated-request'
 
 @Controller('labs')
 @UseGuards(AuthGuard)

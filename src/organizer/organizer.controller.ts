@@ -1,14 +1,7 @@
 import { Controller, Post, Body, Request, UseGuards, Param, Get, Put, Delete } from '@nestjs/common'
 import { OrganizerService } from './organizer.service'
 import { AuthGuard } from 'src/auth/auth.guard'
-import { Request as ExpressRequest } from 'express'
-
-interface AuthenticatedRequest extends ExpressRequest {
-  user: {
-    _id: string
-    role?: string
-  }
-}
+import { AuthenticatedRequest } from 'src/common/authenticated-request'
 
 @Controller('organizer')
 @UseGuards(AuthGuard)

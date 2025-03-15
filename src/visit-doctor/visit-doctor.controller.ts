@@ -1,14 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Request, UseGuards } from '@nestjs/common'
 import { VisitDoctorService } from './visit-doctor.service'
-import { Request as ExpressRequest } from 'express'
 import { AuthGuard } from 'src/auth/auth.guard'
-
-interface AuthenticatedRequest extends ExpressRequest {
-  user: {
-    _id: string
-    role?: string
-  }
-}
+import { AuthenticatedRequest } from 'src/common/authenticated-request'
 
 @Controller('visit-doctor')
 @UseGuards(AuthGuard)
