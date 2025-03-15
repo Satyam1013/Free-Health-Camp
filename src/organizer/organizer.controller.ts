@@ -100,7 +100,7 @@ export class OrganizerController {
   }
 
   // ✅ Book Doctor from an Event
-  @Post('city/:eventId/:doctorId/book')
+  @Post('/:city/:eventId/:doctorId/book')
   async bookDoctor(
     @Request() req: AuthenticatedRequest,
     @Param('city') city: string,
