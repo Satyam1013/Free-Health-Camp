@@ -167,17 +167,32 @@ export class HospitalService {
     }
   }
 
-  async createAvailableServices(hospitalId: string, servicesData: any) {
+  async createAvailableServices(hospitalId: string, serviceData: any) {
     try {
       const hospital = await this.hospitalModel.findById(hospitalId)
       if (!hospital) {
-        throw new Error('hospital not found')
+        throw new Error('Hospital not found')
       }
 
-      hospital.availableServices.push(servicesData.serviceName)
+      // Ensure serviceData contains required fields
+      if (!serviceData.name || !serviceData.fee) {
+        throw new Error('Invalid service data. Name and fee are required.')
+      }
 
+      // Create a new service object
+      const newService = {
+        _id: new Types.ObjectId(),
+        name: serviceData.name,
+        fee: serviceData.fee,
+      }
+
+      hospital.availableServices.push(newService)
       await hospital.save()
-      return { message: 'service added successfully', hospital }
+
+      return {
+        message: 'Service added successfully',
+        availableServices: hospital.availableServices,
+      }
     } catch (error) {
       return { message: 'Error adding service', error: error.message }
     }

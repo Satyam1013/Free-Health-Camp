@@ -114,11 +114,27 @@ export class LabService {
         throw new Error('Lab not found')
       }
 
-      lab.availableServices.push(serviceData.testName)
+      // Ensure serviceData contains required fields
+      if (!serviceData.name || !serviceData.fee) {
+        throw new Error('Invalid service data. Name and fee are required.')
+      }
+
+      // Create a new service object
+      const newService = {
+        _id: new Types.ObjectId(), // Generate a unique ID
+        name: serviceData.name,
+        fee: serviceData.fee,
+      }
+
+      lab.availableServices.push(newService)
       await lab.save()
-      return { message: 'Test added successfully', lab }
+
+      return {
+        message: 'Service added successfully',
+        availableServices: lab.availableServices,
+      }
     } catch (error) {
-      return { message: 'Error adding test', error: error.message }
+      return { message: 'Error adding service', error: error.message }
     }
   }
 
