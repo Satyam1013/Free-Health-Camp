@@ -220,7 +220,7 @@ export class PatientService {
     }
   }
 
-  async getPatientsByLabService(providerId: string, serviceId: string) {
+  async getPatientsByService(providerId: string, serviceId: string) {
     try {
       const patients = await this.patientModel
         .find({
@@ -234,6 +234,29 @@ export class PatientService {
     } catch (error) {
       console.error('Error fetching users:', error)
       throw new InternalServerErrorException('Something went wrong while fetching users')
+    }
+  }
+
+  async getPatientsByProvider(providerId: string) {
+    try {
+      if (!Types.ObjectId.isValid(providerId)) {
+        throw new BadRequestException('Invalid providerId')
+      }
+
+      const patients = await this.patientModel
+        .find({
+          'bookEvents.providerId': new Types.ObjectId(providerId),
+        })
+        .select('-password')
+
+      if (!patients.length) {
+        throw new NotFoundException('No patients found for this provider')
+      }
+
+      return patients
+    } catch (error) {
+      console.error('Error fetching patients:', error)
+      throw new InternalServerErrorException('Something went wrong while fetching patients')
     }
   }
 }
