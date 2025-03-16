@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsMobilePhone, IsNumber, IsOptional, IsEnum } from 'class-validator'
+import { IsNotEmpty, IsString, IsNumber, IsOptional, IsEnum } from 'class-validator'
 import { UserRole } from 'src/auth/create-user.dto'
 
 export class CreateStaffDto {
@@ -11,7 +11,7 @@ export class CreateStaffDto {
   address: string
 
   @IsNotEmpty()
-  @IsMobilePhone()
+  @IsNumber()
   mobile: number
 
   @IsNotEmpty()
@@ -33,7 +33,7 @@ export class CreateDoctorDto {
   address: string
 
   @IsNotEmpty()
-  @IsMobilePhone()
+  @IsNumber()
   mobile: number
 
   @IsNotEmpty()
@@ -55,7 +55,7 @@ export class EditDoctorDto {
   address: string
 
   @IsOptional()
-  @IsMobilePhone()
+  @IsNumber()
   mobile: number
 
   @IsOptional()
@@ -93,7 +93,7 @@ export class EditStaffDto {
   address?: string
 
   @IsOptional()
-  @IsMobilePhone()
+  @IsNumber()
   mobile?: string
 
   @IsOptional()

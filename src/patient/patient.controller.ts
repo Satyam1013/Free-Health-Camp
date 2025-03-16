@@ -19,7 +19,7 @@ export class PatientController {
   }
 
   // ✅ Book Doctor from an Event
-  @Post('/:city/:eventId/:doctorId/book')
+  @Post('book-camp-doctor/:city/:eventId/:doctorId')
   @UseGuards(AuthGuard)
   async bookCampDoctor(
     @Request() req: AuthenticatedRequest,
@@ -33,7 +33,7 @@ export class PatientController {
   }
 
   // ✅ Book Visit Doctor
-  @Post(':visitDoctorId/:visitDetailId/book')
+  @Post('book-visit-doctor/:visitDoctorId/:visitDetailId')
   @UseGuards(AuthGuard)
   async bookVisitDoctor(
     @Request() req: AuthenticatedRequest,
@@ -45,7 +45,7 @@ export class PatientController {
     return this.patientService.bookVisitDoctor(visitDoctorId, visitDetailId, patientId, patientData)
   }
 
-  @Post(':hospitalId/:serviceId/book')
+  @Post('book-hospital/:hospitalId/:serviceId')
   @UseGuards(AuthGuard)
   async bookHospitalServices(
     @Request() req: AuthenticatedRequest,
@@ -57,7 +57,7 @@ export class PatientController {
     return this.patientService.bookHospitalServices(hospitalId, serviceId, patientId, patientData)
   }
 
-  @Post(':labId/:serviceId/book')
+  @Post('book-lab/:labId/:serviceId')
   @UseGuards(AuthGuard)
   async bookLabServices(
     @Request() req: AuthenticatedRequest,

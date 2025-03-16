@@ -90,11 +90,19 @@ export class AuthService {
         }
       }
 
-      // 3️⃣ Check Other Roles (VisitDoctor, Lab, Hospital, Patient)
+      // 3️⃣ Check VisitDoctor
       if (!user) {
         user = await this.visitDoctorModel.findOne({ mobile })
         if (user) {
           role = UserRole.VISIT_DOCTOR
+        }
+      }
+
+      // 3️⃣ Check Patient
+      if (!user) {
+        user = await this.patientModel.findOne({ mobile })
+        if (user) {
+          role = UserRole.PATIENT
         }
       }
 

@@ -5,11 +5,13 @@ import { LabService } from './lab.service'
 import { Lab, LabSchema } from './lab.schema'
 import { AuthModule } from 'src/auth/auth.module'
 import { MobileValidationModule } from 'src/mobile-validation/mobile-validation.module'
+import { PatientModule } from 'src/patient/patient.module'
 
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Lab.name, schema: LabSchema }]),
     forwardRef(() => AuthModule),
+    forwardRef(() => PatientModule),
     MobileValidationModule,
   ],
   controllers: [LabController],

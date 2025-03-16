@@ -4,18 +4,6 @@ import { UserRole } from 'src/auth/create-user.dto'
 import { BaseModel } from 'src/common/common.schema'
 import { Doctor, DoctorSchema, Staff, StaffSchema } from '../common/common.schema'
 
-@Schema()
-export class OrganizerDoctor extends Doctor {
-  @Prop({ required: true, enum: Object.values(UserRole), default: UserRole.ORGANIZER_DOCTOR })
-  role: UserRole
-}
-
-@Schema()
-export class OrganizerStaff extends Staff {
-  @Prop({ required: true, default: UserRole.ORGANIZER_STAFF })
-  role: UserRole
-}
-
 // Define Event Schema
 @Schema()
 class Event {
@@ -38,10 +26,10 @@ class Event {
   endTime: Date
 
   @Prop({ type: [DoctorSchema], default: [] })
-  doctors: OrganizerDoctor[]
+  doctors: Doctor[]
 
   @Prop({ type: [StaffSchema], default: [] })
-  staff: OrganizerStaff[]
+  staff: Staff[]
 }
 
 const EventSchema = SchemaFactory.createForClass(Event)

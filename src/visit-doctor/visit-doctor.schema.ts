@@ -3,12 +3,6 @@ import { Types, Document } from 'mongoose'
 import { UserRole } from 'src/auth/create-user.dto'
 import { BaseModel, Staff } from 'src/common/common.schema'
 
-@Schema()
-class StaffVisitDoctor extends Staff {
-  @Prop({ required: true, default: UserRole.VISIT_DOCTOR_STAFF })
-  role: UserRole
-}
-
 export const StaffSchema = SchemaFactory.createForClass(Staff)
 
 @Schema()
@@ -35,7 +29,7 @@ class VisitDetails {
   endTime: Date
 
   @Prop({ type: [StaffSchema], default: [] })
-  staff: StaffVisitDoctor[]
+  staff: Staff[]
 }
 
 const VisitSchema = SchemaFactory.createForClass(VisitDetails)

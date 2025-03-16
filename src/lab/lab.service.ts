@@ -13,11 +13,13 @@ import {
   UpdateLabTimeDto,
 } from './lab.dto'
 import { Staff } from 'src/common/common.schema'
+import { Patient } from 'src/patient/patient.schema'
 
 @Injectable()
 export class LabService {
   constructor(
     @InjectModel(Lab.name) private labModel: Model<Lab>,
+    @InjectModel(Patient.name) private patientModel: Model<Lab>,
     private readonly mobileValidationService: MobileValidationService,
   ) {}
 
@@ -46,11 +48,8 @@ export class LabService {
       newStaff.password = await bcrypt.hash(staffData.password, 10)
       newStaff.role = staffData.role || UserRole.LAB_STAFF
 
-      console.log('Assigned role:', newStaff.role)
-
       // Add staff to the lab's staff array
       lab.staff.push(newStaff)
-      console.log('Staff before saving:', lab.staff)
       await lab.save()
 
       return {
@@ -63,7 +62,7 @@ export class LabService {
         },
       }
     } catch (error) {
-      console.error('Error creating staff:', error) // ✅ Log actual error
+      console.error('Error creating staff:', error)
       throw new InternalServerErrorException(error.message)
     }
   }
@@ -253,5 +252,19 @@ export class LabService {
     } catch (error) {
       console.error('Error updating lab time:', error)
     }
+  }
+
+  async getUsersByLabService(labId: string, serviceId: string) {
+    const patients = await this.patientModel
+      .find({
+        bookEvents: {
+          $elemMatch: { providerId: labId, serviceId: serviceId },
+        },
+      })
+      .select('-password')
+
+    if (!patients.length) throw new NotFoundException('No patients found for this lab service')
+
+    return patients
   }
 }
