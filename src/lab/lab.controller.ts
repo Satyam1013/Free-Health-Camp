@@ -21,20 +21,20 @@ export class LabController {
     return this.labService.createAvailableServices(labId, servicesData)
   }
 
-  @Put('update-available-service/:serviceName')
+  @Put('update-available-service/:serviceId')
   async updateAvailableService(
     @Request() req: AuthenticatedRequest,
-    @Param('serviceName') serviceName: string,
+    @Param('serviceId') serviceId: string,
     @Body() updatedData: UpdateAvailableServiceDto,
   ) {
     const labId = req.user._id
-    return this.labService.updateAvailableService(labId, serviceName, updatedData)
+    return this.labService.updateAvailableService(labId, serviceId, updatedData)
   }
 
-  @Delete('delete-available-service/:serviceName')
-  async deleteAvailableService(@Request() req: AuthenticatedRequest, @Param('serviceName') serviceName: string) {
+  @Delete('delete-available-service/:serviceId')
+  async deleteAvailableService(@Request() req: AuthenticatedRequest, @Param('serviceId') serviceId: string) {
     const labId = req.user._id
-    return this.labService.deleteAvailableService(labId, serviceName)
+    return this.labService.deleteAvailableService(labId, serviceId)
   }
 
   @Get('lab-details')

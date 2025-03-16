@@ -106,7 +106,7 @@ export class HospitalService {
 
       const hospital = await this.hospitalModel.findById(hospitalId)
       if (!hospital) {
-        throw new BadRequestException('Invalid lab')
+        throw new BadRequestException('Invalid hospital')
       }
 
       const newStaff = new HospitalStaff()
@@ -117,7 +117,7 @@ export class HospitalService {
       newStaff.password = await bcrypt.hash(staffData.password, 10)
       newStaff.role = UserRole.LAB_STAFF
 
-      // Add staff to the lab's staff array
+      // Add staff to the hospital's staff array
       hospital.staff.push(newStaff)
       await hospital.save()
 
@@ -213,18 +213,15 @@ export class HospitalService {
     }
   }
 
-  /**
-   * @description Delete available hospital services.
-   */
-  async updateAvailableService(hospitalId: string, serviceName: string, updatedData: UpdateAvailableServiceDto) {
+  async updateAvailableService(hospitalId: string, serviceId: string, updatedData: UpdateAvailableServiceDto) {
     try {
       const hospital = await this.hospitalModel.findById(hospitalId)
       if (!hospital) {
         throw new NotFoundException('Hospital not found')
       }
 
-      // Find the service
-      const service = hospital.availableServices.find((s) => s.name === serviceName)
+      // Find the service by ID
+      const service = hospital.availableServices.find((s) => s._id.toString() === serviceId)
       if (!service) {
         throw new BadRequestException('Service not found in hospital')
       }
@@ -242,18 +239,18 @@ export class HospitalService {
   }
 
   /**
-   * @description Delete available hospital services.
+   * @description Delete available hospital service by ID.
    */
-  async deleteAvailableService(hospitalId: string, serviceName: string) {
+  async deleteAvailableService(hospitalId: string, serviceId: string) {
     try {
       const hospital = await this.hospitalModel.findById(hospitalId)
       if (!hospital) {
         throw new NotFoundException('Hospital not found')
       }
 
-      // Find index of service
+      // Find index of the service
       const initialLength = hospital.availableServices.length
-      hospital.availableServices = hospital.availableServices.filter((service) => service.name !== serviceName)
+      hospital.availableServices = hospital.availableServices.filter((service) => service._id.toString() !== serviceId)
 
       if (hospital.availableServices.length === initialLength) {
         throw new BadRequestException('Service not found in hospital')

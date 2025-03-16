@@ -23,20 +23,20 @@ export class HospitalController {
     return this.hospitalService.createAvailableServices(hospitalId, servicesData)
   }
 
-  @Put('update-available-service/:serviceName')
+  @Put('update-available-service/:serviceId')
   async updateAvailableService(
     @Request() req: AuthenticatedRequest,
-    @Param('serviceName') serviceName: string,
+    @Param('serviceId') serviceId: string,
     @Body() updatedData: UpdateAvailableServiceDto,
   ) {
     const hospitalId = req.user._id
-    return this.hospitalService.updateAvailableService(hospitalId, serviceName, updatedData)
+    return this.hospitalService.updateAvailableService(hospitalId, serviceId, updatedData)
   }
 
-  @Delete('delete-available-service/:serviceName')
-  async deleteAvailableService(@Request() req: AuthenticatedRequest, @Param('serviceName') serviceName: string) {
+  @Delete('delete-available-service/:serviceId')
+  async deleteAvailableService(@Request() req: AuthenticatedRequest, @Param('serviceId') serviceId: string) {
     const hospitalId = req.user._id
-    return this.hospitalService.deleteAvailableService(hospitalId, serviceName)
+    return this.hospitalService.deleteAvailableService(hospitalId, serviceId)
   }
 
   @Get('hospital-details')

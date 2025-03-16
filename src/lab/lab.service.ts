@@ -156,15 +156,15 @@ export class LabService {
    * @description Update available lab services.
    */
 
-  async updateAvailableService(labId: string, serviceName: string, updatedData: UpdateAvailableServiceDto) {
+  async updateAvailableService(labId: string, serviceId: string, updatedData: UpdateAvailableServiceDto) {
     try {
       const lab = await this.labModel.findById(labId)
       if (!lab) {
         throw new NotFoundException('Lab not found')
       }
 
-      // Find the service
-      const service = lab.availableServices.find((s) => s.name === serviceName)
+      // Find the service by ID
+      const service = lab.availableServices.find((s) => s._id.toString() === serviceId)
       if (!service) {
         throw new BadRequestException('Service not found in lab')
       }
@@ -182,18 +182,18 @@ export class LabService {
   }
 
   /**
-   * @description Delete available lab services.
+   * @description Delete available lab service by ID.
    */
-  async deleteAvailableService(labId: string, serviceName: string) {
+  async deleteAvailableService(labId: string, serviceId: string) {
     try {
       const lab = await this.labModel.findById(labId)
       if (!lab) {
         throw new NotFoundException('Lab not found')
       }
 
-      // Find index of service
+      // Find index of the service
       const initialLength = lab.availableServices.length
-      lab.availableServices = lab.availableServices.filter((service) => service.name !== serviceName)
+      lab.availableServices = lab.availableServices.filter((service) => service._id.toString() !== serviceId)
 
       if (lab.availableServices.length === initialLength) {
         throw new BadRequestException('Service not found in lab')
