@@ -123,6 +123,61 @@ export class LabService {
   }
 
   /**
+   * @description Update available lab services.
+   */
+
+  async updateAvailableService(labId: string, serviceName: string, updatedData: { name?: string; fee?: number }) {
+    try {
+      const lab = await this.labModel.findById(labId)
+      if (!lab) {
+        throw new NotFoundException('Lab not found')
+      }
+
+      // Find the service
+      const service = lab.availableServices.find((s) => s.name === serviceName)
+      if (!service) {
+        throw new BadRequestException('Service not found in lab')
+      }
+
+      // Update properties if provided
+      if (updatedData.name) service.name = updatedData.name
+      if (updatedData.fee !== undefined) service.fee = updatedData.fee
+
+      await lab.save()
+      return { message: 'Service updated successfully', service }
+    } catch (error) {
+      console.error('Error updating service:', error)
+      throw new InternalServerErrorException('Failed to update service')
+    }
+  }
+
+  /**
+   * @description Delete available lab services.
+   */
+  async deleteAvailableService(labId: string, serviceName: string) {
+    try {
+      const lab = await this.labModel.findById(labId)
+      if (!lab) {
+        throw new NotFoundException('Lab not found')
+      }
+
+      // Find index of service
+      const initialLength = lab.availableServices.length
+      lab.availableServices = lab.availableServices.filter((service) => service.name !== serviceName)
+
+      if (lab.availableServices.length === initialLength) {
+        throw new BadRequestException('Service not found in lab')
+      }
+
+      await lab.save()
+      return { message: 'Service deleted successfully', availableServices: lab.availableServices }
+    } catch (error) {
+      console.error('Error deleting service:', error)
+      throw new InternalServerErrorException('Failed to delete service')
+    }
+  }
+
+  /**
    * @description Get details of a specific lab.
    */
   async getLabDetails(labId: string) {
@@ -144,7 +199,7 @@ export class LabService {
   /**
    * @description Update lab opening and closing time.
    */
-  async updateLabTime(labId: string, updateTimeDto: { startTime?: Date; endTime?: Date }) {
+  async updateLabTime(labId: string, updateTimeDto: { startTime?: string; endTime?: string }) {
     try {
       const lab = await this.labModel.findById(labId)
       if (!lab) {

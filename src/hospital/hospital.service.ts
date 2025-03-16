@@ -183,6 +183,60 @@ export class HospitalService {
     }
   }
 
+  /**
+   * @description Delete available hospital services.
+   */
+  async updateAvailableService(hospitalId: string, serviceName: string, updatedData: { name?: string; fee?: number }) {
+    try {
+      const hospital = await this.hospitalModel.findById(hospitalId)
+      if (!hospital) {
+        throw new NotFoundException('Hospital not found')
+      }
+
+      // Find the service
+      const service = hospital.availableServices.find((s) => s.name === serviceName)
+      if (!service) {
+        throw new BadRequestException('Service not found in hospital')
+      }
+
+      // Update properties if provided
+      if (updatedData.name) service.name = updatedData.name
+      if (updatedData.fee !== undefined) service.fee = updatedData.fee
+
+      await hospital.save()
+      return { message: 'Service updated successfully', service }
+    } catch (error) {
+      console.error('Error updating service:', error)
+      throw new InternalServerErrorException('Failed to update service')
+    }
+  }
+
+  /**
+   * @description Delete available hospital services.
+   */
+  async deleteAvailableService(hospitalId: string, serviceName: string) {
+    try {
+      const hospital = await this.hospitalModel.findById(hospitalId)
+      if (!hospital) {
+        throw new NotFoundException('Hospital not found')
+      }
+
+      // Find index of service
+      const initialLength = hospital.availableServices.length
+      hospital.availableServices = hospital.availableServices.filter((service) => service.name !== serviceName)
+
+      if (hospital.availableServices.length === initialLength) {
+        throw new BadRequestException('Service not found in hospital')
+      }
+
+      await hospital.save()
+      return { message: 'Service deleted successfully', availableServices: hospital.availableServices }
+    } catch (error) {
+      console.error('Error deleting service:', error)
+      throw new InternalServerErrorException('Failed to delete service')
+    }
+  }
+
   async getHospitalDetails(hospitalId: string) {
     try {
       const hospital = await this.hospitalModel.findById(hospitalId)
@@ -195,7 +249,7 @@ export class HospitalService {
     }
   }
 
-  async updateHospitalTime(hospitalId: string, updateTimeDto: { startTime?: Date; endTime?: Date }) {
+  async updateHospitalTime(hospitalId: string, updateTimeDto: { startTime?: string; endTime?: string }) {
     try {
       const hospital = await this.hospitalModel.findById(hospitalId)
       if (!hospital) {

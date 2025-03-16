@@ -14,6 +14,22 @@ export class HospitalController {
     return this.hospitalService.createAvailableServices(hospitalId, servicesData)
   }
 
+  @Put('update-available-service/:serviceName')
+  async updateAvailableService(
+    @Request() req: AuthenticatedRequest,
+    @Param('serviceName') serviceName: string,
+    @Body() updatedData: { name?: string; fee?: number },
+  ) {
+    const hospitalId = req.user._id
+    return this.hospitalService.updateAvailableService(hospitalId, serviceName, updatedData)
+  }
+
+  @Delete('delete-available-service/:serviceName')
+  async deleteAvailableService(@Request() req: AuthenticatedRequest, @Param('serviceName') serviceName: string) {
+    const hospitalId = req.user._id
+    return this.hospitalService.deleteAvailableService(hospitalId, serviceName)
+  }
+
   @Get('hospital-details')
   async getHospitalDetails(@Request() req: AuthenticatedRequest) {
     const hospitalId = req.user._id
@@ -63,7 +79,7 @@ export class HospitalController {
   @Put('update-time')
   async updateHospitalTime(
     @Request() req: AuthenticatedRequest,
-    @Body() updateTimeDto: { startTime?: Date; endTime?: Date },
+    @Body() updateTimeDto: { startTime?: string; endTime?: string },
   ) {
     const hospitalId = req.user._id
     return this.hospitalService.updateHospitalTime(hospitalId, updateTimeDto)

@@ -14,6 +14,22 @@ export class LabController {
     return this.labService.createAvailableServices(labId, testData)
   }
 
+  @Put('update-available-service/:serviceName')
+  async updateAvailableService(
+    @Request() req: AuthenticatedRequest,
+    @Param('serviceName') serviceName: string,
+    @Body() updatedData: { name?: string; fee?: number },
+  ) {
+    const labId = req.user._id
+    return this.labService.updateAvailableService(labId, serviceName, updatedData)
+  }
+
+  @Delete('delete-available-service/:serviceName')
+  async deleteAvailableService(@Request() req: AuthenticatedRequest, @Param('serviceName') serviceName: string) {
+    const labId = req.user._id
+    return this.labService.deleteAvailableService(labId, serviceName)
+  }
+
   @Get('lab-details')
   async getLabDetails(@Request() req: AuthenticatedRequest) {
     const labId = req.user._id
@@ -41,7 +57,7 @@ export class LabController {
   @Put('update-time')
   async updateLabTime(
     @Request() req: AuthenticatedRequest,
-    @Body() updateTimeDto: { startTime?: Date; endTime?: Date },
+    @Body() updateTimeDto: { startTime?: string; endTime?: string },
   ) {
     const labId = req.user._id
     return this.labService.updateLabTime(labId, updateTimeDto)
