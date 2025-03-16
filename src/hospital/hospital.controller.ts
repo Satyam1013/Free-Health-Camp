@@ -17,7 +17,7 @@ import {
 export class HospitalController {
   constructor(private readonly hospitalService: HospitalService) {}
 
-  @Post('create-available-service')
+  @Post('create-available-services')
   async createAvailableServices(@Request() req: AuthenticatedRequest, @Body() servicesData: CreateAvailableServiceDto) {
     const hospitalId = req.user._id
     return this.hospitalService.createAvailableServices(hospitalId, servicesData)

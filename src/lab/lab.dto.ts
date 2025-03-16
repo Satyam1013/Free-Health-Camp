@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsMobilePhone, IsOptional, IsNumber } from 'class-validator'
+import { IsNotEmpty, IsString, IsMobilePhone, IsOptional, IsNumber, IsEnum } from 'class-validator'
 import { UserRole } from 'src/auth/create-user.dto'
 
 export class CreateStaffDto {
@@ -18,7 +18,9 @@ export class CreateStaffDto {
   @IsString()
   password: string
 
-  role: UserRole = UserRole.LAB_STAFF
+  @IsNotEmpty()
+  @IsEnum(UserRole)
+  role: UserRole
 }
 
 export class CreateAvailableServiceDto {
