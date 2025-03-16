@@ -1,9 +1,18 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model, Types } from 'mongoose'
-import { Hospital } from './hospital.schema'
+import { Hospital, HospitalStaff } from './hospital.schema'
 import * as bcrypt from 'bcrypt'
 import { MobileValidationService } from 'src/mobile-validation/mobile-validation.service'
+import { UserRole } from 'src/auth/create-user.dto'
+import {
+  CreateAvailableServiceDto,
+  CreateDoctorDto,
+  CreateStaffDto,
+  EditDoctorDto,
+  UpdateAvailableServiceDto,
+  UpdateHospitalTimeDto,
+} from './hospital.dto'
 
 @Injectable()
 export class HospitalService {
@@ -13,7 +22,7 @@ export class HospitalService {
   ) {}
 
   // ✅ Create a new doctor under a hospital
-  async createDoctor(hospitalId: string, doctorData: any) {
+  async createDoctor(hospitalId: string, doctorData: CreateDoctorDto) {
     try {
       await this.mobileValidationService.checkDuplicateMobile(doctorData.mobile)
 
@@ -36,6 +45,7 @@ export class HospitalService {
           _id: newDoctor._id,
           name: newDoctor.name,
           mobile: newDoctor.mobile,
+          role: newDoctor.role,
         },
       }
     } catch {
@@ -44,7 +54,7 @@ export class HospitalService {
   }
 
   // ✅ Edit an existing doctor
-  async editDoctor(hospitalId: string, doctorId: string, updatedData: any) {
+  async editDoctor(hospitalId: string, doctorId: string, updatedData: EditDoctorDto) {
     try {
       const hospital = await this.hospitalModel.findById(hospitalId)
       if (!hospital) {
@@ -90,20 +100,24 @@ export class HospitalService {
     }
   }
 
-  async createStaff(hospitalId: string, staffData: any) {
+  async createStaff(hospitalId: string, staffData: CreateStaffDto) {
     try {
       await this.mobileValidationService.checkDuplicateMobile(staffData.mobile)
 
       const hospital = await this.hospitalModel.findById(hospitalId)
       if (!hospital) {
-        throw new BadRequestException('Invalid hospital')
+        throw new BadRequestException('Invalid lab')
       }
 
-      // Hash password before storing
-      const newStaff = { _id: new Types.ObjectId(), ...staffData }
-      newStaff.password = await bcrypt.hash(newStaff.password, 10)
+      const newStaff = new HospitalStaff()
+      newStaff._id = new Types.ObjectId()
+      newStaff.name = staffData.name
+      newStaff.address = staffData.address
+      newStaff.mobile = staffData.mobile
+      newStaff.password = await bcrypt.hash(staffData.password, 10)
+      newStaff.role = UserRole.LAB_STAFF
 
-      // Add staff to the hospital's staff array
+      // Add staff to the lab's staff array
       hospital.staff.push(newStaff)
       await hospital.save()
 
@@ -113,6 +127,7 @@ export class HospitalService {
           _id: newStaff._id,
           name: newStaff.name,
           mobile: newStaff.mobile,
+          role: newStaff.role,
         },
       }
     } catch {
@@ -167,7 +182,7 @@ export class HospitalService {
     }
   }
 
-  async createAvailableServices(hospitalId: string, serviceData: any) {
+  async createAvailableServices(hospitalId: string, serviceData: CreateAvailableServiceDto) {
     try {
       const hospital = await this.hospitalModel.findById(hospitalId)
       if (!hospital) {
@@ -201,7 +216,7 @@ export class HospitalService {
   /**
    * @description Delete available hospital services.
    */
-  async updateAvailableService(hospitalId: string, serviceName: string, updatedData: { name?: string; fee?: number }) {
+  async updateAvailableService(hospitalId: string, serviceName: string, updatedData: UpdateAvailableServiceDto) {
     try {
       const hospital = await this.hospitalModel.findById(hospitalId)
       if (!hospital) {
@@ -264,7 +279,7 @@ export class HospitalService {
     }
   }
 
-  async updateHospitalTime(hospitalId: string, updateTimeDto: { startTime?: string; endTime?: string }) {
+  async updateHospitalTime(hospitalId: string, updateTimeDto: UpdateHospitalTimeDto) {
     try {
       const hospital = await this.hospitalModel.findById(hospitalId)
       if (!hospital) {

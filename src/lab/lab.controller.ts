@@ -2,6 +2,7 @@ import { Body, Controller, Delete, Get, Param, Post, Put, Request, UseGuards } f
 import { LabService } from './lab.service'
 import { AuthGuard } from 'src/auth/auth.guard'
 import { AuthenticatedRequest } from 'src/common/authenticated-request'
+import { CreateStaffDto } from './lab.dto'
 
 @Controller('labs')
 @UseGuards(AuthGuard)
@@ -37,7 +38,7 @@ export class LabController {
   }
 
   @Post('create-staff')
-  async createStaff(@Request() req: AuthenticatedRequest, @Body() staffData: any) {
+  async createStaff(@Request() req: AuthenticatedRequest, @Body() staffData: CreateStaffDto) {
     const labId = req.user._id
     return this.labService.createStaff(labId, staffData)
   }

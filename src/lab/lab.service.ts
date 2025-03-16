@@ -1,9 +1,11 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model, Types } from 'mongoose'
-import { Lab } from './lab.schema'
+import { Lab, LabStaff } from './lab.schema'
 import * as bcrypt from 'bcrypt'
 import { MobileValidationService } from 'src/mobile-validation/mobile-validation.service'
+import { UserRole } from 'src/auth/create-user.dto'
+import { CreateStaffDto } from './lab.dto'
 
 @Injectable()
 export class LabService {
@@ -19,7 +21,7 @@ export class LabService {
   /**
    * @description Create a new staff member and add to the lab.
    */
-  async createStaff(labId: string, staffData: any) {
+  async createStaff(labId: string, staffData: CreateStaffDto) {
     try {
       await this.mobileValidationService.checkDuplicateMobile(staffData.mobile)
 
@@ -29,8 +31,13 @@ export class LabService {
       }
 
       // Hash password before storing
-      const newStaff = { _id: new Types.ObjectId(), ...staffData }
-      newStaff.password = await bcrypt.hash(newStaff.password, 10)
+      const newStaff = new LabStaff()
+      newStaff._id = new Types.ObjectId()
+      newStaff.name = staffData.name
+      newStaff.address = staffData.address
+      newStaff.mobile = staffData.mobile
+      newStaff.password = await bcrypt.hash(staffData.password, 10)
+      newStaff.role = UserRole.LAB_STAFF
 
       // Add staff to the lab's staff array
       lab.staff.push(newStaff)
@@ -42,6 +49,7 @@ export class LabService {
           _id: newStaff._id,
           name: newStaff.name,
           mobile: newStaff.mobile,
+          role: newStaff.role,
         },
       }
     } catch {
