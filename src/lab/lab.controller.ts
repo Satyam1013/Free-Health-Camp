@@ -2,7 +2,13 @@ import { Body, Controller, Delete, Get, Param, Post, Put, Request, UseGuards } f
 import { LabService } from './lab.service'
 import { AuthGuard } from 'src/auth/auth.guard'
 import { AuthenticatedRequest } from 'src/common/authenticated-request'
-import { CreateStaffDto } from './lab.dto'
+import {
+  CreateAvailableServiceDto,
+  CreateStaffDto,
+  EditStaffDto,
+  UpdateAvailableServiceDto,
+  UpdateLabTimeDto,
+} from './lab.dto'
 
 @Controller('labs')
 @UseGuards(AuthGuard)
@@ -10,16 +16,16 @@ export class LabController {
   constructor(private readonly labService: LabService) {}
 
   @Post('create-available-services')
-  async addAvailableServices(@Request() req: AuthenticatedRequest, @Body() testData: any) {
+  async addAvailableServices(@Request() req: AuthenticatedRequest, @Body() servicesData: CreateAvailableServiceDto) {
     const labId = req.user._id
-    return this.labService.createAvailableServices(labId, testData)
+    return this.labService.createAvailableServices(labId, servicesData)
   }
 
   @Put('update-available-service/:serviceName')
   async updateAvailableService(
     @Request() req: AuthenticatedRequest,
     @Param('serviceName') serviceName: string,
-    @Body() updatedData: { name?: string; fee?: number },
+    @Body() updatedData: UpdateAvailableServiceDto,
   ) {
     const labId = req.user._id
     return this.labService.updateAvailableService(labId, serviceName, updatedData)
@@ -44,7 +50,11 @@ export class LabController {
   }
 
   @Put('edit-staff/:staffId')
-  async editStaff(@Request() req: AuthenticatedRequest, @Param('staffId') staffId: string, @Body() updatedData: any) {
+  async editStaff(
+    @Request() req: AuthenticatedRequest,
+    @Param('staffId') staffId: string,
+    @Body() updatedData: EditStaffDto,
+  ) {
     const labId = req.user._id
     return this.labService.editStaff(labId, staffId, updatedData)
   }
@@ -56,10 +66,7 @@ export class LabController {
   }
 
   @Put('update-time')
-  async updateLabTime(
-    @Request() req: AuthenticatedRequest,
-    @Body() updateTimeDto: { startTime?: string; endTime?: string },
-  ) {
+  async updateLabTime(@Request() req: AuthenticatedRequest, @Body() updateTimeDto: UpdateLabTimeDto) {
     const labId = req.user._id
     return this.labService.updateLabTime(labId, updateTimeDto)
   }

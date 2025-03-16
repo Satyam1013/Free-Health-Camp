@@ -5,7 +5,13 @@ import { Lab, LabStaff } from './lab.schema'
 import * as bcrypt from 'bcrypt'
 import { MobileValidationService } from 'src/mobile-validation/mobile-validation.service'
 import { UserRole } from 'src/auth/create-user.dto'
-import { CreateStaffDto } from './lab.dto'
+import {
+  CreateAvailableServiceDto,
+  CreateStaffDto,
+  EditStaffDto,
+  UpdateAvailableServiceDto,
+  UpdateLabTimeDto,
+} from './lab.dto'
 
 @Injectable()
 export class LabService {
@@ -60,7 +66,7 @@ export class LabService {
   /**
    * @description Edit an existing staff member.
    */
-  async editStaff(labId: string, staffId: string, updatedData: any) {
+  async editStaff(labId: string, staffId: string, updatedData: EditStaffDto) {
     try {
       const lab = await this.labModel.findById(labId)
       if (!lab) {
@@ -115,7 +121,7 @@ export class LabService {
   /**
    * @description Create available lab services.
    */
-  async createAvailableServices(labId: string, serviceData: any) {
+  async createAvailableServices(labId: string, serviceData: CreateAvailableServiceDto) {
     try {
       const lab = await this.labModel.findById(labId)
       if (!lab) {
@@ -150,7 +156,7 @@ export class LabService {
    * @description Update available lab services.
    */
 
-  async updateAvailableService(labId: string, serviceName: string, updatedData: { name?: string; fee?: number }) {
+  async updateAvailableService(labId: string, serviceName: string, updatedData: UpdateAvailableServiceDto) {
     try {
       const lab = await this.labModel.findById(labId)
       if (!lab) {
@@ -223,7 +229,7 @@ export class LabService {
   /**
    * @description Update lab opening and closing time.
    */
-  async updateLabTime(labId: string, updateTimeDto: { startTime?: string; endTime?: string }) {
+  async updateLabTime(labId: string, updateTimeDto: UpdateLabTimeDto) {
     try {
       const lab = await this.labModel.findById(labId)
       if (!lab) {
