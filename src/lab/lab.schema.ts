@@ -24,6 +24,12 @@ export class Lab extends BaseModel {
 
   @Prop({ type: [AvailableServiceSchema], default: [] })
   availableServices: AvailableService[]
+
+  @Prop()
+  startTime?: Date
+
+  @Prop()
+  endTime?: Date
 }
 
 export const LabSchema = SchemaFactory.createForClass(Lab)

@@ -74,6 +74,9 @@ export class AvailableService {
 
   @Prop({ required: true })
   name: string
+
+  @Prop({ required: true })
+  fee: number
 }
 
 export const AvailableServiceSchema = SchemaFactory.createForClass(AvailableService)

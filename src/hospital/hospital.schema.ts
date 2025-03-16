@@ -33,6 +33,12 @@ export class Hospital extends BaseModel {
 
   @Prop({ type: [AvailableServiceSchema], default: [] })
   availableServices: AvailableService[]
+
+  @Prop()
+  startTime?: Date
+
+  @Prop()
+  endTime?: Date
 }
 
 export const HospitalSchema = SchemaFactory.createForClass(Hospital)

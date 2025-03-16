@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common'
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model, Types } from 'mongoose'
 import { Lab } from './lab.schema'
@@ -12,6 +12,13 @@ export class LabService {
     private readonly mobileValidationService: MobileValidationService,
   ) {}
 
+  // ────────────────────────────────────────────────────────────────────────────────
+  // * STAFF MANAGEMENT
+  // ────────────────────────────────────────────────────────────────────────────────
+
+  /**
+   * @description Create a new staff member and add to the lab.
+   */
   async createStaff(labId: string, staffData: any) {
     try {
       await this.mobileValidationService.checkDuplicateMobile(staffData.mobile)
@@ -42,7 +49,9 @@ export class LabService {
     }
   }
 
-  // ✅ Edit an existing staff member
+  /**
+   * @description Edit an existing staff member.
+   */
   async editStaff(labId: string, staffId: string, updatedData: any) {
     try {
       const lab = await this.labModel.findById(labId)
@@ -71,7 +80,9 @@ export class LabService {
     }
   }
 
-  // ✅ Delete a staff member
+  /**
+   * @description Delete a staff member from the lab.
+   */
   async deleteStaff(labId: string, staffId: string) {
     try {
       const lab = await this.labModel.findById(labId)
@@ -89,14 +100,21 @@ export class LabService {
     }
   }
 
-  async createAvailableServices(labId: string, testData: any) {
+  // ────────────────────────────────────────────────────────────────────────────────
+  // * LAB SERVICES
+  // ────────────────────────────────────────────────────────────────────────────────
+
+  /**
+   * @description Create available lab services.
+   */
+  async createAvailableServices(labId: string, serviceData: any) {
     try {
       const lab = await this.labModel.findById(labId)
       if (!lab) {
         throw new Error('Lab not found')
       }
 
-      lab.availableServices.push(testData.testName)
+      lab.availableServices.push(serviceData.testName)
       await lab.save()
       return { message: 'Test added successfully', lab }
     } catch (error) {
@@ -104,15 +122,46 @@ export class LabService {
     }
   }
 
-  async getAvailableServices(labId: string) {
+  /**
+   * @description Get details of a specific lab.
+   */
+  async getLabDetails(labId: string) {
     try {
       const lab = await this.labModel.findById(labId)
       if (!lab) {
         throw new Error('Lab not found')
       }
-      return lab.availableServices
+      return lab
     } catch (error) {
       return { message: 'Error fetching available tests', error: error.message }
+    }
+  }
+
+  // ────────────────────────────────────────────────────────────────────────────────
+  // * LAB TIMING MANAGEMENT
+  // ────────────────────────────────────────────────────────────────────────────────
+
+  /**
+   * @description Update lab opening and closing time.
+   */
+  async updateLabTime(labId: string, updateTimeDto: { startTime?: Date; endTime?: Date }) {
+    try {
+      const lab = await this.labModel.findById(labId)
+      if (!lab) {
+        throw new NotFoundException('Lab not found')
+      }
+
+      if (updateTimeDto.startTime) {
+        lab.startTime = updateTimeDto.startTime
+      }
+      if (updateTimeDto.endTime) {
+        lab.endTime = updateTimeDto.endTime
+      }
+
+      await lab.save()
+      return { message: 'Lab time updated successfully', lab }
+    } catch (error) {
+      console.error('Error updating lab time:', error)
     }
   }
 }

@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common'
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model, Types } from 'mongoose'
 import { Hospital } from './hospital.schema'
@@ -183,15 +183,36 @@ export class HospitalService {
     }
   }
 
-  async getAvailableServices(hospitalId: string) {
+  async getHospitalDetails(hospitalId: string) {
     try {
       const hospital = await this.hospitalModel.findById(hospitalId)
       if (!hospital) {
         throw new Error('hospital not found')
       }
-      return hospital.availableServices
+      return hospital
     } catch (error) {
       return { message: 'Error fetching available services', error: error.message }
+    }
+  }
+
+  async updateHospitalTime(hospitalId: string, updateTimeDto: { startTime?: Date; endTime?: Date }) {
+    try {
+      const hospital = await this.hospitalModel.findById(hospitalId)
+      if (!hospital) {
+        throw new NotFoundException('Hospital not found')
+      }
+
+      if (updateTimeDto.startTime) {
+        hospital.startTime = updateTimeDto.startTime
+      }
+      if (updateTimeDto.endTime) {
+        hospital.endTime = updateTimeDto.endTime
+      }
+
+      await hospital.save()
+      return { message: 'Hospital time updated successfully', hospital }
+    } catch (error) {
+      console.error('Error updating hospital time:', error)
     }
   }
 }

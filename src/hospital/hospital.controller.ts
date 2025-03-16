@@ -14,10 +14,10 @@ export class HospitalController {
     return this.hospitalService.createAvailableServices(hospitalId, servicesData)
   }
 
-  @Get('available-tests')
-  async getAvailableServices(@Request() req: AuthenticatedRequest) {
+  @Get('hospital-details')
+  async getHospitalDetails(@Request() req: AuthenticatedRequest) {
     const hospitalId = req.user._id
-    return this.hospitalService.getAvailableServices(hospitalId)
+    return this.hospitalService.getHospitalDetails(hospitalId)
   }
 
   @Post('create-doctor')
@@ -58,5 +58,14 @@ export class HospitalController {
   async deleteStaff(@Request() req: AuthenticatedRequest, @Param('staffId') staffId: string) {
     const hospitalId = req.user._id
     return this.hospitalService.deleteStaff(hospitalId, staffId)
+  }
+
+  @Put('update-time')
+  async updateHospitalTime(
+    @Request() req: AuthenticatedRequest,
+    @Body() updateTimeDto: { startTime?: Date; endTime?: Date },
+  ) {
+    const hospitalId = req.user._id
+    return this.hospitalService.updateHospitalTime(hospitalId, updateTimeDto)
   }
 }

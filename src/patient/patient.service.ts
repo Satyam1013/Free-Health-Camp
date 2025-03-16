@@ -45,7 +45,7 @@ export class PatientService {
 
     const visitDoctors = await this.visitDoctorModel.find({ city: regex }).exec()
 
-    const labs = await this.labModel.find({ city: regex }).select('username email availableTests').exec()
+    const labs = await this.labModel.find({ city: regex }).select('username email availableServices').exec()
 
     const hospitals = await this.hospitalModel.find({ city: regex }).select('username email availableServices').exec()
 

@@ -14,10 +14,10 @@ export class LabController {
     return this.labService.createAvailableServices(labId, testData)
   }
 
-  @Get('available-services')
-  async getAvailableServices(@Request() req: AuthenticatedRequest) {
+  @Get('lab-details')
+  async getLabDetails(@Request() req: AuthenticatedRequest) {
     const labId = req.user._id
-    return this.labService.getAvailableServices(labId)
+    return this.labService.getLabDetails(labId)
   }
 
   @Post('create-staff')
@@ -36,5 +36,14 @@ export class LabController {
   async deleteStaff(@Request() req: AuthenticatedRequest, @Param('staffId') staffId: string) {
     const labId = req.user._id
     return this.labService.deleteStaff(labId, staffId)
+  }
+
+  @Put('update-time')
+  async updateLabTime(
+    @Request() req: AuthenticatedRequest,
+    @Body() updateTimeDto: { startTime?: Date; endTime?: Date },
+  ) {
+    const labId = req.user._id
+    return this.labService.updateLabTime(labId, updateTimeDto)
   }
 }
