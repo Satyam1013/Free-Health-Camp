@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { Types } from 'mongoose'
+import { UserRole } from 'src/auth/create-user.dto'
 
 export class BaseModel {
   @Prop({ required: true, unique: true })
@@ -38,6 +39,9 @@ export class Doctor {
 
   @Prop({ required: true })
   password: string
+
+  @Prop({ type: String, enum: UserRole, required: true })
+  role: UserRole
 }
 
 export const DoctorSchema = SchemaFactory.createForClass(Doctor)
@@ -58,6 +62,9 @@ export class Staff {
 
   @Prop({ required: true })
   password: string
+
+  @Prop({ type: String, enum: UserRole, required: true })
+  role: UserRole
 }
 
 export const StaffSchema = SchemaFactory.createForClass(Staff)

@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model, Types } from 'mongoose'
-import { Hospital, HospitalStaff } from './hospital.schema'
+import { Hospital } from './hospital.schema'
 import * as bcrypt from 'bcrypt'
 import { MobileValidationService } from 'src/mobile-validation/mobile-validation.service'
 import { UserRole } from 'src/auth/create-user.dto'
@@ -13,6 +13,7 @@ import {
   UpdateAvailableServiceDto,
   UpdateHospitalTimeDto,
 } from './hospital.dto'
+import { Doctor, Staff } from 'src/common/common.schema'
 
 @Injectable()
 export class HospitalService {
@@ -31,9 +32,13 @@ export class HospitalService {
         throw new BadRequestException('Invalid Hospital')
       }
 
-      // Hash password before storing
-      const newDoctor = { _id: new Types.ObjectId(), ...doctorData }
-      newDoctor.password = await bcrypt.hash(newDoctor.password, 10)
+      const newDoctor = new Doctor()
+      newDoctor._id = new Types.ObjectId()
+      newDoctor.name = doctorData.name
+      newDoctor.address = doctorData.address
+      newDoctor.mobile = doctorData.mobile
+      newDoctor.password = await bcrypt.hash(doctorData.password, 10)
+      newDoctor.role = doctorData.role || UserRole.HOSPITAL_DOCTOR
 
       // Add doctor to the hospital's doctors array
       hospital.doctors.push(newDoctor)
@@ -109,7 +114,7 @@ export class HospitalService {
         throw new BadRequestException('Invalid hospital')
       }
 
-      const newStaff = new HospitalStaff()
+      const newStaff = new Staff()
       newStaff._id = new Types.ObjectId()
       newStaff.name = staffData.name
       newStaff.address = staffData.address

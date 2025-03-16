@@ -11,7 +11,7 @@ export class CreateStaffDto {
   address: string
 
   @IsNotEmpty()
-  @IsMobilePhone()
+  @IsNumber()
   mobile: number
 
   @IsNotEmpty()

@@ -1,7 +1,7 @@
 import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model, Types } from 'mongoose'
-import { Lab, LabStaff } from './lab.schema'
+import { Lab } from './lab.schema'
 import * as bcrypt from 'bcrypt'
 import { MobileValidationService } from 'src/mobile-validation/mobile-validation.service'
 import { UserRole } from 'src/auth/create-user.dto'
@@ -12,6 +12,7 @@ import {
   UpdateAvailableServiceDto,
   UpdateLabTimeDto,
 } from './lab.dto'
+import { Staff } from 'src/common/common.schema'
 
 @Injectable()
 export class LabService {
@@ -37,7 +38,7 @@ export class LabService {
       }
 
       // Hash password before storing
-      const newStaff = new LabStaff()
+      const newStaff = new Staff()
       newStaff._id = new Types.ObjectId()
       newStaff.name = staffData.name
       newStaff.address = staffData.address
@@ -45,8 +46,11 @@ export class LabService {
       newStaff.password = await bcrypt.hash(staffData.password, 10)
       newStaff.role = staffData.role || UserRole.LAB_STAFF
 
+      console.log('Assigned role:', newStaff.role)
+
       // Add staff to the lab's staff array
       lab.staff.push(newStaff)
+      console.log('Staff before saving:', lab.staff)
       await lab.save()
 
       return {
@@ -58,8 +62,9 @@ export class LabService {
           role: newStaff.role,
         },
       }
-    } catch {
-      throw new InternalServerErrorException('Something went wrong')
+    } catch (error) {
+      console.error('Error creating staff:', error) // ✅ Log actual error
+      throw new InternalServerErrorException(error.message)
     }
   }
 
