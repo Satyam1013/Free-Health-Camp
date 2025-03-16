@@ -151,9 +151,9 @@ export class PatientService {
   }
 
   // ✅ Book Hospital Services
-  async bookHospitalServices(hospitalId: string, serviceId: string, patientId: string, patientData: any) {
+  async bookHospitalServices(providerId: string, serviceId: string, patientId: string, patientData: any) {
     try {
-      const hospital = await this.hospitalModel.findById(hospitalId)
+      const hospital = await this.hospitalModel.findById(providerId)
       if (!hospital) throw new BadRequestException('Hospital not found')
 
       const service = hospital.availableServices.find((s) => s._id.toString() === serviceId)
@@ -163,14 +163,14 @@ export class PatientService {
       if (!patient) throw new BadRequestException('Patient not found')
 
       const isAlreadyBooked = patient.bookEvents.some(
-        (event) => event.serviceId.toString() === serviceId && event.providerId.toString() === hospitalId,
+        (event) => event.serviceId.toString() === serviceId && event.providerId.toString() === providerId,
       )
       if (isAlreadyBooked) throw new BadRequestException('Service already booked by this patient')
 
       const newBooking: BookedEvent = {
         _id: new Types.ObjectId(),
         serviceId: new Types.ObjectId(serviceId),
-        providerId: new Types.ObjectId(hospitalId),
+        providerId: new Types.ObjectId(providerId),
         serviceName: service.name,
         status: BookingStatus.Booked,
         bookingDate: new Date(patientData.bookingDate),
@@ -217,6 +217,23 @@ export class PatientService {
       return { message: 'Lab service booked successfully', serviceName: service.name }
     } catch (error) {
       throw new InternalServerErrorException(error.message || 'Something went wrong')
+    }
+  }
+
+  async getPatientsByLabService(providerId: string, serviceId: string) {
+    try {
+      const patients = await this.patientModel
+        .find({
+          bookEvents: { $elemMatch: { providerId: providerId, serviceId: serviceId } },
+        })
+        .select('-password')
+
+      if (!patients.length) throw new NotFoundException('No patients found for this lab service')
+
+      return patients
+    } catch (error) {
+      console.error('Error fetching users:', error)
+      throw new InternalServerErrorException('Something went wrong while fetching users')
     }
   }
 }

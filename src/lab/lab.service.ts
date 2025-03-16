@@ -13,13 +13,11 @@ import {
   UpdateLabTimeDto,
 } from './lab.dto'
 import { Staff } from 'src/common/common.schema'
-import { Patient } from 'src/patient/patient.schema'
 
 @Injectable()
 export class LabService {
   constructor(
     @InjectModel(Lab.name) private labModel: Model<Lab>,
-    @InjectModel(Patient.name) private patientModel: Model<Lab>,
     private readonly mobileValidationService: MobileValidationService,
   ) {}
 
@@ -252,19 +250,5 @@ export class LabService {
     } catch (error) {
       console.error('Error updating lab time:', error)
     }
-  }
-
-  async getUsersByLabService(labId: string, serviceId: string) {
-    const patients = await this.patientModel
-      .find({
-        bookEvents: {
-          $elemMatch: { providerId: labId, serviceId: serviceId },
-        },
-      })
-      .select('-password')
-
-    if (!patients.length) throw new NotFoundException('No patients found for this lab service')
-
-    return patients
   }
 }

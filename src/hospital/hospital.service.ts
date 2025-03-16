@@ -19,6 +19,7 @@ import { Doctor, Staff } from 'src/common/common.schema'
 export class HospitalService {
   constructor(
     @InjectModel(Hospital.name) private hospitalModel: Model<Hospital>,
+
     private readonly mobileValidationService: MobileValidationService,
   ) {}
 

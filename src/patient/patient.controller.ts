@@ -68,4 +68,9 @@ export class PatientController {
     const patientId = req.user._id
     return this.patientService.bookLabServices(labId, serviceId, patientId, patientData)
   }
+
+  @Get('get-patients/:providerId/:serviceId')
+  async getPatientsByLabService(@Param('providerId') providerId: string, @Param('serviceId') serviceId: string) {
+    return this.patientService.getPatientsByLabService(providerId, serviceId)
+  }
 }

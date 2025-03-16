@@ -70,10 +70,4 @@ export class LabController {
     const labId = req.user._id
     return this.labService.updateLabTime(labId, updateTimeDto)
   }
-
-  @Get('get-patients/:serviceId')
-  async getUsers(@Request() req: AuthenticatedRequest, @Param('serviceId') serviceId: string) {
-    const labId = req.user._id
-    return this.labService.getUsersByLabService(labId, serviceId)
-  }
 }
