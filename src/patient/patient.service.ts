@@ -224,11 +224,18 @@ export class PatientService {
     try {
       const patients = await this.patientModel
         .find({
-          bookEvents: { $elemMatch: { providerId: providerId, serviceId: serviceId } },
+          bookEvents: {
+            $elemMatch: {
+              providerId: new Types.ObjectId(providerId),
+              serviceId: new Types.ObjectId(serviceId),
+            },
+          },
         })
         .select('-password')
 
-      if (!patients.length) throw new NotFoundException('No patients found for this lab service')
+      if (!patients.length) {
+        throw new NotFoundException('No patients found for this lab service')
+      }
 
       return patients
     } catch (error) {
