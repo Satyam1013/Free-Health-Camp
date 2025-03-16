@@ -43,7 +43,7 @@ export class LabService {
       newStaff.address = staffData.address
       newStaff.mobile = staffData.mobile
       newStaff.password = await bcrypt.hash(staffData.password, 10)
-      newStaff.role = UserRole.LAB_STAFF
+      newStaff.role = staffData.role || UserRole.LAB_STAFF
 
       // Add staff to the lab's staff array
       lab.staff.push(newStaff)

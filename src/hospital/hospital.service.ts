@@ -115,7 +115,7 @@ export class HospitalService {
       newStaff.address = staffData.address
       newStaff.mobile = staffData.mobile
       newStaff.password = await bcrypt.hash(staffData.password, 10)
-      newStaff.role = UserRole.LAB_STAFF
+      newStaff.role = staffData.role || UserRole.HOSPITAL_STAFF
 
       // Add staff to the hospital's staff array
       hospital.staff.push(newStaff)
