@@ -1,37 +1,55 @@
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator'
+import { PartialType } from '@nestjs/mapped-types'
+import { IsString, IsNotEmpty, IsNumber, IsDate, IsEnum } from 'class-validator'
+import { UserRole } from 'src/auth/create-user.dto'
 
-export class CreateVisitDoctorDto {
-  @IsString()
+export class CreateVisitDetailDto {
   @IsNotEmpty()
-  username: string
+  @IsString()
+  visitName: string
 
-  @IsString()
   @IsNotEmpty()
-  mobile: string
+  @IsString()
+  visitPlace: string
 
-  @IsString()
   @IsNotEmpty()
+  @IsNumber()
+  doctorFee: number
+
+  @IsNotEmpty()
+  @IsDate()
+  eventDate: Date
+
+  @IsNotEmpty()
+  @IsDate()
+  startTime: Date
+
+  @IsNotEmpty()
+  @IsDate()
+  endTime: Date
+}
+
+export class UpdateVisitDetailDto extends PartialType(CreateVisitDetailDto) {}
+
+export class CreateStaffDto {
+  @IsNotEmpty()
+  @IsString()
+  name: string
+
+  @IsNotEmpty()
+  @IsString()
   address: string
 
-  @IsString()
   @IsNotEmpty()
+  @IsNumber()
+  mobile: number
+
+  @IsNotEmpty()
+  @IsString()
   password: string
-}
 
-export class UpdateVisitDoctorDto {
-  @IsOptional()
-  @IsString()
-  username?: string
-
-  @IsOptional()
-  @IsString()
-  mobile?: string
-
-  @IsString()
   @IsNotEmpty()
-  address: string
-
-  @IsOptional()
-  @IsString()
-  password?: string
+  @IsEnum(UserRole)
+  role: UserRole
 }
+
+export class UpdateStaffDto extends PartialType(CreateStaffDto) {}

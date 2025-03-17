@@ -1,4 +1,5 @@
-import { IsNotEmpty, IsString, IsMobilePhone, IsOptional, IsNumber, IsEnum } from 'class-validator'
+import { PartialType } from '@nestjs/mapped-types'
+import { IsNotEmpty, IsString, IsOptional, IsNumber, IsEnum } from 'class-validator'
 import { UserRole } from 'src/auth/create-user.dto'
 
 export class CreateStaffDto {
@@ -23,6 +24,8 @@ export class CreateStaffDto {
   role: UserRole
 }
 
+export class EditStaffDto extends PartialType(CreateStaffDto) {}
+
 export class CreateAvailableServiceDto {
   @IsNotEmpty()
   @IsString()
@@ -33,33 +36,7 @@ export class CreateAvailableServiceDto {
   fee: number
 }
 
-export class UpdateAvailableServiceDto {
-  @IsOptional()
-  @IsString()
-  name?: string
-
-  @IsOptional()
-  @IsNumber()
-  fee?: number
-}
-
-export class EditStaffDto {
-  @IsOptional()
-  @IsString()
-  name?: string
-
-  @IsOptional()
-  @IsString()
-  address?: string
-
-  @IsOptional()
-  @IsMobilePhone()
-  mobile?: string
-
-  @IsOptional()
-  @IsString()
-  password?: string
-}
+export class UpdateAvailableServiceDto extends PartialType(CreateAvailableServiceDto) {}
 
 export class UpdateLabTimeDto {
   @IsOptional()

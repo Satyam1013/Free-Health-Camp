@@ -3,8 +3,10 @@ import * as bcrypt from 'bcrypt'
 import { InjectModel } from '@nestjs/mongoose'
 import { VisitDoctor, VisitDoctorDocument } from './visit-doctor.schema'
 import { Model, Types } from 'mongoose'
-import { Patient, PatientDocument } from 'src/patient/patient.schema'
+import { BookingStatus, Patient, PatientDocument } from 'src/patient/patient.schema'
 import { MobileValidationService } from 'src/mobile-validation/mobile-validation.service'
+import { CreateStaffDto, CreateVisitDetailDto, UpdateStaffDto, UpdateVisitDetailDto } from './visit-doctor.dto'
+import { PatientService } from 'src/patient/patient.service'
 
 @Injectable()
 export class VisitDoctorService {
@@ -12,6 +14,7 @@ export class VisitDoctorService {
     @InjectModel(VisitDoctor.name) private visitDoctorModel: Model<VisitDoctorDocument>,
     @InjectModel(Patient.name) private patientModel: Model<PatientDocument>,
     private readonly mobileValidationService: MobileValidationService,
+    private readonly patientService: PatientService,
   ) {}
 
   private async findVisitDoctor(visitDoctorId: string) {
@@ -19,7 +22,7 @@ export class VisitDoctorService {
     if (!visitDoctor) throw new NotFoundException('Doctor not found')
     return visitDoctor
   }
-  async createVisitDetail(visitDetailId: string, visitDetailData: any) {
+  async createVisitDetail(visitDetailId: string, visitDetailData: CreateVisitDetailDto) {
     try {
       const visitDoctor = await this.visitDoctorModel.findById(visitDetailId)
       if (!visitDoctor) throw new BadRequestException('Invalid visitDoctor')
@@ -62,7 +65,49 @@ export class VisitDoctorService {
     }
   }
 
-  async createStaff(visitDoctorId: string, visitDetailId: string, staffData: any) {
+  async updateVisitDetails(visitDoctorId: string, visitDetailId: string, updateData: UpdateVisitDetailDto) {
+    try {
+      const visitDoctor = await this.findVisitDoctor(visitDoctorId)
+
+      const visitDetail = visitDoctor.visitDetails.find((v) => v._id.toString() === visitDetailId)
+      if (!visitDetail) throw new BadRequestException('Visit detail not found')
+
+      Object.assign(visitDetail, updateData)
+      await visitDoctor.save()
+
+      return { message: 'Visit details updated successfully', visitDetail }
+    } catch (error) {
+      throw new InternalServerErrorException(error.message || 'Something went wrong')
+    }
+  }
+
+  async deleteVisitDetails(visitDoctorId: string, visitDetailId: string) {
+    try {
+      const visitDoctor = await this.findVisitDoctor(visitDoctorId)
+
+      const visitIndex = visitDoctor.visitDetails.findIndex((v) => v._id.toString() === visitDetailId)
+      if (visitIndex === -1) throw new BadRequestException('Visit detail not found')
+
+      visitDoctor.visitDetails.splice(visitIndex, 1)
+      await visitDoctor.save()
+
+      return { message: 'Visit detail deleted successfully' }
+    } catch (error) {
+      throw new InternalServerErrorException(error.message || 'Something went wrong')
+    }
+  }
+
+  async getAllVisitDetails(visitDoctorId: string) {
+    try {
+      const visitDoctor = await this.visitDoctorModel.findById(visitDoctorId).select('visitDetails')
+      if (!visitDoctor) throw new NotFoundException('Visit Doctor not found')
+      return visitDoctor.visitDetails
+    } catch (error) {
+      throw new InternalServerErrorException(error.message || 'Something went wrong')
+    }
+  }
+
+  async createStaff(visitDoctorId: string, visitDetailId: string, staffData: CreateStaffDto) {
     try {
       await this.mobileValidationService.checkDuplicateMobile(staffData.mobile)
 
@@ -91,17 +136,50 @@ export class VisitDoctorService {
     }
   }
 
-  async getAllVisitDetails(visitDoctorId: string) {
+  async updateStaff(visitDoctorId: string, visitDetailId: string, staffId: string, updateData: UpdateStaffDto) {
     try {
-      const visitDoctor = await this.visitDoctorModel.findById(visitDoctorId).select('visitDetails')
-      if (!visitDoctor) throw new NotFoundException('Visit Doctor not found')
-      return visitDoctor.visitDetails
+      const visitDoctor = await this.findVisitDoctor(visitDoctorId)
+
+      const visitDetail = visitDoctor.visitDetails.find((v) => v._id.toString() === visitDetailId)
+      if (!visitDetail) throw new BadRequestException('Visit detail not found')
+
+      const staff = visitDetail.staff.find((s) => s._id.toString() === staffId)
+      if (!staff) throw new BadRequestException('Staff not found')
+
+      Object.assign(staff, updateData)
+      await visitDoctor.save()
+
+      return { message: 'Staff updated successfully', staff }
     } catch (error) {
       throw new InternalServerErrorException(error.message || 'Something went wrong')
     }
   }
 
-  async updatePatient(visitDoctorId: string, serviceId: string, patientId: string, updateData: any) {
+  async deleteStaff(visitDoctorId: string, visitDetailId: string, staffId: string) {
+    try {
+      const visitDoctor = await this.findVisitDoctor(visitDoctorId)
+
+      const visitDetail = visitDoctor.visitDetails.find((v) => v._id.toString() === visitDetailId)
+      if (!visitDetail) throw new BadRequestException('Visit detail not found')
+
+      const staffIndex = visitDetail.staff.findIndex((s) => s._id.toString() === staffId)
+      if (staffIndex === -1) throw new BadRequestException('Staff not found')
+
+      visitDetail.staff.splice(staffIndex, 1)
+      await visitDoctor.save()
+
+      return { message: 'Staff deleted successfully' }
+    } catch (error) {
+      throw new InternalServerErrorException(error.message || 'Something went wrong')
+    }
+  }
+
+  async updatePatient(
+    visitDoctorId: string,
+    serviceId: string,
+    patientId: string,
+    updateData: Partial<{ status?: BookingStatus; nextVisitDate?: Date }>,
+  ) {
     try {
       // ✅ Find the patient
       const patient = await this.patientModel.findById(patientId)
@@ -124,73 +202,26 @@ export class VisitDoctorService {
     }
   }
 
-  async updateVisitDetails(visitDoctorId: string, visitDetailId: string, updateData: any) {
+  async getPatientsByStaff(staffId: string) {
     try {
-      const visitDoctor = await this.findVisitDoctor(visitDoctorId)
+      const visitDoctor = await this.visitDoctorModel.findOne({ 'visitDetails.staff._id': staffId }).select('_id')
 
-      const visitDetail = visitDoctor.visitDetails.find((v) => v._id.toString() === visitDetailId)
-      if (!visitDetail) throw new BadRequestException('Visit detail not found')
+      if (!visitDoctor) {
+        throw new NotFoundException('VisitDoctor not found for this staff member')
+      }
 
-      Object.assign(visitDetail, updateData)
-      await visitDoctor.save()
+      const providerId = visitDoctor._id.toString()
 
-      return { message: 'Visit details updated successfully', visitDetail }
+      // ✅ Fetch and return patients
+      return await this.patientService.getPatientsByProvider(providerId)
     } catch (error) {
-      throw new InternalServerErrorException(error.message || 'Something went wrong')
-    }
-  }
+      console.error('Error fetching patients for staff:', error)
 
-  async updateStaff(visitDoctorId: string, visitDetailId: string, staffId: string, updateData: any) {
-    try {
-      const visitDoctor = await this.findVisitDoctor(visitDoctorId)
+      if (error instanceof NotFoundException) {
+        throw error
+      }
 
-      const visitDetail = visitDoctor.visitDetails.find((v) => v._id.toString() === visitDetailId)
-      if (!visitDetail) throw new BadRequestException('Visit detail not found')
-
-      const staff = visitDetail.staff.find((s) => s._id.toString() === staffId)
-      if (!staff) throw new BadRequestException('Staff not found')
-
-      Object.assign(staff, updateData)
-      await visitDoctor.save()
-
-      return { message: 'Staff updated successfully', staff }
-    } catch (error) {
-      throw new InternalServerErrorException(error.message || 'Something went wrong')
-    }
-  }
-
-  async deleteVisitDetails(visitDoctorId: string, visitDetailId: string) {
-    try {
-      const visitDoctor = await this.findVisitDoctor(visitDoctorId)
-
-      const visitIndex = visitDoctor.visitDetails.findIndex((v) => v._id.toString() === visitDetailId)
-      if (visitIndex === -1) throw new BadRequestException('Visit detail not found')
-
-      visitDoctor.visitDetails.splice(visitIndex, 1)
-      await visitDoctor.save()
-
-      return { message: 'Visit detail deleted successfully' }
-    } catch (error) {
-      throw new InternalServerErrorException(error.message || 'Something went wrong')
-    }
-  }
-
-  async deleteStaff(visitDoctorId: string, visitDetailId: string, staffId: string) {
-    try {
-      const visitDoctor = await this.findVisitDoctor(visitDoctorId)
-
-      const visitDetail = visitDoctor.visitDetails.find((v) => v._id.toString() === visitDetailId)
-      if (!visitDetail) throw new BadRequestException('Visit detail not found')
-
-      const staffIndex = visitDetail.staff.findIndex((s) => s._id.toString() === staffId)
-      if (staffIndex === -1) throw new BadRequestException('Staff not found')
-
-      visitDetail.staff.splice(staffIndex, 1)
-      await visitDoctor.save()
-
-      return { message: 'Staff deleted successfully' }
-    } catch (error) {
-      throw new InternalServerErrorException(error.message || 'Something went wrong')
+      throw new InternalServerErrorException('Something went wrong while fetching patients')
     }
   }
 }

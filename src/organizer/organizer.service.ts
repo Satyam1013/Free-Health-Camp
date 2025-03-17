@@ -5,16 +5,26 @@ import { Organizer, OrganizerDocument } from './organizer.schema'
 import * as bcrypt from 'bcrypt'
 import { MobileValidationService } from 'src/mobile-validation/mobile-validation.service'
 import { Cron } from '@nestjs/schedule'
+import { PatientService } from 'src/patient/patient.service'
+import {
+  CreateDoctorDto,
+  CreateEventDto,
+  CreateStaffDto,
+  EditDoctorDto,
+  EditEventDto,
+  EditStaffDto,
+} from './organizer.dto'
 
 @Injectable()
 export class OrganizerService {
   constructor(
     @InjectModel(Organizer.name) private organizerModel: Model<OrganizerDocument>,
     private readonly mobileValidationService: MobileValidationService,
+    private readonly patientService: PatientService,
   ) {}
 
   // ✅ Create Event
-  async createEvent(organizerId: string, eventData: any) {
+  async createEvent(organizerId: string, eventData: CreateEventDto) {
     try {
       const organizer = await this.organizerModel.findById(organizerId)
       if (!organizer) throw new BadRequestException('Invalid Organizer')
@@ -54,8 +64,50 @@ export class OrganizerService {
     }
   }
 
+  // ✅ Edit Event
+  async editEvent(organizerId: string, eventId: string, updatedData: EditEventDto) {
+    try {
+      const organizer = await this.organizerModel.findById(organizerId)
+      if (!organizer) throw new BadRequestException('Invalid Organizer')
+
+      const event = organizer.events.find((ev) => ev._id.toString() === eventId)
+      if (!event) throw new BadRequestException('Invalid Event')
+
+      Object.assign(event, updatedData)
+      await organizer.save()
+      return event
+    } catch {
+      throw new InternalServerErrorException('Something went wrong')
+    }
+  }
+
+  // ✅ Delete Event
+  async deleteEvent(organizerId: string, eventId: string) {
+    try {
+      const organizer = await this.organizerModel.findById(organizerId)
+      if (!organizer) throw new NotFoundException('Organizer not found')
+
+      const eventIndex = organizer.events.findIndex((ev) => ev._id.toString() === eventId)
+      if (eventIndex === -1) throw new NotFoundException('Event not found')
+
+      organizer.events.splice(eventIndex, 1)
+      await organizer.save()
+
+      return { message: 'Event deleted successfully' }
+    } catch (error) {
+      throw new InternalServerErrorException(error.message || 'Something went wrong')
+    }
+  }
+
+  // ✅ Get All Events
+  async getAllEvents(organizerId: string) {
+    const organizer = await this.organizerModel.findById(organizerId).select('events')
+    if (!organizer) throw new NotFoundException('Organizer not found')
+    return organizer.events
+  }
+
   // ✅ Add Doctor to Event
-  async createDoctor(organizerId: string, eventId: string, doctorData: any) {
+  async createDoctor(organizerId: string, eventId: string, doctorData: CreateDoctorDto) {
     try {
       await this.mobileValidationService.checkDuplicateMobile(doctorData.mobile)
 
@@ -84,8 +136,49 @@ export class OrganizerService {
     }
   }
 
+  // ✅ Edit Doctor
+  async editDoctor(organizerId: string, eventId: string, doctorId: string, updatedData: EditDoctorDto) {
+    try {
+      const organizer = await this.organizerModel.findById(organizerId)
+      if (!organizer) throw new BadRequestException('Invalid Organizer')
+
+      const event = organizer.events.find((ev) => ev._id.toString() === eventId)
+      if (!event) throw new BadRequestException('Invalid Event')
+
+      const doctor = event.doctors.find((doc) => doc._id.toString() === doctorId)
+      if (!doctor) throw new BadRequestException('Doctor not found')
+
+      Object.assign(doctor, updatedData)
+      await organizer.save()
+      return doctor
+    } catch {
+      throw new InternalServerErrorException('Something went wrong')
+    }
+  }
+
+  // ✅ Delete Doctor
+  async deleteDoctor(organizerId: string, eventId: string, doctorId: string) {
+    try {
+      const organizer = await this.organizerModel.findById(organizerId)
+      if (!organizer) throw new NotFoundException('Organizer not found')
+
+      const event = organizer.events.find((ev) => ev._id.toString() === eventId)
+      if (!event) throw new NotFoundException('Event not found')
+
+      const doctorIndex = event.doctors.findIndex((doc) => doc._id.toString() === doctorId)
+      if (doctorIndex === -1) throw new NotFoundException('Doctor not found')
+
+      event.doctors.splice(doctorIndex, 1)
+      await organizer.save()
+
+      return { message: 'Doctor deleted successfully' }
+    } catch (error) {
+      throw new InternalServerErrorException(error.message || 'Something went wrong')
+    }
+  }
+
   // ✅ Add Staff to Event
-  async createStaff(organizerId: string, eventId: string, staffData: any) {
+  async createStaff(organizerId: string, eventId: string, staffData: CreateStaffDto) {
     try {
       await this.mobileValidationService.checkDuplicateMobile(staffData.mobile)
 
@@ -115,52 +208,8 @@ export class OrganizerService {
     }
   }
 
-  // ✅ Get All Events
-  async getAllEvents(organizerId: string) {
-    const organizer = await this.organizerModel.findById(organizerId).select('events')
-    if (!organizer) throw new NotFoundException('Organizer not found')
-    return organizer.events
-  }
-
-  // ✅ Edit Event
-  async editEvent(organizerId: string, eventId: string, updatedData: any) {
-    try {
-      const organizer = await this.organizerModel.findById(organizerId)
-      if (!organizer) throw new BadRequestException('Invalid Organizer')
-
-      const event = organizer.events.find((ev) => ev._id.toString() === eventId)
-      if (!event) throw new BadRequestException('Invalid Event')
-
-      Object.assign(event, updatedData) // Update event details
-      await organizer.save()
-      return event
-    } catch {
-      throw new InternalServerErrorException('Something went wrong')
-    }
-  }
-
-  // ✅ Edit Doctor
-  async editDoctor(organizerId: string, eventId: string, doctorId: string, updatedData: any) {
-    try {
-      const organizer = await this.organizerModel.findById(organizerId)
-      if (!organizer) throw new BadRequestException('Invalid Organizer')
-
-      const event = organizer.events.find((ev) => ev._id.toString() === eventId)
-      if (!event) throw new BadRequestException('Invalid Event')
-
-      const doctor = event.doctors.find((doc) => doc._id.toString() === doctorId)
-      if (!doctor) throw new BadRequestException('Doctor not found')
-
-      Object.assign(doctor, updatedData)
-      await organizer.save()
-      return doctor
-    } catch {
-      throw new InternalServerErrorException('Something went wrong')
-    }
-  }
-
   // ✅ Edit Staff
-  async editStaff(organizerId: string, eventId: string, staffId: string, updatedData: any) {
+  async editStaff(organizerId: string, eventId: string, staffId: string, updatedData: EditStaffDto) {
     try {
       const organizer = await this.organizerModel.findById(organizerId)
       if (!organizer) throw new BadRequestException('Invalid Organizer')
@@ -176,45 +225,6 @@ export class OrganizerService {
       return staff
     } catch {
       throw new InternalServerErrorException('Something went wrong')
-    }
-  }
-
-  // ✅ Delete Event
-  async deleteEvent(organizerId: string, eventId: string) {
-    try {
-      const organizer = await this.organizerModel.findById(organizerId)
-      if (!organizer) throw new NotFoundException('Organizer not found')
-
-      const eventIndex = organizer.events.findIndex((ev) => ev._id.toString() === eventId)
-      if (eventIndex === -1) throw new NotFoundException('Event not found')
-
-      organizer.events.splice(eventIndex, 1)
-      await organizer.save()
-
-      return { message: 'Event deleted successfully' }
-    } catch (error) {
-      throw new InternalServerErrorException(error.message || 'Something went wrong')
-    }
-  }
-
-  // ✅ Delete Doctor
-  async deleteDoctor(organizerId: string, eventId: string, doctorId: string) {
-    try {
-      const organizer = await this.organizerModel.findById(organizerId)
-      if (!organizer) throw new NotFoundException('Organizer not found')
-
-      const event = organizer.events.find((ev) => ev._id.toString() === eventId)
-      if (!event) throw new NotFoundException('Event not found')
-
-      const doctorIndex = event.doctors.findIndex((doc) => doc._id.toString() === doctorId)
-      if (doctorIndex === -1) throw new NotFoundException('Doctor not found')
-
-      event.doctors.splice(doctorIndex, 1)
-      await organizer.save()
-
-      return { message: 'Doctor deleted successfully' }
-    } catch (error) {
-      throw new InternalServerErrorException(error.message || 'Something went wrong')
     }
   }
 
@@ -236,6 +246,29 @@ export class OrganizerService {
       return { message: 'Staff deleted successfully' }
     } catch (error) {
       throw new InternalServerErrorException(error.message || 'Something went wrong')
+    }
+  }
+
+  // ✅ Get Patients from an Event by Organizer ID
+  async getPatientsByStaff(staffId: string) {
+    try {
+      const organizer = await this.organizerModel.findOne({ 'events.staff._id': staffId }).select('_id')
+
+      if (!organizer) {
+        throw new NotFoundException('Organizer not found for this staff member')
+      }
+
+      const providerId = organizer._id.toString()
+
+      return await this.patientService.getPatientsByProvider(providerId)
+    } catch (error) {
+      console.error('Error fetching patients for organizer staff:', error)
+
+      if (error instanceof NotFoundException) {
+        throw error
+      }
+
+      throw new InternalServerErrorException('Something went wrong while fetching patients')
     }
   }
 

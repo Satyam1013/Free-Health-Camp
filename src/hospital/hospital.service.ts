@@ -10,16 +10,18 @@ import {
   CreateDoctorDto,
   CreateStaffDto,
   EditDoctorDto,
+  EditStaffDto,
   UpdateAvailableServiceDto,
   UpdateHospitalTimeDto,
 } from './hospital.dto'
 import { Doctor, Staff } from 'src/common/common.schema'
+import { PatientService } from 'src/patient/patient.service'
 
 @Injectable()
 export class HospitalService {
   constructor(
     @InjectModel(Hospital.name) private hospitalModel: Model<Hospital>,
-
+    private readonly patientService: PatientService,
     private readonly mobileValidationService: MobileValidationService,
   ) {}
 
@@ -142,7 +144,7 @@ export class HospitalService {
   }
 
   // ✅ Edit an existing staff member
-  async editStaff(hospitalId: string, staffId: string, updatedData: any) {
+  async editStaff(hospitalId: string, staffId: string, updatedData: EditStaffDto) {
     try {
       const hospital = await this.hospitalModel.findById(hospitalId)
       if (!hospital) {
@@ -300,6 +302,29 @@ export class HospitalService {
       return { message: 'Hospital time updated successfully', hospital }
     } catch (error) {
       console.error('Error updating hospital time:', error)
+    }
+  }
+
+  async getPatientsByStaff(staffId: string) {
+    try {
+      // ✅ Find the lab that contains this staff
+      const lab = await this.hospitalModel.findOne({ 'staff._id': staffId }).select('_id')
+      if (!lab) {
+        throw new NotFoundException('Lab not found for this staff member')
+      }
+
+      const providerId = lab._id.toString()
+
+      // ✅ Fetch and return patients
+      return await this.patientService.getPatientsByProvider(providerId)
+    } catch (error) {
+      console.error('Error fetching patients for staff:', error)
+
+      if (error instanceof NotFoundException) {
+        throw error
+      }
+
+      throw new InternalServerErrorException('Something went wrong while fetching patients')
     }
   }
 }

@@ -13,12 +13,14 @@ import {
   UpdateLabTimeDto,
 } from './lab.dto'
 import { Staff } from 'src/common/common.schema'
+import { PatientService } from 'src/patient/patient.service'
 
 @Injectable()
 export class LabService {
   constructor(
     @InjectModel(Lab.name) private labModel: Model<Lab>,
     private readonly mobileValidationService: MobileValidationService,
+    private readonly patientService: PatientService,
   ) {}
 
   // ────────────────────────────────────────────────────────────────────────────────
@@ -249,6 +251,29 @@ export class LabService {
       return { message: 'Lab time updated successfully', lab }
     } catch (error) {
       console.error('Error updating lab time:', error)
+    }
+  }
+
+  async getPatientsByStaff(staffId: string) {
+    try {
+      // ✅ Find the lab that contains this staff
+      const lab = await this.labModel.findOne({ 'staff._id': staffId }).select('_id')
+      if (!lab) {
+        throw new NotFoundException('Lab not found for this staff member')
+      }
+
+      const providerId = lab._id.toString()
+
+      // ✅ Fetch and return patients
+      return await this.patientService.getPatientsByProvider(providerId)
+    } catch (error) {
+      console.error('Error fetching patients for staff:', error)
+
+      if (error instanceof NotFoundException) {
+        throw error
+      }
+
+      throw new InternalServerErrorException('Something went wrong while fetching patients')
     }
   }
 }

@@ -9,9 +9,13 @@ import {
   UpdateAvailableServiceDto,
   UpdateLabTimeDto,
 } from './lab.dto'
+import { RolesGuard } from 'src/auth/roles.guard'
+import { UserRole } from 'src/auth/create-user.dto'
+import { Roles } from 'src/auth/roles.decorator'
 
 @Controller('labs')
 @UseGuards(AuthGuard)
+@UseGuards(RolesGuard)
 export class LabController {
   constructor(private readonly labService: LabService) {}
 
@@ -69,5 +73,13 @@ export class LabController {
   async updateLabTime(@Request() req: AuthenticatedRequest, @Body() updateTimeDto: UpdateLabTimeDto) {
     const labId = req.user._id
     return this.labService.updateLabTime(labId, updateTimeDto)
+  }
+
+  // 👨‍⚕️👩‍⚕️ Only Staff Related
+  @Get('get-all-patients')
+  @Roles(UserRole.LAB_STAFF)
+  async getPatientsByProvider(@Request() req: AuthenticatedRequest) {
+    const staffId = req.user._id
+    return this.labService.getPatientsByStaff(staffId)
   }
 }

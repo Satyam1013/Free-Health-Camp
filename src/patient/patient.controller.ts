@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, Post, Request, UseGuards } from '@nestjs/
 import { PatientService } from './patient.service'
 import { AuthGuard } from 'src/auth/auth.guard'
 import { AuthenticatedRequest } from 'src/common/authenticated-request'
+import { BookDoctorDto } from './patient.dto'
 
 @Controller('patient')
 export class PatientController {
@@ -9,8 +10,8 @@ export class PatientController {
 
   @Get('profile')
   @UseGuards(AuthGuard)
-  async getUserDetails(@Request() req: AuthenticatedRequest) {
-    return this.patientService.getUserDetails(req.user._id)
+  async getPatientDetails(@Request() req: AuthenticatedRequest) {
+    return this.patientService.getPatientDetails(req.user._id)
   }
 
   @Get('available-doctors-services/:city')
@@ -26,7 +27,7 @@ export class PatientController {
     @Param('city') city: string,
     @Param('eventId') eventId: string,
     @Param('doctorId') doctorId: string,
-    @Body() patientData: any,
+    @Body() patientData: BookDoctorDto,
   ) {
     const patientId = req.user._id
     return this.patientService.bookCampDoctor(city, eventId, doctorId, patientId, patientData)
@@ -39,7 +40,7 @@ export class PatientController {
     @Request() req: AuthenticatedRequest,
     @Param('visitDoctorId') visitDoctorId: string,
     @Param('visitDetailId') visitDetailId: string,
-    @Body() patientData: any,
+    @Body() patientData: BookDoctorDto,
   ) {
     const patientId = req.user._id
     return this.patientService.bookVisitDoctor(visitDoctorId, visitDetailId, patientId, patientData)
@@ -51,7 +52,7 @@ export class PatientController {
     @Request() req: AuthenticatedRequest,
     @Param('hospitalId') hospitalId: string,
     @Param('serviceId') serviceId: string,
-    @Body() patientData: any,
+    @Body() patientData: BookDoctorDto,
   ) {
     const patientId = req.user._id
     return this.patientService.bookHospitalServices(hospitalId, serviceId, patientId, patientData)
@@ -63,7 +64,7 @@ export class PatientController {
     @Request() req: AuthenticatedRequest,
     @Param('labId') labId: string,
     @Param('serviceId') serviceId: string,
-    @Body() patientData: any,
+    @Body() patientData: BookDoctorDto,
   ) {
     const patientId = req.user._id
     return this.patientService.bookLabServices(labId, serviceId, patientId, patientData)

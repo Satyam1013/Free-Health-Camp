@@ -6,6 +6,7 @@ import { Lab } from 'src/lab/lab.schema'
 import { Hospital } from 'src/hospital/hospital.schema'
 import { Organizer } from 'src/organizer/organizer.schema'
 import { BookedEvent, BookingStatus, Patient } from './patient.schema'
+import { BookDoctorDto } from './patient.dto'
 
 @Injectable()
 export class PatientService {
@@ -17,7 +18,7 @@ export class PatientService {
     @InjectModel(Hospital.name) private hospitalModel: Model<Hospital>,
   ) {}
 
-  async getUserDetails(userId: string) {
+  async getPatientDetails(userId: string) {
     try {
       const user = await this.patientModel.findById(userId).select('-password').exec()
       if (!user) throw new NotFoundException('User not found')
@@ -57,7 +58,13 @@ export class PatientService {
     }
   }
 
-  async bookCampDoctor(city: string, serviceId: string, providerId: string, patientId: string, patientData: any) {
+  async bookCampDoctor(
+    city: string,
+    serviceId: string,
+    providerId: string,
+    patientId: string,
+    patientData: BookDoctorDto,
+  ) {
     try {
       const regex = new RegExp(`^${city}$`, 'i')
 
@@ -99,7 +106,7 @@ export class PatientService {
         providerId: new Types.ObjectId(providerId),
         serviceName: event.name,
         bookingDate: new Date(patientData.bookingDate),
-        status: BookingStatus.Booked,
+        status: BookingStatus.Pending,
       }
 
       // ✅ Add booking to patient's bookEvents array
@@ -112,7 +119,7 @@ export class PatientService {
     }
   }
 
-  async bookVisitDoctor(visitDoctorId: string, visitDetailId: string, patientId: string, patientData: any) {
+  async bookVisitDoctor(visitDoctorId: string, visitDetailId: string, patientId: string, patientData: BookDoctorDto) {
     try {
       const doctor = await this.visitDoctorModel.findById(visitDoctorId)
       if (!doctor) throw new BadRequestException('Doctor not found')
@@ -134,7 +141,7 @@ export class PatientService {
         serviceId: new Types.ObjectId(visitDetailId),
         providerId: new Types.ObjectId(visitDoctorId),
         serviceName: visitDetail.visitName,
-        status: BookingStatus.Booked,
+        status: BookingStatus.Pending,
         bookingDate: new Date(patientData.bookingDate),
       }
 
@@ -151,7 +158,7 @@ export class PatientService {
   }
 
   // ✅ Book Hospital Services
-  async bookHospitalServices(providerId: string, serviceId: string, patientId: string, patientData: any) {
+  async bookHospitalServices(providerId: string, serviceId: string, patientId: string, patientData: BookDoctorDto) {
     try {
       const hospital = await this.hospitalModel.findById(providerId)
       if (!hospital) throw new BadRequestException('Hospital not found')
@@ -172,7 +179,7 @@ export class PatientService {
         serviceId: new Types.ObjectId(serviceId),
         providerId: new Types.ObjectId(providerId),
         serviceName: service.name,
-        status: BookingStatus.Booked,
+        status: BookingStatus.Pending,
         bookingDate: new Date(patientData.bookingDate),
       }
 
@@ -186,7 +193,7 @@ export class PatientService {
   }
 
   // ✅ Book Lab Services
-  async bookLabServices(labId: string, serviceId: string, patientId: string, patientData: any) {
+  async bookLabServices(labId: string, serviceId: string, patientId: string, patientData: BookDoctorDto) {
     try {
       const lab = await this.labModel.findById(labId)
       if (!lab) throw new BadRequestException('Lab not found')
@@ -207,7 +214,7 @@ export class PatientService {
         serviceId: new Types.ObjectId(serviceId),
         providerId: new Types.ObjectId(labId),
         serviceName: service.name,
-        status: BookingStatus.Booked,
+        status: BookingStatus.Pending,
         bookingDate: new Date(patientData.bookingDate),
       }
 
@@ -234,7 +241,7 @@ export class PatientService {
         .select('-password')
 
       if (!patients.length) {
-        throw new NotFoundException('No patients found for this lab service')
+        throw new NotFoundException('No patients found for this service')
       }
 
       return patients
@@ -263,6 +270,11 @@ export class PatientService {
       return patients
     } catch (error) {
       console.error('Error fetching patients:', error)
+
+      if (error instanceof BadRequestException || error instanceof NotFoundException) {
+        throw error
+      }
+
       throw new InternalServerErrorException('Something went wrong while fetching patients')
     }
   }
