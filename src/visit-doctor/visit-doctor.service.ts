@@ -204,7 +204,11 @@ export class VisitDoctorService {
 
   async getPatientsByStaff(staffId: string) {
     try {
-      const visitDoctor = await this.visitDoctorModel.findOne({ 'visitDetails.staff._id': staffId }).select('_id')
+      const objectIdStaffId = new Types.ObjectId(staffId)
+
+      const visitDoctor = await this.visitDoctorModel
+        .findOne({ 'visitDetails.staff._id': objectIdStaffId })
+        .select('_id')
 
       if (!visitDoctor) {
         throw new NotFoundException('VisitDoctor not found for this staff member')

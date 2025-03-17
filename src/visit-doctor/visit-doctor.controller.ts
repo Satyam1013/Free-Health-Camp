@@ -4,13 +4,9 @@ import { AuthGuard } from 'src/auth/auth.guard'
 import { AuthenticatedRequest } from 'src/common/authenticated-request'
 import { CreateStaffDto, CreateVisitDetailDto, UpdateStaffDto, UpdateVisitDetailDto } from './visit-doctor.dto'
 import { BookingStatus } from 'src/patient/patient.schema'
-import { RolesGuard } from 'src/auth/roles.guard'
-import { UserRole } from 'src/auth/create-user.dto'
-import { Roles } from 'src/auth/roles.decorator'
 
 @Controller('visit-doctor')
 @UseGuards(AuthGuard)
-@UseGuards(RolesGuard)
 export class VisitDoctorController {
   constructor(private readonly visitDoctorService: VisitDoctorService) {}
 
@@ -86,7 +82,6 @@ export class VisitDoctorController {
 
   // 👨‍⚕️👩‍⚕️ Only Staff Related
   @Get('get-all-patients')
-  @Roles(UserRole.VISIT_DOCTOR_STAFF)
   async getPatientsByProvider(@Request() req: AuthenticatedRequest) {
     const staffId = req.user._id
     return this.visitDoctorService.getPatientsByStaff(staffId)

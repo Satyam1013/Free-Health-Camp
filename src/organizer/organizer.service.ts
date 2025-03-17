@@ -252,8 +252,13 @@ export class OrganizerService {
   // ✅ Get Patients from an Event by Organizer ID
   async getPatientsByStaff(staffId: string) {
     try {
-      const organizer = await this.organizerModel.findOne({ 'events.staff._id': staffId }).select('_id')
+      const objectIdStaffId = new Types.ObjectId(staffId)
 
+      const organizer = await this.organizerModel
+        .findOne({
+          'events.staff._id': objectIdStaffId,
+        })
+        .select('_id')
       if (!organizer) {
         throw new NotFoundException('Organizer not found for this staff member')
       }

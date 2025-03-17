@@ -307,8 +307,9 @@ export class HospitalService {
 
   async getPatientsByStaff(staffId: string) {
     try {
-      // ✅ Find the lab that contains this staff
-      const lab = await this.hospitalModel.findOne({ 'staff._id': staffId }).select('_id')
+      const objectIdStaffId = new Types.ObjectId(staffId)
+
+      const lab = await this.hospitalModel.findOne({ 'staff._id': objectIdStaffId }).select('_id')
       if (!lab) {
         throw new NotFoundException('Lab not found for this staff member')
       }

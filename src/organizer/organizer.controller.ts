@@ -2,9 +2,7 @@ import { Controller, Post, Body, Request, UseGuards, Param, Get, Put, Delete } f
 import { OrganizerService } from './organizer.service'
 import { AuthGuard } from 'src/auth/auth.guard'
 import { AuthenticatedRequest } from 'src/common/authenticated-request'
-import { RolesGuard } from 'src/auth/roles.guard'
-import { Roles } from 'src/auth/roles.decorator'
-import { UserRole } from 'src/auth/create-user.dto'
+
 import {
   CreateDoctorDto,
   CreateEventDto,
@@ -16,7 +14,6 @@ import {
 
 @Controller('organizer')
 @UseGuards(AuthGuard)
-@UseGuards(RolesGuard)
 export class OrganizerController {
   constructor(private readonly organizerService: OrganizerService) {}
 
@@ -123,7 +120,6 @@ export class OrganizerController {
   // ✅ Get All Patient's from an Event
   // 👨‍⚕️👩‍⚕️ Only Staff Related
   @Get('get-all-patients')
-  @Roles(UserRole.ORGANIZER_STAFF)
   async getPatientsByProvider(@Request() req: AuthenticatedRequest) {
     const staffId = req.user._id
     return this.organizerService.getPatientsByStaff(staffId)

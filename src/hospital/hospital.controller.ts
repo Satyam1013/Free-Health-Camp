@@ -11,13 +11,9 @@ import {
   UpdateAvailableServiceDto,
   UpdateHospitalTimeDto,
 } from './hospital.dto'
-import { Roles } from 'src/auth/roles.decorator'
-import { UserRole } from 'src/auth/create-user.dto'
-import { RolesGuard } from 'src/auth/roles.guard'
 
 @Controller('hospital')
 @UseGuards(AuthGuard)
-@UseGuards(RolesGuard)
 export class HospitalController {
   constructor(private readonly hospitalService: HospitalService) {}
 
@@ -101,7 +97,6 @@ export class HospitalController {
 
   // 👨‍⚕️👩‍⚕️ Only Staff Related
   @Get('get-all-patients')
-  @Roles(UserRole.HOSPITAL_STAFF)
   async getPatientsByProvider(@Request() req: AuthenticatedRequest) {
     const staffId = req.user._id
     return this.hospitalService.getPatientsByStaff(staffId)

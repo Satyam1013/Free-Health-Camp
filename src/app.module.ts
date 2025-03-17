@@ -8,8 +8,6 @@ import { LabModule } from './lab/lab.module'
 import { PatientModule } from './patient/patient.module'
 import { VisitDoctorModule } from './visit-doctor/visit-doctor.module'
 import { ScheduleModule } from '@nestjs/schedule'
-import { APP_GUARD } from '@nestjs/core'
-import { RolesGuard } from './auth/roles.guard'
 
 @Module({
   imports: [
@@ -32,12 +30,6 @@ import { RolesGuard } from './auth/roles.guard'
     LabModule,
     VisitDoctorModule,
     PatientModule,
-  ],
-  providers: [
-    {
-      provide: APP_GUARD,
-      useClass: RolesGuard,
-    },
   ],
 })
 export class AppModule {}
