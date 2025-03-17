@@ -230,15 +230,31 @@ export class PatientService {
   async getPatientsByService(providerId: string, serviceId: string) {
     try {
       const patients = await this.patientModel
-        .find({
-          bookEvents: {
-            $elemMatch: {
-              providerId: new Types.ObjectId(providerId),
-              serviceId: new Types.ObjectId(serviceId),
+        .find(
+          {
+            bookEvents: {
+              $elemMatch: {
+                providerId: new Types.ObjectId(providerId),
+                serviceId: new Types.ObjectId(serviceId),
+              },
             },
           },
-        })
-        .select('-password')
+          {
+            email: 1,
+            mobile: 1,
+            username: 1,
+            age: 1,
+            gender: 1,
+            role: 1,
+            bookEvents: {
+              $elemMatch: {
+                providerId: new Types.ObjectId(providerId),
+                serviceId: new Types.ObjectId(serviceId),
+              },
+            },
+          },
+        )
+        .lean()
 
       if (!patients.length) {
         throw new NotFoundException('No patients found for this service')
@@ -258,10 +274,25 @@ export class PatientService {
       }
 
       const patients = await this.patientModel
-        .find({
-          'bookEvents.providerId': new Types.ObjectId(providerId),
-        })
-        .select('-password')
+        .find(
+          {
+            'bookEvents.providerId': new Types.ObjectId(providerId),
+          },
+          {
+            email: 1,
+            mobile: 1,
+            username: 1,
+            age: 1,
+            gender: 1,
+            role: 1,
+            bookEvents: {
+              $elemMatch: {
+                providerId: new Types.ObjectId(providerId),
+              },
+            },
+          },
+        )
+        .lean()
 
       if (!patients.length) {
         throw new NotFoundException('No patients found for this provider')
