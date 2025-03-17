@@ -41,7 +41,7 @@ export class VisitDoctor extends BaseModel {
   @Prop({ required: true, default: UserRole.VISIT_DOCTOR })
   role: UserRole
 
-  @Prop({ required: true })
+  @Prop({ required: true, unique: true })
   workId: string
 
   @Prop({ type: [VisitSchema], default: [] })

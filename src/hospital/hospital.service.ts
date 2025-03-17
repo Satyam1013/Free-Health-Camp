@@ -309,12 +309,12 @@ export class HospitalService {
     try {
       const objectIdStaffId = new Types.ObjectId(staffId)
 
-      const lab = await this.hospitalModel.findOne({ 'staff._id': objectIdStaffId }).select('_id')
-      if (!lab) {
-        throw new NotFoundException('Lab not found for this staff member')
+      const hospital = await this.hospitalModel.findOne({ 'staff._id': objectIdStaffId }).select('_id')
+      if (!hospital) {
+        throw new NotFoundException('Hospital not found for this staff member')
       }
 
-      const providerId = lab._id.toString()
+      const providerId = hospital._id.toString()
 
       // ✅ Fetch and return patients
       return await this.patientService.getPatientsByProvider(providerId)

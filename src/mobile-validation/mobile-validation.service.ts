@@ -20,14 +20,27 @@ export class MobileValidationService {
 
   async checkDuplicateMobile(mobile: number): Promise<void> {
     const existingUser = await Promise.all([
+      // Main roles
       this.organizerModel.findOne({ mobile }),
-      this.visitDoctorModel.findOne({ mobile }),
-      this.labModel.findOne({ mobile }),
       this.hospitalModel.findOne({ mobile }),
+      this.labModel.findOne({ mobile }),
+      this.visitDoctorModel.findOne({ mobile }),
       this.patientModel.findOne({ mobile }),
-      this.organizerModel.findOne({ 'events.doctors.mobile': mobile }),
-      this.organizerModel.findOne({ 'events.staff.mobile': mobile }),
-      this.visitDoctorModel.findOne({ 'visitDetails.staff.mobile': mobile }),
+
+      // Sub-roles within Organizer
+      this.organizerModel.findOne({ 'events.doctors.mobile': mobile }), // OrganizerDoctor
+      this.organizerModel.findOne({ 'events.staff.mobile': mobile }), // OrganizerStaff
+
+      // Sub-roles within VisitDoctor
+      this.visitDoctorModel.findOne({ 'visitDetails.staff.mobile': mobile }), // VisitDoctorStaff
+      this.visitDoctorModel.findOne({ 'visitDetails.doctors.mobile': mobile }), // VisitDoctor (if doctors exist)
+
+      // Sub-roles within Hospital
+      this.hospitalModel.findOne({ 'doctors.mobile': mobile }), // HospitalDoctor
+      this.hospitalModel.findOne({ 'staff.mobile': mobile }), // HospitalStaff
+
+      // Sub-roles within Lab
+      this.labModel.findOne({ 'staff.mobile': mobile }), // LabStaff
     ])
 
     if (existingUser.some((user) => user !== null)) {
