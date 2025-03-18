@@ -14,12 +14,15 @@ import {
   EditEventDto,
   EditStaffDto,
 } from './organizer.dto'
+import { BookingStatus, Patient, PatientDocument } from 'src/patient/patient.schema'
 
 @Injectable()
 export class OrganizerService {
   constructor(
     @InjectModel(Organizer.name) private organizerModel: Model<OrganizerDocument>,
+    @InjectModel(Patient.name) private patientModel: Model<PatientDocument>,
     private readonly mobileValidationService: MobileValidationService,
+
     private readonly patientService: PatientService,
   ) {}
 
@@ -274,6 +277,34 @@ export class OrganizerService {
       }
 
       throw new InternalServerErrorException('Something went wrong while fetching patients')
+    }
+  }
+
+  async updatePatient(
+    organizerId: string,
+    serviceId: string,
+    patientId: string,
+    updateData: Partial<{ status?: BookingStatus }>,
+  ) {
+    try {
+      // ✅ Find the patient
+      const patient = await this.patientModel.findById(patientId)
+      if (!patient) throw new BadRequestException('Patient not found')
+
+      // ✅ Find the booked event for this provider and service
+      const bookedEvent = patient.bookEvents.find(
+        (event) => event.providerId.toString() === organizerId && event.serviceId.toString() === serviceId,
+      )
+
+      if (!bookedEvent) throw new BadRequestException('No booking found for this service and provider')
+
+      // ✅ Update the booked event data (status, nextVisitDate, etc.)
+      Object.assign(bookedEvent, updateData)
+      await patient.save()
+
+      return { message: 'Patient status updated successfully', updatedBooking: bookedEvent }
+    } catch (error) {
+      throw new InternalServerErrorException(error.message || 'Something went wrong')
     }
   }
 

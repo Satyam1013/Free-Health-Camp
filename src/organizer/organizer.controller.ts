@@ -11,6 +11,7 @@ import {
   EditEventDto,
   EditStaffDto,
 } from './organizer.dto'
+import { BookingStatus } from 'src/patient/patient.schema'
 
 @Controller('organizer')
 @UseGuards(AuthGuard)
@@ -123,5 +124,16 @@ export class OrganizerController {
   async getPatientsByProvider(@Request() req: AuthenticatedRequest) {
     const staffId = req.user._id
     return this.organizerService.getPatientsByStaff(staffId)
+  }
+
+  @Put(':serviceId/patient/:patientId')
+  async updatePatient(
+    @Request() req: AuthenticatedRequest,
+    @Param('serviceId') serviceId: string,
+    @Param('patientId') patientId: string,
+    @Body() updateData: Partial<{ status?: BookingStatus }>,
+  ) {
+    const organizerId = req.user._id
+    return this.organizerService.updatePatient(organizerId, serviceId, patientId, updateData)
   }
 }

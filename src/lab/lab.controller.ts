@@ -9,6 +9,7 @@ import {
   UpdateAvailableServiceDto,
   UpdateLabTimeDto,
 } from './lab.dto'
+import { BookingStatus } from 'src/patient/patient.schema'
 
 @Controller('labs')
 @UseGuards(AuthGuard)
@@ -76,5 +77,16 @@ export class LabController {
   async getPatientsByProvider(@Request() req: AuthenticatedRequest) {
     const staffId = req.user._id
     return this.labService.getPatientsByStaff(staffId)
+  }
+
+  @Put(':serviceId/patient/:patientId')
+  async updatePatient(
+    @Request() req: AuthenticatedRequest,
+    @Param('serviceId') serviceId: string,
+    @Param('patientId') patientId: string,
+    @Body() updateData: Partial<{ status?: BookingStatus }>,
+  ) {
+    const labId = req.user._id
+    return this.labService.updatePatient(labId, serviceId, patientId, updateData)
   }
 }

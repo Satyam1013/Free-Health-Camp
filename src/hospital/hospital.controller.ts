@@ -11,6 +11,7 @@ import {
   UpdateAvailableServiceDto,
   UpdateHospitalTimeDto,
 } from './hospital.dto'
+import { BookingStatus } from 'src/patient/patient.schema'
 
 @Controller('hospital')
 @UseGuards(AuthGuard)
@@ -100,5 +101,16 @@ export class HospitalController {
   async getPatientsByProvider(@Request() req: AuthenticatedRequest) {
     const staffId = req.user._id
     return this.hospitalService.getPatientsByStaff(staffId)
+  }
+
+  @Put(':serviceId/patient/:patientId')
+  async updatePatient(
+    @Request() req: AuthenticatedRequest,
+    @Param('serviceId') serviceId: string,
+    @Param('patientId') patientId: string,
+    @Body() updateData: Partial<{ status?: BookingStatus }>,
+  ) {
+    const hospitalId = req.user._id
+    return this.hospitalService.updatePatient(hospitalId, serviceId, patientId, updateData)
   }
 }
