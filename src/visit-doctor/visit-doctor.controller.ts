@@ -82,7 +82,7 @@ export class VisitDoctorController {
 
   // 👨‍⚕️👩‍⚕️ Only Staff Related
   @Get('get-all-patients')
-  async getPatientsByProvider(@Request() req: AuthenticatedRequest) {
+  async getPatientsByStaff(@Request() req: AuthenticatedRequest) {
     const staffId = req.user._id
     return this.visitDoctorService.getPatientsByStaff(staffId)
   }

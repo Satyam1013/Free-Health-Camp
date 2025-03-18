@@ -1,5 +1,5 @@
 import { PartialType } from '@nestjs/mapped-types'
-import { IsNotEmpty, IsString, IsNumber, IsOptional, IsEnum } from 'class-validator'
+import { IsNotEmpty, IsString, IsNumber, IsOptional, IsEnum, IsMongoId } from 'class-validator'
 import { UserRole } from 'src/auth/create-user.dto'
 
 export class CreateDoctorDto {
@@ -14,6 +14,14 @@ export class CreateDoctorDto {
   @IsNotEmpty()
   @IsNumber()
   mobile: number
+
+  @IsNotEmpty()
+  @IsMongoId()
+  serviceId: string
+
+  @IsNotEmpty()
+  @IsString()
+  service: string
 
   @IsNotEmpty()
   @IsString()

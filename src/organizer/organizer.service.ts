@@ -261,14 +261,30 @@ export class OrganizerService {
         .findOne({
           'events.staff._id': objectIdStaffId,
         })
-        .select('_id')
+        .select('events.doctors')
+
       if (!organizer) {
         throw new NotFoundException('Organizer not found for this staff member')
       }
 
-      const providerId = organizer._id.toString()
+      // Find the doctor inside events where staffId exists
+      let doctorId: string | null = null
 
-      return await this.patientService.getPatientsByProvider(providerId)
+      for (const event of organizer.events) {
+        for (const doctor of event.doctors) {
+          if (doctor._id) {
+            doctorId = doctor._id.toString()
+            break // Stop once we find the first doctor
+          }
+        }
+        if (doctorId) break
+      }
+
+      if (!doctorId) {
+        throw new NotFoundException('Doctor not found for this staff member')
+      }
+
+      return await this.patientService.getPatientsByProvider(doctorId)
     } catch (error) {
       console.error('Error fetching patients for organizer staff:', error)
 
