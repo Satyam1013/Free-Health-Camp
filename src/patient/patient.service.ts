@@ -106,7 +106,7 @@ export class PatientService {
         serviceId: new Types.ObjectId(serviceId),
         providerId: new Types.ObjectId(providerId),
         providerRole: UserRole.ORGANIZER,
-        serviceName: event.name,
+        serviceName: event.eventName,
         bookingDate: new Date(patientData.bookingDate),
         status: BookingStatus.Pending,
       }
