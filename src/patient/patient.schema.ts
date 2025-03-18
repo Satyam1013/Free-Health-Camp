@@ -22,6 +22,9 @@ export class BookedEvent {
   @Prop({ type: Types.ObjectId, required: true })
   providerId: Types.ObjectId
 
+  @Prop()
+  providerRole: UserRole
+
   @Prop({ required: true })
   serviceName: string
 

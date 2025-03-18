@@ -7,6 +7,7 @@ import { Hospital } from 'src/hospital/hospital.schema'
 import { Organizer } from 'src/organizer/organizer.schema'
 import { BookedEvent, BookingStatus, Patient } from './patient.schema'
 import { BookDoctorDto } from './patient.dto'
+import { UserRole } from 'src/auth/create-user.dto'
 
 @Injectable()
 export class PatientService {
@@ -104,6 +105,7 @@ export class PatientService {
         _id: new Types.ObjectId(),
         serviceId: new Types.ObjectId(serviceId),
         providerId: new Types.ObjectId(providerId),
+        providerRole: UserRole.ORGANIZER,
         serviceName: event.name,
         bookingDate: new Date(patientData.bookingDate),
         status: BookingStatus.Pending,
@@ -140,6 +142,7 @@ export class PatientService {
         _id: new Types.ObjectId(),
         serviceId: new Types.ObjectId(visitDetailId),
         providerId: new Types.ObjectId(visitDoctorId),
+        providerRole: UserRole.VISIT_DOCTOR,
         serviceName: visitDetail.visitName,
         status: BookingStatus.Pending,
         bookingDate: new Date(patientData.bookingDate),
@@ -178,6 +181,7 @@ export class PatientService {
         _id: new Types.ObjectId(),
         serviceId: new Types.ObjectId(serviceId),
         providerId: new Types.ObjectId(providerId),
+        providerRole: UserRole.HOSPITAL,
         serviceName: service.name,
         status: BookingStatus.Pending,
         bookingDate: new Date(patientData.bookingDate),
@@ -213,6 +217,7 @@ export class PatientService {
         _id: new Types.ObjectId(),
         serviceId: new Types.ObjectId(serviceId),
         providerId: new Types.ObjectId(labId),
+        providerRole: UserRole.LAB,
         serviceName: service.name,
         status: BookingStatus.Pending,
         bookingDate: new Date(patientData.bookingDate),
