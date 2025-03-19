@@ -343,7 +343,7 @@ export class PatientService {
         .lean()
 
       if (!patients.length) {
-        throw new NotFoundException('No patients found for this provider')
+        throw new NotFoundException('No patients found for this service')
       }
 
       return patients
