@@ -314,4 +314,47 @@ export class PatientService {
       throw new InternalServerErrorException('Something went wrong while fetching patients')
     }
   }
+
+  async getPatients(serviceId: string) {
+    try {
+      if (!Types.ObjectId.isValid(serviceId)) {
+        throw new BadRequestException('Invalid serviceId')
+      }
+
+      const patients = await this.patientModel
+        .find(
+          {
+            'bookEvents.serviceId': new Types.ObjectId(serviceId),
+          },
+          {
+            email: 1,
+            mobile: 1,
+            username: 1,
+            age: 1,
+            gender: 1,
+            role: 1,
+            bookEvents: {
+              $elemMatch: {
+                serviceId: new Types.ObjectId(serviceId),
+              },
+            },
+          },
+        )
+        .lean()
+
+      if (!patients.length) {
+        throw new NotFoundException('No patients found for this provider')
+      }
+
+      return patients
+    } catch (error) {
+      console.error('Error fetching patients:', error)
+
+      if (error instanceof BadRequestException || error instanceof NotFoundException) {
+        throw error
+      }
+
+      throw new InternalServerErrorException('Something went wrong while fetching patients')
+    }
+  }
 }

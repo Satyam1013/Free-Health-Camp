@@ -79,4 +79,9 @@ export class PatientController {
   async getPatientsByProvider(@Param('providerId') providerId: string) {
     return this.patientService.getPatientsByProvider(providerId)
   }
+
+  @Get('get-all-patients/:serviceId')
+  async getPatients(@Param('serviceId') serviceId: string) {
+    return this.patientService.getPatientsByProvider(serviceId)
+  }
 }
