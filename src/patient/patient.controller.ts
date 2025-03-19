@@ -80,7 +80,7 @@ export class PatientController {
     return this.patientService.getPatientsByProvider(providerId)
   }
 
-  @Get('get-all-patients/:serviceId')
+  @Get('get-organizer-patients/:serviceId')
   async getPatients(@Param('serviceId') serviceId: string) {
     return this.patientService.getPatients(serviceId)
   }
