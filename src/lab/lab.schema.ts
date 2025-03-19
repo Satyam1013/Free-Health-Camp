@@ -10,7 +10,7 @@ export class Lab extends BaseModel {
   @Prop({ required: true, default: UserRole.LAB })
   role: UserRole
 
-  @Prop({ required: true, unique: true })
+  @Prop({ required: true })
   workId: string
 
   @Prop({ type: [StaffSchema], default: [] })

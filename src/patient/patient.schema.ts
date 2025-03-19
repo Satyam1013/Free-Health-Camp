@@ -9,8 +9,6 @@ export enum BookingStatus {
   Cancelled = 'Cancelled',
 }
 
-export type PatientDocument = Patient & Document
-
 @Schema()
 export class BookedEvent {
   @Prop({ type: Types.ObjectId, auto: true })
@@ -39,6 +37,8 @@ export class BookedEvent {
 }
 
 export const BookedEventSchema = SchemaFactory.createForClass(BookedEvent)
+
+export type PatientDocument = Patient & Document
 
 @Schema()
 export class Patient {
