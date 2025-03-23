@@ -26,6 +26,10 @@ export class CreateVisitDetailDto {
   @IsNotEmpty()
   @IsDate()
   endTime: Date
+
+  @IsString()
+  @IsNotEmpty()
+  city: string
 }
 
 export class UpdateVisitDetailDto extends PartialType(CreateVisitDetailDto) {}

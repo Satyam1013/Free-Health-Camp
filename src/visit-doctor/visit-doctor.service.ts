@@ -209,14 +209,14 @@ export class VisitDoctorService {
       const visitDoctor = await this.visitDoctorModel
         .findOne({ 'visitDetails.staff._id': objectIdStaffId })
         .select('_id')
+        .lean() // ✅ Returns plain JavaScript object
 
-      if (!visitDoctor) {
+      if (!visitDoctor || !visitDoctor._id) {
         throw new NotFoundException('VisitDoctor not found for this staff member')
       }
 
-      const providerId = visitDoctor._id.toString()
+      const providerId = new Types.ObjectId(visitDoctor._id as unknown as string)
 
-      // ✅ Fetch and return patients
       return await this.patientService.getPatientsByProvider(providerId)
     } catch (error) {
       console.error('Error fetching patients for staff:', error)

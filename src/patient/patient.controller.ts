@@ -3,6 +3,7 @@ import { PatientService } from './patient.service'
 import { AuthGuard } from 'src/auth/auth.guard'
 import { AuthenticatedRequest } from 'src/common/authenticated-request'
 import { BookDoctorDto } from './patient.dto'
+import { Types } from 'mongoose'
 
 @Controller('patient')
 export class PatientController {
@@ -76,7 +77,7 @@ export class PatientController {
   }
 
   @Get('get-all-patients/:providerId')
-  async getPatientsByProvider(@Param('providerId') providerId: string) {
+  async getPatientsByProvider(@Param('providerId') providerId: Types.ObjectId) {
     return this.patientService.getPatientsByProvider(providerId)
   }
 

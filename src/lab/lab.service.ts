@@ -242,11 +242,17 @@ export class LabService {
         throw new NotFoundException('Lab not found')
       }
 
-      if (updateTimeDto.startTime) {
-        lab.startTime = updateTimeDto.startTime
+      if (updateTimeDto.shiftOneStartTime) {
+        lab.shiftOneStartTime = updateTimeDto.shiftOneStartTime
       }
-      if (updateTimeDto.endTime) {
-        lab.endTime = updateTimeDto.endTime
+      if (updateTimeDto.shiftOneEndTime) {
+        lab.shiftOneEndTime = updateTimeDto.shiftOneEndTime
+      }
+      if (updateTimeDto.shiftTwoStartTime) {
+        lab.shiftTwoStartTime = updateTimeDto.shiftTwoStartTime
+      }
+      if (updateTimeDto.shiftTwoEndTime) {
+        lab.shiftTwoEndTime = updateTimeDto.shiftTwoEndTime
       }
 
       await lab.save()
@@ -265,10 +271,8 @@ export class LabService {
         throw new NotFoundException('Lab not found for this staff member')
       }
 
-      const providerId = lab._id.toString()
-
       // ✅ Fetch and return patients
-      return await this.patientService.getPatientsByProvider(providerId)
+      return await this.patientService.getPatientsByProvider(lab._id)
     } catch (error) {
       console.error('Error fetching patients for staff:', error)
 

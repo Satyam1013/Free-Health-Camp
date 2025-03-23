@@ -35,10 +35,16 @@ export class Hospital extends BaseModel {
   availableServices: AvailableService[]
 
   @Prop()
-  startTime?: string
+  shiftOneStartTime?: string
 
   @Prop()
-  endTime?: string
+  shiftOneEndTime?: string
+
+  @Prop()
+  shiftTwoStartTime?: string
+
+  @Prop()
+  shiftTwoEndTime?: string
 }
 
 export const HospitalSchema = SchemaFactory.createForClass(Hospital)

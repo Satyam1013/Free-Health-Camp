@@ -41,9 +41,17 @@ export class UpdateAvailableServiceDto extends PartialType(CreateAvailableServic
 export class UpdateLabTimeDto {
   @IsOptional()
   @IsString()
-  startTime?: string
+  shiftOneStartTime?: string
 
   @IsOptional()
   @IsString()
-  endTime?: string
+  shiftOneEndTime?: string
+
+  @IsOptional()
+  @IsString()
+  shiftTwoStartTime?: string
+
+  @IsOptional()
+  @IsString()
+  shiftTwoEndTime?: string
 }

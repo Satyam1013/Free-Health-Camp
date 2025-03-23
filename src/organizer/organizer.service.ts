@@ -268,12 +268,12 @@ export class OrganizerService {
       }
 
       // Find the doctor inside events where staffId exists
-      let doctorId: string | null = null
+      let doctorId: Types.ObjectId | null = null
 
       for (const event of organizer.events) {
         for (const doctor of event.doctors) {
           if (doctor._id) {
-            doctorId = doctor._id.toString()
+            doctorId = doctor._id
             break // Stop once we find the first doctor
           }
         }

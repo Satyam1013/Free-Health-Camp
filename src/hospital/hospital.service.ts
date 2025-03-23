@@ -297,11 +297,17 @@ export class HospitalService {
         throw new NotFoundException('Hospital not found')
       }
 
-      if (updateTimeDto.startTime) {
-        hospital.startTime = updateTimeDto.startTime
+      if (updateTimeDto.shiftOneStartTime) {
+        hospital.shiftOneStartTime = updateTimeDto.shiftOneStartTime
       }
-      if (updateTimeDto.endTime) {
-        hospital.endTime = updateTimeDto.endTime
+      if (updateTimeDto.shiftOneEndTime) {
+        hospital.shiftOneEndTime = updateTimeDto.shiftOneEndTime
+      }
+      if (updateTimeDto.shiftTwoStartTime) {
+        hospital.shiftTwoStartTime = updateTimeDto.shiftTwoStartTime
+      }
+      if (updateTimeDto.shiftTwoEndTime) {
+        hospital.shiftTwoEndTime = updateTimeDto.shiftTwoEndTime
       }
 
       await hospital.save()
@@ -320,10 +326,8 @@ export class HospitalService {
         throw new NotFoundException('Hospital not found for this staff member')
       }
 
-      const providerId = hospital._id.toString()
-
       // ✅ Fetch and return patients
-      return await this.patientService.getPatientsByProvider(providerId)
+      return await this.patientService.getPatientsByProvider(hospital._id)
     } catch (error) {
       console.error('Error fetching patients for staff:', error)
 

@@ -17,6 +17,9 @@ class Event {
   eventPlace: string
 
   @Prop({ required: true })
+  city: string
+
+  @Prop({ required: true })
   eventDate: Date
 
   @Prop({ type: Date, required: true })

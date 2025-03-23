@@ -22,6 +22,10 @@ export class CreateEventDto {
   @IsDate()
   @IsNotEmpty()
   endTime: Date
+
+  @IsString()
+  @IsNotEmpty()
+  city: string
 }
 
 export class EditEventDto extends PartialType(CreateEventDto) {}

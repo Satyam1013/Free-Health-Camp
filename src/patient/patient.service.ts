@@ -32,23 +32,30 @@ export class PatientService {
   async getAvailableDoctorsAndServices(city: string) {
     const regex = new RegExp(`^${city}$`, 'i')
 
-    const organizers = await this.organizerModel.find({ city: regex }).select('events').exec()
+    // ✅ Find organizers that have events with the specified city
+    const organizers = await this.organizerModel.find({ 'events.city': regex }).select('events').exec()
+
+    // Extract matching events
     const freeCampEvents = organizers.flatMap((org) =>
-      org.events.map((event) => ({
-        _id: event._id,
-        eventName: event.eventName,
-        eventPlace: event.eventPlace,
-        eventDate: event.eventDate,
-        startTime: event.startTime,
-        endTime: event.endTime,
-        doctors: event.doctors,
-      })),
+      org.events
+        .filter((event) => regex.test(event.city))
+        .map((event) => ({
+          _id: event._id,
+          eventName: event.eventName,
+          eventPlace: event.eventPlace,
+          city: event.city,
+          eventDate: event.eventDate,
+          startTime: event.startTime,
+          endTime: event.endTime,
+          doctors: event.doctors,
+        })),
     )
 
-    const visitDoctors = await this.visitDoctorModel.find({ city: regex }).exec()
+    // ✅ Find visit doctors that have visitDetails with the specified city
+    const visitDoctors = await this.visitDoctorModel.find({ 'visitDetails.city': regex }).exec()
 
+    // ✅ Find labs and hospitals (still searched using main city field)
     const labs = await this.labModel.find({ city: regex }).select('username email availableServices').exec()
-
     const hospitals = await this.hospitalModel.find({ city: regex }).select('username email availableServices').exec()
 
     return {
@@ -272,16 +279,12 @@ export class PatientService {
     }
   }
 
-  async getPatientsByProvider(providerId: string) {
+  async getPatientsByProvider(providerId: Types.ObjectId) {
     try {
-      if (!Types.ObjectId.isValid(providerId)) {
-        throw new BadRequestException('Invalid providerId')
-      }
-
       const patients = await this.patientModel
         .find(
           {
-            'bookEvents.providerId': new Types.ObjectId(providerId),
+            'bookEvents.providerId': providerId,
           },
           {
             email: 1,
@@ -292,7 +295,7 @@ export class PatientService {
             role: 1,
             bookEvents: {
               $elemMatch: {
-                providerId: new Types.ObjectId(providerId),
+                providerId: providerId,
               },
             },
           },

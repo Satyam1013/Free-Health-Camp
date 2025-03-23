@@ -17,6 +17,9 @@ class VisitDetails {
   visitPlace: string
 
   @Prop({ required: true })
+  city: string
+
+  @Prop({ required: true })
   doctorFee: number
 
   @Prop({ required: true })
