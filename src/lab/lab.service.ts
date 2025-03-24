@@ -32,7 +32,7 @@ export class LabService {
   /**
    * @description Create a new staff member and add to the lab.
    */
-  async createStaff(labId: string, staffData: CreateStaffDto) {
+  async createStaff(labId: Types.ObjectId, staffData: CreateStaffDto) {
     try {
       await this.mobileValidationService.checkDuplicateMobile(staffData.mobile)
 
@@ -72,7 +72,7 @@ export class LabService {
   /**
    * @description Edit an existing staff member.
    */
-  async editStaff(labId: string, staffId: string, updatedData: EditStaffDto) {
+  async editStaff(labId: Types.ObjectId, staffId: string, updatedData: EditStaffDto) {
     try {
       const lab = await this.labModel.findById(labId)
       if (!lab) {
@@ -103,7 +103,7 @@ export class LabService {
   /**
    * @description Delete a staff member from the lab.
    */
-  async deleteStaff(labId: string, staffId: string) {
+  async deleteStaff(labId: Types.ObjectId, staffId: string) {
     try {
       const lab = await this.labModel.findById(labId)
       if (!lab) {
@@ -127,7 +127,7 @@ export class LabService {
   /**
    * @description Create available lab services.
    */
-  async createAvailableServices(labId: string, serviceData: CreateAvailableServiceDto) {
+  async createAvailableServices(labId: Types.ObjectId, serviceData: CreateAvailableServiceDto) {
     try {
       const lab = await this.labModel.findById(labId)
       if (!lab) {
@@ -162,7 +162,7 @@ export class LabService {
    * @description Update available lab services.
    */
 
-  async updateAvailableService(labId: string, serviceId: string, updatedData: UpdateAvailableServiceDto) {
+  async updateAvailableService(labId: Types.ObjectId, serviceId: string, updatedData: UpdateAvailableServiceDto) {
     try {
       const lab = await this.labModel.findById(labId)
       if (!lab) {
@@ -190,7 +190,7 @@ export class LabService {
   /**
    * @description Delete available lab service by ID.
    */
-  async deleteAvailableService(labId: string, serviceId: string) {
+  async deleteAvailableService(labId: Types.ObjectId, serviceId: string) {
     try {
       const lab = await this.labModel.findById(labId)
       if (!lab) {
@@ -216,7 +216,7 @@ export class LabService {
   /**
    * @description Get details of a specific lab.
    */
-  async getLabDetails(labId: string) {
+  async getLabDetails(labId: Types.ObjectId) {
     try {
       const lab = await this.labModel.findById(labId)
       if (!lab) {
@@ -235,7 +235,7 @@ export class LabService {
   /**
    * @description Update lab opening and closing time.
    */
-  async updateLabTime(labId: string, updateTimeDto: UpdateLabTimeDto) {
+  async updateLabTime(labId: Types.ObjectId, updateTimeDto: UpdateLabTimeDto) {
     try {
       const lab = await this.labModel.findById(labId)
       if (!lab) {
@@ -262,17 +262,16 @@ export class LabService {
     }
   }
 
-  async getPatientsByStaff(staffId: string) {
+  async getPatientsByStaff(staffId: Types.ObjectId) {
     try {
-      const objectIdStaffId = new Types.ObjectId(staffId)
-
-      const lab = await this.labModel.findOne({ 'staff._id': objectIdStaffId }).select('_id')
+      const lab = await this.labModel.findOne({ 'staff._id': staffId }).select('_id')
       if (!lab) {
         throw new NotFoundException('Lab not found for this staff member')
       }
 
+      const providerId = lab._id.toString()
       // ✅ Fetch and return patients
-      return await this.patientService.getPatientsByProvider(lab._id)
+      return await this.patientService.getPatientsByProvider(providerId)
     } catch (error) {
       console.error('Error fetching patients for staff:', error)
 
@@ -285,7 +284,7 @@ export class LabService {
   }
 
   async updatePatient(
-    labId: string,
+    labId: Types.ObjectId,
     serviceId: string,
     patientId: string,
     updateData: Partial<{ status?: BookingStatus }>,
@@ -297,7 +296,7 @@ export class LabService {
 
       // ✅ Find the booked event for this provider and service
       const bookedEvent = patient.bookEvents.find(
-        (event) => event.providerId.toString() === labId && event.serviceId.toString() === serviceId,
+        (event) => event.providerId === labId && event.serviceId.toString() === serviceId,
       )
 
       if (!bookedEvent) throw new BadRequestException('No booking found for this service and provider')

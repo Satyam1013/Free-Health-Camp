@@ -19,9 +19,9 @@ export class PatientService {
     @InjectModel(Hospital.name) private hospitalModel: Model<Hospital>,
   ) {}
 
-  async getPatientDetails(userId: string) {
+  async getPatientDetails(patientId: Types.ObjectId) {
     try {
-      const user = await this.patientModel.findById(userId).select('-password').exec()
+      const user = await this.patientModel.findById(patientId).select('-password').exec()
       if (!user) throw new NotFoundException('User not found')
       return user
     } catch (error) {
@@ -70,7 +70,7 @@ export class PatientService {
     city: string,
     serviceId: string,
     providerId: string,
-    patientId: string,
+    patientId: Types.ObjectId,
     patientData: BookDoctorDto,
   ) {
     try {
@@ -128,7 +128,12 @@ export class PatientService {
     }
   }
 
-  async bookVisitDoctor(visitDoctorId: string, visitDetailId: string, patientId: string, patientData: BookDoctorDto) {
+  async bookVisitDoctor(
+    visitDoctorId: string,
+    visitDetailId: string,
+    patientId: Types.ObjectId,
+    patientData: BookDoctorDto,
+  ) {
     try {
       const doctor = await this.visitDoctorModel.findById(visitDoctorId)
       if (!doctor) throw new BadRequestException('Doctor not found')
@@ -168,7 +173,12 @@ export class PatientService {
   }
 
   // ✅ Book Hospital Services
-  async bookHospitalServices(providerId: string, serviceId: string, patientId: string, patientData: BookDoctorDto) {
+  async bookHospitalServices(
+    providerId: string,
+    serviceId: string,
+    patientId: Types.ObjectId,
+    patientData: BookDoctorDto,
+  ) {
     try {
       const hospital = await this.hospitalModel.findById(providerId)
       if (!hospital) throw new BadRequestException('Hospital not found')
@@ -204,7 +214,7 @@ export class PatientService {
   }
 
   // ✅ Book Lab Services
-  async bookLabServices(labId: string, serviceId: string, patientId: string, patientData: BookDoctorDto) {
+  async bookLabServices(labId: string, serviceId: string, patientId: Types.ObjectId, patientData: BookDoctorDto) {
     try {
       const lab = await this.labModel.findById(labId)
       if (!lab) throw new BadRequestException('Lab not found')
@@ -279,12 +289,13 @@ export class PatientService {
     }
   }
 
-  async getPatientsByProvider(providerId: Types.ObjectId) {
+  async getPatientsByProvider(providerId: string) {
     try {
+      const objectIdProviderId = new Types.ObjectId(providerId)
       const patients = await this.patientModel
         .find(
           {
-            'bookEvents.providerId': providerId,
+            'bookEvents.providerId': objectIdProviderId,
           },
           {
             email: 1,
@@ -295,7 +306,7 @@ export class PatientService {
             role: 1,
             bookEvents: {
               $elemMatch: {
-                providerId: providerId,
+                providerId: objectIdProviderId,
               },
             },
           },

@@ -28,7 +28,7 @@ export class HospitalService {
   ) {}
 
   // ✅ Create a new doctor under a hospital
-  async createDoctor(hospitalId: string, doctorData: CreateDoctorDto) {
+  async createDoctor(hospitalId: Types.ObjectId, doctorData: CreateDoctorDto) {
     try {
       await this.mobileValidationService.checkDuplicateMobile(doctorData.mobile)
 
@@ -68,7 +68,7 @@ export class HospitalService {
   }
 
   // ✅ Edit an existing doctor
-  async editDoctor(hospitalId: string, doctorId: string, updatedData: EditDoctorDto) {
+  async editDoctor(hospitalId: Types.ObjectId, doctorId: string, updatedData: EditDoctorDto) {
     try {
       const hospital = await this.hospitalModel.findById(hospitalId)
       if (!hospital) {
@@ -97,7 +97,7 @@ export class HospitalService {
   }
 
   // ✅ Delete a doctor
-  async deleteDoctor(hospitalId: string, doctorId: string) {
+  async deleteDoctor(hospitalId: Types.ObjectId, doctorId: string) {
     try {
       const hospital = await this.hospitalModel.findById(hospitalId)
       if (!hospital) {
@@ -114,7 +114,7 @@ export class HospitalService {
     }
   }
 
-  async createStaff(hospitalId: string, staffData: CreateStaffDto) {
+  async createStaff(hospitalId: Types.ObjectId, staffData: CreateStaffDto) {
     try {
       await this.mobileValidationService.checkDuplicateMobile(staffData.mobile)
 
@@ -150,7 +150,7 @@ export class HospitalService {
   }
 
   // ✅ Edit an existing staff member
-  async editStaff(hospitalId: string, staffId: string, updatedData: EditStaffDto) {
+  async editStaff(hospitalId: Types.ObjectId, staffId: string, updatedData: EditStaffDto) {
     try {
       const hospital = await this.hospitalModel.findById(hospitalId)
       if (!hospital) {
@@ -179,7 +179,7 @@ export class HospitalService {
   }
 
   // ✅ Delete a staff member
-  async deleteStaff(hospitalId: string, staffId: string) {
+  async deleteStaff(hospitalId: Types.ObjectId, staffId: string) {
     try {
       const hospital = await this.hospitalModel.findById(hospitalId)
       if (!hospital) {
@@ -196,7 +196,7 @@ export class HospitalService {
     }
   }
 
-  async createAvailableServices(hospitalId: string, serviceData: CreateAvailableServiceDto) {
+  async createAvailableServices(hospitalId: Types.ObjectId, serviceData: CreateAvailableServiceDto) {
     try {
       const hospital = await this.hospitalModel.findById(hospitalId)
       if (!hospital) {
@@ -227,7 +227,7 @@ export class HospitalService {
     }
   }
 
-  async updateAvailableService(hospitalId: string, serviceId: string, updatedData: UpdateAvailableServiceDto) {
+  async updateAvailableService(hospitalId: Types.ObjectId, serviceId: string, updatedData: UpdateAvailableServiceDto) {
     try {
       const hospital = await this.hospitalModel.findById(hospitalId)
       if (!hospital) {
@@ -255,7 +255,7 @@ export class HospitalService {
   /**
    * @description Delete available hospital service by ID.
    */
-  async deleteAvailableService(hospitalId: string, serviceId: string) {
+  async deleteAvailableService(hospitalId: Types.ObjectId, serviceId: string) {
     try {
       const hospital = await this.hospitalModel.findById(hospitalId)
       if (!hospital) {
@@ -278,7 +278,7 @@ export class HospitalService {
     }
   }
 
-  async getHospitalDetails(hospitalId: string) {
+  async getHospitalDetails(hospitalId: Types.ObjectId) {
     try {
       const hospital = await this.hospitalModel.findById(hospitalId)
       if (!hospital) {
@@ -290,7 +290,7 @@ export class HospitalService {
     }
   }
 
-  async updateHospitalTime(hospitalId: string, updateTimeDto: UpdateHospitalTimeDto) {
+  async updateHospitalTime(hospitalId: Types.ObjectId, updateTimeDto: UpdateHospitalTimeDto) {
     try {
       const hospital = await this.hospitalModel.findById(hospitalId)
       if (!hospital) {
@@ -317,17 +317,16 @@ export class HospitalService {
     }
   }
 
-  async getPatientsByStaff(staffId: string) {
+  async getPatientsByStaff(staffId: Types.ObjectId) {
     try {
-      const objectIdStaffId = new Types.ObjectId(staffId)
-
-      const hospital = await this.hospitalModel.findOne({ 'staff._id': objectIdStaffId }).select('_id')
+      const hospital = await this.hospitalModel.findOne({ 'staff._id': staffId }).select('_id')
       if (!hospital) {
         throw new NotFoundException('Hospital not found for this staff member')
       }
 
+      const providerId = hospital._id.toString()
       // ✅ Fetch and return patients
-      return await this.patientService.getPatientsByProvider(hospital._id)
+      return await this.patientService.getPatientsByProvider(providerId)
     } catch (error) {
       console.error('Error fetching patients for staff:', error)
 
@@ -340,7 +339,7 @@ export class HospitalService {
   }
 
   async updatePatient(
-    hospitalId: string,
+    hospitalId: Types.ObjectId,
     serviceId: string,
     patientId: string,
     updateData: Partial<{ status?: BookingStatus }>,
@@ -352,7 +351,7 @@ export class HospitalService {
 
       // ✅ Find the booked event for this provider and service
       const bookedEvent = patient.bookEvents.find(
-        (event) => event.providerId.toString() === hospitalId && event.serviceId.toString() === serviceId,
+        (event) => event.providerId === hospitalId && event.serviceId.toString() === serviceId,
       )
 
       if (!bookedEvent) throw new BadRequestException('No booking found for this service and provider')

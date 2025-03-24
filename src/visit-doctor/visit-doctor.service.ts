@@ -17,14 +17,14 @@ export class VisitDoctorService {
     private readonly patientService: PatientService,
   ) {}
 
-  private async findVisitDoctor(visitDoctorId: string) {
+  private async findVisitDoctor(visitDoctorId: Types.ObjectId) {
     const visitDoctor = await this.visitDoctorModel.findById(visitDoctorId)
     if (!visitDoctor) throw new NotFoundException('Doctor not found')
     return visitDoctor
   }
-  async createVisitDetail(visitDetailId: string, visitDetailData: CreateVisitDetailDto) {
+  async createVisitDetail(visitDoctorId: Types.ObjectId, visitDetailData: CreateVisitDetailDto) {
     try {
-      const visitDoctor = await this.visitDoctorModel.findById(visitDetailId)
+      const visitDoctor = await this.visitDoctorModel.findById(visitDoctorId)
       if (!visitDoctor) throw new BadRequestException('Invalid visitDoctor')
 
       // ✅ Check if last event was created within 24 hours
@@ -65,7 +65,7 @@ export class VisitDoctorService {
     }
   }
 
-  async updateVisitDetails(visitDoctorId: string, visitDetailId: string, updateData: UpdateVisitDetailDto) {
+  async updateVisitDetails(visitDoctorId: Types.ObjectId, visitDetailId: string, updateData: UpdateVisitDetailDto) {
     try {
       const visitDoctor = await this.findVisitDoctor(visitDoctorId)
 
@@ -81,7 +81,7 @@ export class VisitDoctorService {
     }
   }
 
-  async deleteVisitDetails(visitDoctorId: string, visitDetailId: string) {
+  async deleteVisitDetails(visitDoctorId: Types.ObjectId, visitDetailId: string) {
     try {
       const visitDoctor = await this.findVisitDoctor(visitDoctorId)
 
@@ -97,7 +97,7 @@ export class VisitDoctorService {
     }
   }
 
-  async getAllVisitDetails(visitDoctorId: string) {
+  async getAllVisitDetails(visitDoctorId: Types.ObjectId) {
     try {
       const visitDoctor = await this.visitDoctorModel.findById(visitDoctorId).select('visitDetails')
       if (!visitDoctor) throw new NotFoundException('Visit Doctor not found')
@@ -107,7 +107,7 @@ export class VisitDoctorService {
     }
   }
 
-  async createStaff(visitDoctorId: string, visitDetailId: string, staffData: CreateStaffDto) {
+  async createStaff(visitDoctorId: Types.ObjectId, visitDetailId: string, staffData: CreateStaffDto) {
     try {
       await this.mobileValidationService.checkDuplicateMobile(staffData.mobile)
 
@@ -136,7 +136,7 @@ export class VisitDoctorService {
     }
   }
 
-  async updateStaff(visitDoctorId: string, visitDetailId: string, staffId: string, updateData: UpdateStaffDto) {
+  async updateStaff(visitDoctorId: Types.ObjectId, visitDetailId: string, staffId: string, updateData: UpdateStaffDto) {
     try {
       const visitDoctor = await this.findVisitDoctor(visitDoctorId)
 
@@ -155,7 +155,7 @@ export class VisitDoctorService {
     }
   }
 
-  async deleteStaff(visitDoctorId: string, visitDetailId: string, staffId: string) {
+  async deleteStaff(visitDoctorId: Types.ObjectId, visitDetailId: string, staffId: string) {
     try {
       const visitDoctor = await this.findVisitDoctor(visitDoctorId)
 
@@ -175,7 +175,7 @@ export class VisitDoctorService {
   }
 
   async updatePatient(
-    visitDoctorId: string,
+    visitDoctorId: Types.ObjectId,
     serviceId: string,
     patientId: string,
     updateData: Partial<{ status?: BookingStatus; nextVisitDate?: Date }>,
@@ -187,7 +187,7 @@ export class VisitDoctorService {
 
       // ✅ Find the booked event for this provider and service
       const bookedEvent = patient.bookEvents.find(
-        (event) => event.providerId.toString() === visitDoctorId && event.serviceId.toString() === serviceId,
+        (event) => event.providerId === visitDoctorId && event.serviceId.toString() === serviceId,
       )
 
       if (!bookedEvent) throw new BadRequestException('No booking found for this service and provider')
@@ -202,12 +202,10 @@ export class VisitDoctorService {
     }
   }
 
-  async getPatientsByStaff(staffId: string) {
+  async getPatientsByStaff(staffId: Types.ObjectId) {
     try {
-      const objectIdStaffId = new Types.ObjectId(staffId)
-
       const visitDoctor = await this.visitDoctorModel
-        .findOne({ 'visitDetails.staff._id': objectIdStaffId })
+        .findOne({ 'visitDetails.staff._id': staffId })
         .select('_id')
         .lean() // ✅ Returns plain JavaScript object
 
@@ -215,7 +213,7 @@ export class VisitDoctorService {
         throw new NotFoundException('VisitDoctor not found for this staff member')
       }
 
-      const providerId = new Types.ObjectId(visitDoctor._id as unknown as string)
+      const providerId = visitDoctor._id.toString()
 
       return await this.patientService.getPatientsByProvider(providerId)
     } catch (error) {

@@ -27,7 +27,7 @@ export class OrganizerService {
   ) {}
 
   // ✅ Create Event
-  async createEvent(organizerId: string, eventData: CreateEventDto) {
+  async createEvent(organizerId: Types.ObjectId, eventData: CreateEventDto) {
     try {
       const organizer = await this.organizerModel.findById(organizerId)
       if (!organizer) throw new BadRequestException('Invalid Organizer')
@@ -68,7 +68,7 @@ export class OrganizerService {
   }
 
   // ✅ Edit Event
-  async editEvent(organizerId: string, eventId: string, updatedData: EditEventDto) {
+  async editEvent(organizerId: Types.ObjectId, eventId: string, updatedData: EditEventDto) {
     try {
       const organizer = await this.organizerModel.findById(organizerId)
       if (!organizer) throw new BadRequestException('Invalid Organizer')
@@ -85,7 +85,7 @@ export class OrganizerService {
   }
 
   // ✅ Delete Event
-  async deleteEvent(organizerId: string, eventId: string) {
+  async deleteEvent(organizerId: Types.ObjectId, eventId: string) {
     try {
       const organizer = await this.organizerModel.findById(organizerId)
       if (!organizer) throw new NotFoundException('Organizer not found')
@@ -103,14 +103,14 @@ export class OrganizerService {
   }
 
   // ✅ Get All Events
-  async getAllEvents(organizerId: string) {
+  async getAllEvents(organizerId: Types.ObjectId) {
     const organizer = await this.organizerModel.findById(organizerId).select('events')
     if (!organizer) throw new NotFoundException('Organizer not found')
     return organizer.events
   }
 
   // ✅ Add Doctor to Event
-  async createDoctor(organizerId: string, eventId: string, doctorData: CreateDoctorDto) {
+  async createDoctor(organizerId: Types.ObjectId, eventId: string, doctorData: CreateDoctorDto) {
     try {
       await this.mobileValidationService.checkDuplicateMobile(doctorData.mobile)
 
@@ -140,7 +140,7 @@ export class OrganizerService {
   }
 
   // ✅ Edit Doctor
-  async editDoctor(organizerId: string, eventId: string, doctorId: string, updatedData: EditDoctorDto) {
+  async editDoctor(organizerId: Types.ObjectId, eventId: string, doctorId: string, updatedData: EditDoctorDto) {
     try {
       const organizer = await this.organizerModel.findById(organizerId)
       if (!organizer) throw new BadRequestException('Invalid Organizer')
@@ -160,7 +160,7 @@ export class OrganizerService {
   }
 
   // ✅ Delete Doctor
-  async deleteDoctor(organizerId: string, eventId: string, doctorId: string) {
+  async deleteDoctor(organizerId: Types.ObjectId, eventId: string, doctorId: string) {
     try {
       const organizer = await this.organizerModel.findById(organizerId)
       if (!organizer) throw new NotFoundException('Organizer not found')
@@ -181,7 +181,7 @@ export class OrganizerService {
   }
 
   // ✅ Add Staff to Event
-  async createStaff(organizerId: string, eventId: string, staffData: CreateStaffDto) {
+  async createStaff(organizerId: Types.ObjectId, eventId: string, staffData: CreateStaffDto) {
     try {
       await this.mobileValidationService.checkDuplicateMobile(staffData.mobile)
 
@@ -212,7 +212,7 @@ export class OrganizerService {
   }
 
   // ✅ Edit Staff
-  async editStaff(organizerId: string, eventId: string, staffId: string, updatedData: EditStaffDto) {
+  async editStaff(organizerId: Types.ObjectId, eventId: string, staffId: string, updatedData: EditStaffDto) {
     try {
       const organizer = await this.organizerModel.findById(organizerId)
       if (!organizer) throw new BadRequestException('Invalid Organizer')
@@ -232,7 +232,7 @@ export class OrganizerService {
   }
 
   // ✅ Delete Staff
-  async deleteStaff(organizerId: string, eventId: string, staffId: string) {
+  async deleteStaff(organizerId: Types.ObjectId, eventId: string, staffId: string) {
     try {
       const organizer = await this.organizerModel.findById(organizerId)
       if (!organizer) throw new NotFoundException('Organizer not found')
@@ -253,13 +253,11 @@ export class OrganizerService {
   }
 
   // ✅ Get Patients from an Event by Organizer ID
-  async getPatientsByStaff(staffId: string) {
+  async getPatientsByStaff(staffId: Types.ObjectId) {
     try {
-      const objectIdStaffId = new Types.ObjectId(staffId)
-
       const organizer = await this.organizerModel
         .findOne({
-          'events.staff._id': objectIdStaffId,
+          'events.staff._id': staffId,
         })
         .select('events.doctors')
 
@@ -268,12 +266,12 @@ export class OrganizerService {
       }
 
       // Find the doctor inside events where staffId exists
-      let doctorId: Types.ObjectId | null = null
+      let doctorId: string | null = null
 
       for (const event of organizer.events) {
         for (const doctor of event.doctors) {
           if (doctor._id) {
-            doctorId = doctor._id
+            doctorId = doctor._id.toString()
             break // Stop once we find the first doctor
           }
         }
@@ -284,7 +282,9 @@ export class OrganizerService {
         throw new NotFoundException('Doctor not found for this staff member')
       }
 
-      return await this.patientService.getPatientsByProvider(doctorId)
+      const providerId = doctorId
+
+      return await this.patientService.getPatientsByProvider(providerId)
     } catch (error) {
       console.error('Error fetching patients for organizer staff:', error)
 
@@ -297,7 +297,7 @@ export class OrganizerService {
   }
 
   async updatePatient(
-    organizerId: string,
+    organizerId: Types.ObjectId,
     serviceId: string,
     patientId: string,
     updateData: Partial<{ status?: BookingStatus }>,
@@ -309,7 +309,7 @@ export class OrganizerService {
 
       // ✅ Find the booked event for this provider and service
       const bookedEvent = patient.bookEvents.find(
-        (event) => event.providerId.toString() === organizerId && event.serviceId.toString() === serviceId,
+        (event) => event.providerId === organizerId && event.serviceId.toString() === serviceId,
       )
 
       if (!bookedEvent) throw new BadRequestException('No booking found for this service and provider')
