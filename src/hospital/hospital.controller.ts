@@ -18,89 +18,77 @@ import { BookingStatus } from 'src/patient/patient.schema'
 export class HospitalController {
   constructor(private readonly hospitalService: HospitalService) {}
 
+  // 🏥 Available Services
   @Post('create-available-services')
-  async createAvailableServices(@Request() req: AuthenticatedRequest, @Body() servicesData: CreateAvailableServiceDto) {
-    const hospitalId = req.user._id
-    return this.hospitalService.createAvailableServices(hospitalId, servicesData)
+  async createAvailableServices(@Request() req: AuthenticatedRequest, @Body() data: CreateAvailableServiceDto) {
+    return this.hospitalService.createAvailableServices(req.user._id, data)
   }
 
   @Put('update-available-service/:serviceId')
   async updateAvailableService(
     @Request() req: AuthenticatedRequest,
     @Param('serviceId') serviceId: string,
-    @Body() updatedData: UpdateAvailableServiceDto,
+    @Body() data: UpdateAvailableServiceDto,
   ) {
-    const hospitalId = req.user._id
-    return this.hospitalService.updateAvailableService(hospitalId, serviceId, updatedData)
+    return this.hospitalService.updateAvailableService(req.user._id, serviceId, data)
   }
 
   @Delete('delete-available-service/:serviceId')
   async deleteAvailableService(@Request() req: AuthenticatedRequest, @Param('serviceId') serviceId: string) {
-    const hospitalId = req.user._id
-    return this.hospitalService.deleteAvailableService(hospitalId, serviceId)
+    return this.hospitalService.deleteAvailableService(req.user._id, serviceId)
   }
 
+  // ℹ️ Hospital Details & Timings
   @Get('hospital-details')
   async getHospitalDetails(@Request() req: AuthenticatedRequest) {
-    const hospitalId = req.user._id
-    return this.hospitalService.getHospitalDetails(hospitalId)
+    return this.hospitalService.getHospitalDetails(req.user._id)
   }
 
+  @Put('update-time')
+  async updateHospitalTime(@Request() req: AuthenticatedRequest, @Body() data: UpdateHospitalTimeDto) {
+    return this.hospitalService.updateHospitalTime(req.user._id, data)
+  }
+
+  // 👨‍⚕️ Doctors Management
   @Post('create-doctor')
-  async createDoctor(@Request() req: AuthenticatedRequest, @Body() doctorData: CreateDoctorDto) {
-    const hospitalId = req.user._id
-    return this.hospitalService.createDoctor(hospitalId, doctorData)
+  async createDoctor(@Request() req: AuthenticatedRequest, @Body() data: CreateDoctorDto) {
+    return this.hospitalService.createDoctor(req.user._id, data)
   }
 
   @Put('edit-doctor/:doctorId')
   async editDoctor(
     @Request() req: AuthenticatedRequest,
     @Param('doctorId') doctorId: string,
-    @Body() updatedData: EditDoctorDto,
+    @Body() data: EditDoctorDto,
   ) {
-    const hospitalId = req.user._id
-    return this.hospitalService.editDoctor(hospitalId, doctorId, updatedData)
+    return this.hospitalService.editDoctor(req.user._id, doctorId, data)
   }
 
   @Delete('delete-doctor/:doctorId')
   async deleteDoctor(@Request() req: AuthenticatedRequest, @Param('doctorId') doctorId: string) {
-    const hospitalId = req.user._id
-    return this.hospitalService.deleteDoctor(hospitalId, doctorId)
+    return this.hospitalService.deleteDoctor(req.user._id, doctorId)
   }
 
+  // 👩‍⚕️ Staff Management
   @Post('create-staff')
-  async createStaff(@Request() req: AuthenticatedRequest, @Body() staffData: CreateStaffDto) {
-    const hospitalId = req.user._id
-    return this.hospitalService.createStaff(hospitalId, staffData)
+  async createStaff(@Request() req: AuthenticatedRequest, @Body() data: CreateStaffDto) {
+    return this.hospitalService.createStaff(req.user._id, data)
   }
 
   @Put('edit-staff/:staffId')
-  async editStaff(
-    @Request() req: AuthenticatedRequest,
-    @Param('staffId') staffId: string,
-    @Body() updatedData: EditStaffDto,
-  ) {
-    const hospitalId = req.user._id
-    return this.hospitalService.editStaff(hospitalId, staffId, updatedData)
+  async editStaff(@Request() req: AuthenticatedRequest, @Param('staffId') staffId: string, @Body() data: EditStaffDto) {
+    return this.hospitalService.editStaff(req.user._id, staffId, data)
   }
 
   @Delete('delete-staff/:staffId')
   async deleteStaff(@Request() req: AuthenticatedRequest, @Param('staffId') staffId: string) {
-    const hospitalId = req.user._id
-    return this.hospitalService.deleteStaff(hospitalId, staffId)
+    return this.hospitalService.deleteStaff(req.user._id, staffId)
   }
 
-  @Put('update-time')
-  async updateHospitalTime(@Request() req: AuthenticatedRequest, @Body() updateTimeDto: UpdateHospitalTimeDto) {
-    const hospitalId = req.user._id
-    return this.hospitalService.updateHospitalTime(hospitalId, updateTimeDto)
-  }
-
-  // 👨‍⚕️👩‍⚕️ Only Staff Related
+  // 📋 Patient Management (Staff Only)
   @Get('get-all-patients')
   async getPatientsByStaff(@Request() req: AuthenticatedRequest) {
-    const staffId = req.user._id
-    return this.hospitalService.getPatientsByStaff(staffId)
+    return this.hospitalService.getPatientsByStaff(req.user._id)
   }
 
   @Put(':serviceId/patient/:patientId')
@@ -108,9 +96,8 @@ export class HospitalController {
     @Request() req: AuthenticatedRequest,
     @Param('serviceId') serviceId: string,
     @Param('patientId') patientId: string,
-    @Body() updateData: Partial<{ status?: BookingStatus }>,
+    @Body() data: Partial<{ status?: BookingStatus }>,
   ) {
-    const hospitalId = req.user._id
-    return this.hospitalService.updatePatient(hospitalId, serviceId, patientId, updateData)
+    return this.hospitalService.updatePatient(req.user._id, serviceId, patientId, data)
   }
 }

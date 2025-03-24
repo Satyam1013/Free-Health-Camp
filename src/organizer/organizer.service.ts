@@ -22,7 +22,6 @@ export class OrganizerService {
     @InjectModel(Organizer.name) private organizerModel: Model<OrganizerDocument>,
     @InjectModel(Patient.name) private patientModel: Model<PatientDocument>,
     private readonly mobileValidationService: MobileValidationService,
-
     private readonly patientService: PatientService,
   ) {}
 

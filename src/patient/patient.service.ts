@@ -83,7 +83,10 @@ export class PatientService {
       const regex = new RegExp(`^${city}$`, 'i')
 
       // ✅ Find all organizers in the given city
-      const organizers = await this.organizerModel.find({ city: regex })
+      const organizers = await this.organizerModel.find({
+        'events.city': regex,
+      })
+
       if (!organizers.length) throw new BadRequestException('No organizers found in this city')
 
       // ✅ Find the event within any organizer
