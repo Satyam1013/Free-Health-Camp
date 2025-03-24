@@ -55,8 +55,14 @@ export class PatientService {
     const visitDoctors = await this.visitDoctorModel.find({ 'visitDetails.city': regex }).exec()
 
     // ✅ Find labs and hospitals (still searched using main city field)
-    const labs = await this.labModel.find({ city: regex }).select('username email availableServices').exec()
-    const hospitals = await this.hospitalModel.find({ city: regex }).select('username email availableServices').exec()
+    const labs = await this.labModel
+      .find({ city: regex })
+      .select('username email availableServices shiftOneStartTime shiftOneEndTime shiftTwoStartTime shiftTwoEndTime')
+      .exec()
+    const hospitals = await this.hospitalModel
+      .find({ city: regex })
+      .select('username email availableServices shiftOneStartTime shiftOneEndTime shiftTwoStartTime shiftTwoEndTime')
+      .exec()
 
     return {
       freeCampEvents,
