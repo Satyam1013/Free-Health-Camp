@@ -61,13 +61,35 @@ export class AuthService {
       let user: any = null
       let role: UserRole | null = null
 
-      // 1️⃣ Check if the mobile exists in the Organizer collection
-      const organizer = await this.organizerModel.findOne({ mobile })
-      if (organizer) {
-        user = organizer
-        role = UserRole.ORGANIZER
-      } else {
-        // 2️⃣ Check inside events for Doctors & Staff under Organizer
+      // 🔹 Helper function to check user existence in a collection
+      const checkUserInCollection = async (model: any, query: object, userRole: UserRole) => {
+        const result = await model.findOne(query)
+        if (result) {
+          return { user: result, role: userRole }
+        }
+        return null
+      }
+
+      // 🔹 Check user across different collections
+      const userChecks = [
+        { model: this.organizerModel, query: { mobile }, role: UserRole.ORGANIZER },
+        { model: this.visitDoctorModel, query: { mobile }, role: UserRole.VISIT_DOCTOR },
+        { model: this.patientModel, query: { mobile }, role: UserRole.PATIENT },
+        { model: this.labModel, query: { mobile }, role: UserRole.LAB },
+        { model: this.hospitalModel, query: { mobile }, role: UserRole.HOSPITAL },
+      ]
+
+      for (const check of userChecks) {
+        const result = await checkUserInCollection(check.model, check.query, check.role)
+        if (result) {
+          user = result.user
+          role = result.role
+          break
+        }
+      }
+
+      // 🔹 Check for Doctors & Staff in Organizer's events
+      if (!user) {
         const event = await this.organizerModel.findOne({
           $or: [{ 'events.doctors.mobile': mobile }, { 'events.staff.mobile': mobile }],
         })
@@ -79,42 +101,23 @@ export class AuthService {
           )
 
           if (foundEvent) {
-            user = foundEvent.doctors.find((doc) => doc.mobile === mobile)
-            role = UserRole.ORGANIZER_DOCTOR
-
-            if (!user) {
-              user = foundEvent.staff.find((staff) => staff.mobile === mobile)
-              role = UserRole.ORGANIZER_STAFF
-            }
+            user =
+              foundEvent.doctors.find((doc) => doc.mobile === mobile) ||
+              foundEvent.staff.find((staff) => staff.mobile === mobile)
+            role = user
+              ? foundEvent.doctors.includes(user)
+                ? UserRole.ORGANIZER_DOCTOR
+                : UserRole.ORGANIZER_STAFF
+              : null
           }
         }
       }
 
-      // 3️⃣ Check VisitDoctor
+      // 🔹 Check Staff in VisitDoctor's visitDetails
       if (!user) {
-        user = await this.visitDoctorModel.findOne({ mobile })
-        if (user) {
-          role = UserRole.VISIT_DOCTOR
-        }
-      }
-
-      // 3️⃣ Check Patient
-      if (!user) {
-        user = await this.patientModel.findOne({ mobile })
-        if (user) {
-          role = UserRole.PATIENT
-        }
-      }
-
-      // If not a VisitDoctor, check inside visitDetails for Staff
-      if (!user) {
-        const visitDoctor = await this.visitDoctorModel.findOne({
-          'visitDetails.staff.mobile': mobile,
-        })
-
+        const visitDoctor = await this.visitDoctorModel.findOne({ 'visitDetails.staff.mobile': mobile })
         if (visitDoctor) {
           const foundVisit = visitDoctor.visitDetails.find((visit) => visit.staff.some((s) => s.mobile === mobile))
-
           if (foundVisit) {
             user = foundVisit.staff.find((s) => s.mobile === mobile)
             role = UserRole.VISIT_DOCTOR_STAFF
@@ -122,11 +125,7 @@ export class AuthService {
         }
       }
 
-      // ✅ Check Lab & Lab Staff
-      if (!user) {
-        user = await this.labModel.findOne({ mobile })
-        if (user) role = UserRole.LAB
-      }
+      // 🔹 Check Staff in Lab
       if (!user) {
         const lab = await this.labModel.findOne({ 'staff.mobile': mobile })
         if (lab) {
@@ -135,55 +134,49 @@ export class AuthService {
         }
       }
 
-      // ✅ Check Hospital, Hospital Doctor & Hospital Staff
-      if (!user) {
-        user = await this.hospitalModel.findOne({ mobile })
-        if (user) role = UserRole.HOSPITAL
-      }
+      // 🔹 Check Doctors & Staff in Hospital
       if (!user) {
         const hospital = await this.hospitalModel.findOne({
           $or: [{ 'staff.mobile': mobile }, { 'doctors.mobile': mobile }],
         })
         if (hospital) {
-          user = hospital.staff.find((s) => s.mobile === mobile)
-          role = user ? UserRole.HOSPITAL_STAFF : UserRole.HOSPITAL_DOCTOR
-
-          if (!user) {
-            user = hospital.doctors.find((d) => d.mobile === mobile)
-          }
+          user = hospital.staff.find((s) => s.mobile === mobile) || hospital.doctors.find((d) => d.mobile === mobile)
+          role = user ? (hospital.staff.includes(user) ? UserRole.HOSPITAL_STAFF : UserRole.HOSPITAL_DOCTOR) : null
         }
       }
 
-      // 4️⃣ If User Not Found, Throw Unauthorized Error
+      // ❌ If User Not Found, Throw Error
       if (!user) {
         throw new UnauthorizedException('Invalid mobile number or password')
       }
 
-      // 5️⃣ Compare Passwords
+      // 🔹 Verify Password
       const isPasswordMatch = await bcrypt.compare(password, user.password)
       if (!isPasswordMatch) {
         throw new UnauthorizedException('Invalid mobile number or password')
       }
 
-      // 6️⃣ Ensure Staff & Doctors Can Log in as Their Main Role
-      const isOrganizerRole = [UserRole.ORGANIZER_DOCTOR, UserRole.ORGANIZER_STAFF].includes(role as UserRole)
-      const isLabStaff = role === UserRole.LAB_STAFF
-      const isHospitalStaff = role === UserRole.HOSPITAL_STAFF
-      const isHospitalDoctor = role === UserRole.HOSPITAL_DOCTOR
+      // 🔹 Normalize Role Mapping
+      const roleMapping: Record<UserRole, UserRole> = {
+        [UserRole.ORGANIZER]: UserRole.ORGANIZER,
+        [UserRole.ORGANIZER_DOCTOR]: UserRole.ORGANIZER,
+        [UserRole.ORGANIZER_STAFF]: UserRole.ORGANIZER,
+        [UserRole.VISIT_DOCTOR]: UserRole.VISIT_DOCTOR,
+        [UserRole.VISIT_DOCTOR_STAFF]: UserRole.VISIT_DOCTOR,
+        [UserRole.LAB]: UserRole.LAB,
+        [UserRole.LAB_STAFF]: UserRole.LAB,
+        [UserRole.HOSPITAL]: UserRole.HOSPITAL,
+        [UserRole.HOSPITAL_DOCTOR]: UserRole.HOSPITAL,
+        [UserRole.HOSPITAL_STAFF]: UserRole.HOSPITAL,
+        [UserRole.PATIENT]: UserRole.PATIENT,
+      }
 
-      const finalRole = isOrganizerRole
-        ? UserRole.ORGANIZER
-        : isLabStaff
-          ? UserRole.LAB
-          : isHospitalStaff || isHospitalDoctor
-            ? UserRole.HOSPITAL
-            : role
+      const finalRole = roleMapping[role as UserRole] || role
 
-      // 7️⃣ Generate JWT Token
+      // 🔹 Generate JWT Token
       const payload = { _id: user._id, role: finalRole }
       const access_token = this.jwtService.sign(payload)
 
-      // 8️⃣ Remove Sensitive Data
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { password: _, ...userDetails } = user.toObject ? user.toObject() : user
 

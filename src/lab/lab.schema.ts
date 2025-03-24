@@ -19,10 +19,10 @@ export class Lab extends BaseModel {
   @Prop({ type: [AvailableServiceSchema], default: [] })
   availableServices: AvailableService[]
 
-  @Prop()
+  @Prop({ default: '09:00' }) // 9 AM
   shiftOneStartTime?: string
 
-  @Prop()
+  @Prop({ default: '21:00' }) // 9 PM
   shiftOneEndTime?: string
 
   @Prop()
