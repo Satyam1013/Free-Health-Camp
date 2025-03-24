@@ -3,7 +3,7 @@ import { VisitDoctorService } from './visit-doctor.service'
 import { AuthGuard } from 'src/auth/auth.guard'
 import { AuthenticatedRequest } from 'src/common/authenticated-request'
 import { CreateStaffDto, CreateVisitDetailDto, UpdateStaffDto, UpdateVisitDetailDto } from './visit-doctor.dto'
-import { BookingStatus } from 'src/patient/patient.schema'
+import { BookingStatus } from 'src/common/common.types'
 
 @Controller('visit-doctor')
 @UseGuards(AuthGuard)

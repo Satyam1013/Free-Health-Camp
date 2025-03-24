@@ -1,6 +1,6 @@
 import { PartialType } from '@nestjs/mapped-types'
 import { IsNotEmpty, IsString, IsOptional, IsNumber, IsEnum } from 'class-validator'
-import { UserRole } from 'src/auth/create-user.dto'
+import { UserRole } from 'src/common/common.types'
 
 export class CreateStaffDto {
   @IsNotEmpty()

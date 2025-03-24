@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { Types, Document } from 'mongoose'
-import { UserRole } from 'src/auth/create-user.dto'
 import { BaseModel, Staff } from 'src/common/common.schema'
+import { PaidStatus, UserRole } from 'src/common/common.types'
 
 export const StaffSchema = SchemaFactory.createForClass(Staff)
 
@@ -47,8 +47,25 @@ export class VisitDoctor extends BaseModel {
   @Prop({ required: true })
   workId: string
 
+  @Prop({ default: 0 })
+  adminRevenue: number
+
+  @Prop({ default: 0 })
+  feeBalance: number
+
+  @Prop({ type: String, enum: PaidStatus, default: PaidStatus.PENDING })
+  paid: PaidStatus
+
   @Prop({ type: [VisitSchema], default: [] })
   visitDetails: VisitDetails[]
 }
 
 export const VisitDoctorSchema = SchemaFactory.createForClass(VisitDoctor)
+
+// 2000, 2000 admin ke feeBalance 0 krne ka update honga
+// add 20% of doctor fee when status is completed
+// patient ko service nhi dikhegi agr feeBalance 0 hai
+// feeBalance update -> admin
+// event -> count, visitDetails, labs, hospitals, revenue, feeBalance -> organizer name event count, patient count city wise
+// city specific event data
+// eventEnd time ke bad patient ko nhi dena hai

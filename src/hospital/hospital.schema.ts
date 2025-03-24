@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
-import { UserRole } from 'src/auth/create-user.dto'
+import { UserRole } from 'src/common/common.types'
 import { AvailableService, AvailableServiceSchema, BaseModel } from 'src/common/common.schema'
 import { Doctor, Staff, StaffSchema } from '../common/common.schema'
 import { Types } from 'mongoose'
@@ -33,6 +33,12 @@ export class Hospital extends BaseModel {
 
   @Prop({ type: [AvailableServiceSchema], default: [] })
   availableServices: AvailableService[]
+
+  @Prop({ default: 0 })
+  adminRevenue: number
+
+  @Prop({ default: 0 })
+  feeBalance: number
 
   @Prop({ default: '09:00' }) // 9 AM
   shiftOneStartTime?: string

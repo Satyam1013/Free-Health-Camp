@@ -11,7 +11,7 @@ import {
   EditEventDto,
   EditStaffDto,
 } from './organizer.dto'
-import { BookingStatus } from 'src/patient/patient.schema'
+import { BookingStatus } from 'src/common/common.types'
 
 @Controller('organizer')
 @UseGuards(AuthGuard)

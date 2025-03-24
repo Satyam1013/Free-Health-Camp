@@ -14,7 +14,8 @@ import {
   EditEventDto,
   EditStaffDto,
 } from './organizer.dto'
-import { BookingStatus, Patient, PatientDocument } from 'src/patient/patient.schema'
+import { Patient, PatientDocument } from 'src/patient/patient.schema'
+import { BookingStatus } from 'src/common/common.types'
 
 @Injectable()
 export class OrganizerService {

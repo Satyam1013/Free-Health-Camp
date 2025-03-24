@@ -1,6 +1,6 @@
 import { Request as ExpressRequest } from 'express'
 import { Types } from 'mongoose'
-import { UserRole } from 'src/auth/create-user.dto'
+import { UserRole } from './common.types'
 
 export interface AuthenticatedRequest extends ExpressRequest {
   user: {

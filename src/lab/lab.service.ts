@@ -4,7 +4,6 @@ import { Model, Types } from 'mongoose'
 import { Lab } from './lab.schema'
 import * as bcrypt from 'bcrypt'
 import { MobileValidationService } from 'src/mobile-validation/mobile-validation.service'
-import { UserRole } from 'src/auth/create-user.dto'
 import {
   CreateAvailableServiceDto,
   CreateStaffDto,
@@ -14,7 +13,8 @@ import {
 } from './lab.dto'
 import { Staff } from 'src/common/common.schema'
 import { PatientService } from 'src/patient/patient.service'
-import { BookingStatus, Patient, PatientDocument } from 'src/patient/patient.schema'
+import { Patient, PatientDocument } from 'src/patient/patient.schema'
+import { BookingStatus, UserRole } from 'src/common/common.types'
 
 @Injectable()
 export class LabService {

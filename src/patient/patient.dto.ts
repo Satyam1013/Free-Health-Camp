@@ -1,5 +1,5 @@
 import { IsEnum, IsNotEmpty, IsDate } from 'class-validator'
-import { BookingStatus } from './patient.schema'
+import { BookingStatus } from 'src/common/common.types'
 
 export class BookDoctorDto {
   @IsEnum(BookingStatus)

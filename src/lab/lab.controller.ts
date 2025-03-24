@@ -9,7 +9,7 @@ import {
   UpdateAvailableServiceDto,
   UpdateLabTimeDto,
 } from './lab.dto'
-import { BookingStatus } from 'src/patient/patient.schema'
+import { BookingStatus } from 'src/common/common.types'
 
 @Controller('labs')
 @UseGuards(AuthGuard)

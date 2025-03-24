@@ -3,10 +3,11 @@ import * as bcrypt from 'bcrypt'
 import { InjectModel } from '@nestjs/mongoose'
 import { VisitDoctor, VisitDoctorDocument } from './visit-doctor.schema'
 import { Model, Types } from 'mongoose'
-import { BookingStatus, Patient, PatientDocument } from 'src/patient/patient.schema'
+import { Patient, PatientDocument } from 'src/patient/patient.schema'
 import { MobileValidationService } from 'src/mobile-validation/mobile-validation.service'
 import { CreateStaffDto, CreateVisitDetailDto, UpdateStaffDto, UpdateVisitDetailDto } from './visit-doctor.dto'
 import { PatientService } from 'src/patient/patient.service'
+import { BookingStatus } from 'src/common/common.types'
 
 @Injectable()
 export class VisitDoctorService {

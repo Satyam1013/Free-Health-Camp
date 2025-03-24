@@ -9,8 +9,9 @@ import { Lab, LabDocument } from '../lab/lab.schema'
 import { Hospital, HospitalDocument } from '../hospital/hospital.schema'
 import { Patient, PatientDocument } from '../patient/patient.schema'
 import { MobileValidationService } from 'src/mobile-validation/mobile-validation.service'
-import { CreateUserDto, UserRole } from './create-user.dto'
+import { CreateUserDto } from './create-user.dto'
 import { LoginDto } from './login.dto'
+import { UserRole } from 'src/common/common.types'
 
 @Injectable()
 export class AuthService {

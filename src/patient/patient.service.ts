@@ -5,9 +5,10 @@ import { VisitDoctor } from 'src/visit-doctor/visit-doctor.schema'
 import { Lab } from 'src/lab/lab.schema'
 import { Hospital } from 'src/hospital/hospital.schema'
 import { Organizer } from 'src/organizer/organizer.schema'
-import { BookedEvent, BookingStatus, Patient } from './patient.schema'
+import { BookedEvent, Patient } from './patient.schema'
 import { BookDoctorDto } from './patient.dto'
-import { UserRole } from 'src/auth/create-user.dto'
+import { UserRole } from 'src/common/common.types'
+import { BookingStatus } from 'src/common/common.types'
 
 @Injectable()
 export class PatientService {

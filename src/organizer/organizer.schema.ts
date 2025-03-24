@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { Document, Types } from 'mongoose'
-import { UserRole } from 'src/auth/create-user.dto'
+import { UserRole } from 'src/common/common.types'
 import { BaseModel } from 'src/common/common.schema'
 import { Doctor, DoctorSchema, Staff, StaffSchema } from '../common/common.schema'
 

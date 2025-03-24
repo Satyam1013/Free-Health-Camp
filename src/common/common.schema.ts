@@ -1,6 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { Types } from 'mongoose'
-import { UserRole } from 'src/auth/create-user.dto'
+import { UserRole } from './common.types'
 
 export class BaseModel {
   @Prop({ required: true, unique: true })

@@ -1,13 +1,8 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { Document, Types } from 'mongoose'
-import { UserRole } from 'src/auth/create-user.dto'
+import { UserRole } from 'src/common/common.types'
 import { BaseModel, Gender } from 'src/common/common.schema'
-
-export enum BookingStatus {
-  Booked = 'Booked',
-  Pending = 'Pending',
-  Cancelled = 'Cancelled',
-}
+import { BookingStatus } from 'src/common/common.types'
 
 @Schema()
 export class BookedEvent {
