@@ -1,7 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
 import { Document, Types } from 'mongoose'
 import { UserRole } from 'src/auth/create-user.dto'
-import { Gender } from 'src/common/common.schema'
+import { BaseModel, Gender } from 'src/common/common.schema'
 
 export enum BookingStatus {
   Booked = 'Booked',
@@ -41,19 +41,7 @@ export const BookedEventSchema = SchemaFactory.createForClass(BookedEvent)
 export type PatientDocument = Patient & Document
 
 @Schema()
-export class Patient {
-  @Prop({ required: true, unique: true })
-  email: string
-
-  @Prop({ required: true, unique: true })
-  mobile: number
-
-  @Prop({ required: true })
-  username: string
-
-  @Prop({ required: true })
-  password: string
-
+export class Patient extends BaseModel {
   @Prop({ required: true })
   age: number
 
