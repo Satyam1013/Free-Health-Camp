@@ -79,11 +79,10 @@ export class AdminService {
       totalPendingRevenue,
     }
   }
-
   async getDashboardStatsCityWise(city: string) {
     const regex = new RegExp(`^${city}$`, 'i')
 
-    // ✅ Find providers in the given city
+    // ✅ Fetch all providers in the given city
     const organizers = await this.organizerModel.find({ 'events.city': regex }).exec()
     const visitDoctors = await this.visitDoctorModel.find({ 'visitDetails.city': regex }).exec()
     const labs = await this.labModel.find({ city: regex }).exec()
@@ -95,7 +94,7 @@ export class AdminService {
     const labIds = labs.map((lab) => lab._id)
     const hospitalIds = hospitals.map((hospital) => hospital._id)
 
-    // ✅ Fetch patients whose bookings are completed and match providers in this city
+    // ✅ Fetch completed patient bookings
     const completedPatients = await this.patientModel
       .find({
         'bookEvents.providerId': { $in: [...organizerIds, ...visitDoctorIds, ...labIds, ...hospitalIds] },
@@ -126,54 +125,61 @@ export class AdminService {
       })
     })
 
-    // ✅ Compute additional stats from providers
-    const totalEvents = organizers.reduce((acc, org) => acc + org.events.length, 0)
-    const totalOrganizerDoctors = organizers.reduce(
-      (acc, org) => acc + org.events.reduce((sum, event) => sum + event.doctors.length, 0),
-      0,
-    )
-    const totalOrganizerStaff = organizers.reduce(
-      (acc, org) => acc + org.events.reduce((sum, event) => sum + event.staff.length, 0),
-      0,
-    )
+    // ✅ Compute stats with full details
+    const organizerDetails = organizers.map((org) => ({
+      _id: org._id,
+      name: org.username,
+      totalEvents: org.events.length,
+      totalDoctors: org.events.reduce((sum, event) => sum + event.doctors.length, 0),
+      totalStaff: org.events.reduce((sum, event) => sum + event.staff.length, 0),
+      completedPatients: totalOrganizerCompletedPatients,
+      events: org.events,
+    }))
 
-    const totalVisitDetails = visitDoctors.reduce((acc, doc) => acc + doc.visitDetails.length, 0)
-    const totalVisitDoctorStaff = visitDoctors.reduce(
-      (acc, doc) => acc + doc.visitDetails.reduce((sum, visit) => sum + visit.staff.length, 0),
-      0,
-    )
+    const visitDoctorDetails = visitDoctors.map((doc) => ({
+      _id: doc._id,
+      name: doc.username,
+      totalVisitDetails: doc.visitDetails.length,
+      totalStaff: doc.visitDetails.reduce((sum, visit) => sum + visit.staff.length, 0),
+      completedPatients: totalVisitDoctorCompletedPatients,
+      visitDetails: doc.visitDetails,
+    }))
 
-    const totalLabServices = labs.reduce((acc, lab) => acc + lab.availableServices.length, 0)
-    const totalLabStaff = labs.reduce((acc, lab) => acc + lab.staff.length, 0)
+    const labDetails = labs.map((lab) => ({
+      _id: lab._id,
+      name: lab.username,
+      email: lab.email,
+      totalServices: lab.availableServices.length,
+      totalStaff: lab.staff.length,
+      completedPatients: totalLabCompletedPatients,
+      availableServices: lab.availableServices,
+      shiftOneStartTime: lab.shiftOneStartTime,
+      shiftOneEndTime: lab.shiftOneEndTime,
+      shiftTwoStartTime: lab.shiftTwoStartTime,
+      shiftTwoEndTime: lab.shiftTwoEndTime,
+    }))
 
-    const totalHospitalServices = hospitals.reduce((acc, hospital) => acc + hospital.availableServices.length, 0)
-    const totalHospitalDoctors = hospitals.reduce((acc, hospital) => acc + hospital.doctors.length, 0)
-    const totalHospitalStaff = hospitals.reduce((acc, hospital) => acc + hospital.staff.length, 0)
+    const hospitalDetails = hospitals.map((hospital) => ({
+      _id: hospital._id,
+      name: hospital.username,
+      email: hospital.email,
+      totalServices: hospital.availableServices.length,
+      totalDoctors: hospital.doctors.length,
+      totalStaff: hospital.staff.length,
+      completedPatients: totalHospitalCompletedPatients,
+      availableServices: hospital.availableServices,
+      shiftOneStartTime: hospital.shiftOneStartTime,
+      shiftOneEndTime: hospital.shiftOneEndTime,
+      shiftTwoStartTime: hospital.shiftTwoStartTime,
+      shiftTwoEndTime: hospital.shiftTwoEndTime,
+    }))
 
-    // ✅ Final Response
+    // ✅ Return full details along with service counts
     return {
-      organizer: {
-        totalEvents,
-        totalDoctors: totalOrganizerDoctors,
-        totalStaff: totalOrganizerStaff,
-        completedPatients: totalOrganizerCompletedPatients,
-      },
-      visitDoctor: {
-        totalVisitDetails,
-        totalStaff: totalVisitDoctorStaff,
-        completedPatients: totalVisitDoctorCompletedPatients,
-      },
-      lab: {
-        totalServices: totalLabServices,
-        totalStaff: totalLabStaff,
-        completedPatients: totalLabCompletedPatients,
-      },
-      hospital: {
-        totalServices: totalHospitalServices,
-        totalDoctors: totalHospitalDoctors,
-        totalStaff: totalHospitalStaff,
-        completedPatients: totalHospitalCompletedPatients,
-      },
+      organizers: organizerDetails,
+      visitDoctors: visitDoctorDetails,
+      labs: labDetails,
+      hospitals: hospitalDetails,
     }
   }
 
