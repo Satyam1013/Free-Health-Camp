@@ -79,6 +79,7 @@ export class AdminService {
       totalPendingRevenue,
     }
   }
+
   async getDashboardStatsCityWise(city: string) {
     const regex = new RegExp(`^${city}$`, 'i')
 
@@ -143,6 +144,8 @@ export class AdminService {
       totalStaff: doc.visitDetails.reduce((sum, visit) => sum + visit.staff.length, 0),
       completedPatients: totalVisitDoctorCompletedPatients,
       visitDetails: doc.visitDetails,
+      adminRevenue: doc.adminRevenue, // ✅ Added
+      feeBalance: doc.feeBalance, // ✅ Added
     }))
 
     const labDetails = labs.map((lab) => ({
@@ -157,6 +160,8 @@ export class AdminService {
       shiftOneEndTime: lab.shiftOneEndTime,
       shiftTwoStartTime: lab.shiftTwoStartTime,
       shiftTwoEndTime: lab.shiftTwoEndTime,
+      adminRevenue: lab.adminRevenue, // ✅ Added
+      feeBalance: lab.feeBalance, // ✅ Added
     }))
 
     const hospitalDetails = hospitals.map((hospital) => ({
@@ -172,9 +177,10 @@ export class AdminService {
       shiftOneEndTime: hospital.shiftOneEndTime,
       shiftTwoStartTime: hospital.shiftTwoStartTime,
       shiftTwoEndTime: hospital.shiftTwoEndTime,
+      adminRevenue: hospital.adminRevenue, // ✅ Added
+      feeBalance: hospital.feeBalance, // ✅ Added
     }))
 
-    // ✅ Return full details along with service counts
     return {
       organizers: organizerDetails,
       visitDoctors: visitDoctorDetails,
