@@ -351,7 +351,7 @@ export class HospitalService {
 
       // ✅ Find the booked event for this provider and service
       const bookedEvent = patient.bookEvents.find(
-        (event) => event.providerId === hospitalId && event.serviceId.toString() === serviceId,
+        (event) => event.providerId.equals(hospitalId) && event.serviceId.equals(serviceId),
       )
 
       if (!bookedEvent) throw new BadRequestException('No booking found for this service and provider')

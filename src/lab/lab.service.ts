@@ -292,12 +292,16 @@ export class LabService {
     try {
       // ✅ Find the patient
       const patient = await this.patientModel.findById(patientId)
+      console.log('✨ ~ patient:', patient)
       if (!patient) throw new BadRequestException('Patient not found')
-
+      console.log('labId', labId)
+      console.log('serviceId', serviceId)
       // ✅ Find the booked event for this provider and service
       const bookedEvent = patient.bookEvents.find(
-        (event) => event.providerId === labId && event.serviceId.toString() === serviceId,
+        (event) => event.providerId.equals(labId) && event.serviceId.equals(serviceId),
       )
+
+      console.log('✨ ~ bookedEvent:', bookedEvent)
 
       if (!bookedEvent) throw new BadRequestException('No booking found for this service and provider')
 
