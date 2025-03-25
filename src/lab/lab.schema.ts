@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose'
-import { UserRole } from 'src/common/common.types'
+import { PaidStatus, UserRole } from 'src/common/common.types'
 import { AvailableService, AvailableServiceSchema, BaseModel } from 'src/common/common.schema'
 import { Staff, StaffSchema } from '../common/common.schema'
 
@@ -21,6 +21,9 @@ export class Lab extends BaseModel {
 
   @Prop({ default: 0 })
   feeBalance: number
+
+  @Prop({ type: String, enum: PaidStatus, default: PaidStatus.PENDING })
+  paid: PaidStatus
 
   @Prop({ type: [AvailableServiceSchema], default: [] })
   availableServices: AvailableService[]

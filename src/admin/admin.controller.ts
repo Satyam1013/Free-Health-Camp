@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Param, Patch } from '@nestjs/common'
 import { AdminService } from './admin.service'
+import { PaidStatus } from 'src/common/common.types'
 
 @Controller('admin')
 export class AdminController {
@@ -16,18 +17,27 @@ export class AdminController {
   }
 
   // ✅ Mark Visit as Completed and Update Revenue
-  @Patch('visit/status/:visitId')
-  async updateVisitDetailsRevenue(@Param('visitId') visitId: string) {
-    return await this.adminService.updateVisitDetailsRevenue(visitId, status)
+  @Patch('visit-doctor/:visitDoctorId')
+  async updateVisitDoctorRevenue(
+    @Param('visitDoctorId') visitDoctorId: string,
+    @Body() updateData: { feeBalance?: number; paidStatus?: PaidStatus },
+  ) {
+    return await this.adminService.updateVisitDoctorRevenue(visitDoctorId, updateData)
   }
 
-  @Patch('update-lab-revenue')
-  async updateLabRevenue(@Body('patientId') patientId: string, @Body('serviceId') serviceId: string) {
-    return await this.adminService.updateLabRevenue(patientId, serviceId)
+  @Patch('update-lab-revenue/:ladId')
+  async updateLabRevenue(
+    @Param('ladId') ladId: string,
+    @Body() updateData: { feeBalance?: number; paidStatus?: PaidStatus },
+  ) {
+    return await this.adminService.updateLabRevenue(ladId, updateData)
   }
 
-  @Patch('update-lab-revenue')
-  async updateHospitalRevenue(@Body('patientId') patientId: string, @Body('serviceId') serviceId: string) {
-    return await this.adminService.updateHospitalRevenue(patientId, serviceId)
+  @Patch('update-hospital-revenue/:hospitalId')
+  async updateHospitalRevenue(
+    @Param('hospitalId') hospitalId: string,
+    @Body() updateData: { feeBalance?: number; paidStatus?: PaidStatus },
+  ) {
+    return await this.adminService.updateHospitalRevenue(hospitalId, updateData)
   }
 }

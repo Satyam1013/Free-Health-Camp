@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
-import { BookingStatus } from 'src/common/common.types'
+import { BookingStatus, PaidStatus } from 'src/common/common.types'
 import { Hospital, HospitalDocument } from 'src/hospital/hospital.schema'
 import { Lab, LabDocument } from 'src/lab/lab.schema'
 import { Organizer, OrganizerDocument } from 'src/organizer/organizer.schema'
@@ -189,82 +189,75 @@ export class AdminService {
     }
   }
 
-  async updateVisitDetailsRevenue(patientId: string, serviceId: string): Promise<void> {
-    // Step 1: Find the patient
-    const patient = await this.patientModel.findById(patientId)
-    if (!patient) {
-      throw new NotFoundException('Patient not found')
+  async updateVisitDoctorRevenue(visitDoctorId: string, updateData: { feeBalance?: number; paidStatus?: PaidStatus }) {
+    const visitDoctor = await this.visitDoctorModel.findOne({ visitDoctorId })
+    if (!visitDoctor) {
+      throw new NotFoundException('Visit Doctor not found')
     }
 
-    // Step 2: Check if the service is booked by the patient
-    const bookedEvent = patient.bookEvents.find((event) => event.serviceId.toString() === serviceId)
-    if (!bookedEvent) {
-      throw new NotFoundException('Service not booked by this patient')
+    // ✅ Update feeBalance
+    if (typeof updateData.feeBalance !== 'undefined') {
+      visitDoctor.feeBalance = updateData.feeBalance
     }
 
-    // Step 3: If status is COMPLETED, update VisitDoctor's revenue
-    if (bookedEvent.status === BookingStatus.Completed) {
-      // Find the corresponding VisitDoctor using the serviceId
-      const visitDoctor = await this.visitDoctorModel.findOne({ 'visitDetails._id': serviceId })
-      if (!visitDoctor) {
-        throw new NotFoundException('Doctor associated with this service not found')
+    // ✅ Update paidStatus
+    if (updateData.paidStatus) {
+      visitDoctor.paid = updateData.paidStatus
+
+      // ✅ If paidStatus is PAID, reset feeBalance to 0
+      if (updateData.paidStatus === PaidStatus.PAID) {
+        visitDoctor.feeBalance = 0
       }
-
-      // Step 4: Calculate 20% admin revenue
-      const visitDetail = visitDoctor.visitDetails.find((v) => v._id.toString() === serviceId)
-      if (!visitDetail) {
-        throw new NotFoundException('Visit details not found for this service')
-      }
-
-      const adminShare = visitDetail.doctorFee * 0.2
-      visitDoctor.adminRevenue += adminShare
-      visitDoctor.feeBalance -= adminShare
-
-      await visitDoctor.save()
     }
+
+    await visitDoctor.save()
   }
 
-  async updateLabRevenue(patientId: string, serviceId: string): Promise<void> {
-    const patient = await this.patientModel.findById(patientId)
-    if (!patient) throw new NotFoundException('Patient not found')
-
-    const bookedEvent = patient.bookEvents.find((event) => event.serviceId.toString() === serviceId)
-    if (!bookedEvent) throw new NotFoundException('Service not booked by this patient')
-
-    if (bookedEvent.status === BookingStatus.Completed) {
-      const lab = await this.labModel.findOne({ 'availableServices._id': serviceId })
-      if (!lab) throw new NotFoundException('Lab associated with this service not found')
-
-      const service = lab.availableServices.find((s) => s._id.toString() === serviceId)
-      if (!service) throw new NotFoundException('Service details not found in Lab')
-
-      const adminShare = service.fee * 0.2
-      lab.adminRevenue += adminShare
-      lab.feeBalance -= adminShare
-
-      await lab.save()
+  async updateLabRevenue(ladId: string, updateData: { feeBalance?: number; paidStatus?: PaidStatus }) {
+    const lab = await this.visitDoctorModel.findOne({ ladId })
+    if (!lab) {
+      throw new NotFoundException('Lab not found')
     }
+
+    // ✅ Update feeBalance
+    if (typeof updateData.feeBalance !== 'undefined') {
+      lab.feeBalance = updateData.feeBalance
+    }
+
+    // ✅ Update paidStatus
+    if (updateData.paidStatus) {
+      lab.paid = updateData.paidStatus
+
+      // ✅ If paidStatus is PAID, reset feeBalance to 0
+      if (updateData.paidStatus === PaidStatus.PAID) {
+        lab.feeBalance = 0
+      }
+    }
+
+    await lab.save()
   }
 
-  async updateHospitalRevenue(patientId: string, serviceId: string): Promise<void> {
-    const patient = await this.patientModel.findById(patientId)
-    if (!patient) throw new NotFoundException('Patient not found')
-
-    const bookedEvent = patient.bookEvents.find((event) => event.serviceId.toString() === serviceId)
-    if (!bookedEvent) throw new NotFoundException('Service not booked by this patient')
-
-    if (bookedEvent.status === BookingStatus.Completed) {
-      const hospital = await this.labModel.findOne({ 'availableServices._id': serviceId })
-      if (!hospital) throw new NotFoundException('Lab associated with this service not found')
-
-      const service = hospital.availableServices.find((s) => s._id.toString() === serviceId)
-      if (!service) throw new NotFoundException('Service details not found in Lab')
-
-      const adminShare = service.fee * 0.2
-      hospital.adminRevenue += adminShare
-      hospital.feeBalance -= adminShare
-
-      await hospital.save()
+  async updateHospitalRevenue(hospitalId: string, updateData: { feeBalance?: number; paidStatus?: PaidStatus }) {
+    const hospital = await this.visitDoctorModel.findOne({ hospitalId })
+    if (!hospital) {
+      throw new NotFoundException('Hospital not found')
     }
+
+    // ✅ Update feeBalance
+    if (typeof updateData.feeBalance !== 'undefined') {
+      hospital.feeBalance = updateData.feeBalance
+    }
+
+    // ✅ Update paidStatus
+    if (updateData.paidStatus) {
+      hospital.paid = updateData.paidStatus
+
+      // ✅ If paidStatus is PAID, reset feeBalance to 0
+      if (updateData.paidStatus === PaidStatus.PAID) {
+        hospital.feeBalance = 0
+      }
+    }
+
+    await hospital.save()
   }
 }
