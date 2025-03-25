@@ -87,6 +87,6 @@ export class LabController {
     @Body() updateData: Partial<{ status?: BookingStatus }>,
   ) {
     const labId = req.user._id
-    return this.labService.updatePatient(labId, serviceId, patientId, updateData)
+    return this.labService.updatePatientStatus(labId, req.user.role, serviceId, patientId, updateData)
   }
 }

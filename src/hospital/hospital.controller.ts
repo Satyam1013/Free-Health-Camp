@@ -98,6 +98,6 @@ export class HospitalController {
     @Param('patientId') patientId: string,
     @Body() data: Partial<{ status?: BookingStatus }>,
   ) {
-    return this.hospitalService.updatePatient(req.user._id, serviceId, patientId, data)
+    return this.hospitalService.updatePatientStatus(req.user._id, req.user.role, serviceId, patientId, data)
   }
 }

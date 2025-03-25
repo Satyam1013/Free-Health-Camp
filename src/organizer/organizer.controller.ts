@@ -134,6 +134,6 @@ export class OrganizerController {
     @Body() updateData: Partial<{ status?: BookingStatus }>,
   ) {
     const organizerId = req.user._id
-    return this.organizerService.updatePatient(organizerId, serviceId, patientId, updateData)
+    return this.organizerService.updatePatientStatus(organizerId, req.user.role, serviceId, patientId, updateData)
   }
 }

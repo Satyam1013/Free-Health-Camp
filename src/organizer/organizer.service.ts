@@ -4,7 +4,6 @@ import { Model, Types } from 'mongoose'
 import { Organizer, OrganizerDocument } from './organizer.schema'
 import * as bcrypt from 'bcrypt'
 import { MobileValidationService } from 'src/mobile-validation/mobile-validation.service'
-import { Cron } from '@nestjs/schedule'
 import { PatientService } from 'src/patient/patient.service'
 import {
   CreateDoctorDto,
@@ -15,7 +14,8 @@ import {
   EditStaffDto,
 } from './organizer.dto'
 import { Patient, PatientDocument } from 'src/patient/patient.schema'
-import { BookingStatus } from 'src/common/common.types'
+import { updatePatientBooking } from 'src/common/update-patient-status'
+import { BookingStatus, UserRole } from 'src/common/common.types'
 
 @Injectable()
 export class OrganizerService {
@@ -296,55 +296,45 @@ export class OrganizerService {
     }
   }
 
-  async updatePatient(
+  async updatePatientStatus(
     organizerId: Types.ObjectId,
+    providerRole: UserRole,
     serviceId: string,
     patientId: string,
     updateData: Partial<{ status?: BookingStatus }>,
   ) {
-    try {
-      // ✅ Find the patient
-      const patient = await this.patientModel.findById(patientId)
-      if (!patient) throw new BadRequestException('Patient not found')
-
-      // ✅ Find the booked event for this provider and service
-      const bookedEvent = patient.bookEvents.find(
-        (event) => event.providerId.equals(organizerId) && event.serviceId.equals(serviceId),
-      )
-
-      if (!bookedEvent) throw new BadRequestException('No booking found for this service and provider')
-
-      // ✅ Update the booked event data (status, nextVisitDate, etc.)
-      Object.assign(bookedEvent, updateData)
-      await patient.save()
-
-      return { message: 'Patient status updated successfully', updatedBooking: bookedEvent }
-    } catch (error) {
-      throw new InternalServerErrorException(error.message || 'Something went wrong')
-    }
+    return updatePatientBooking(
+      this.patientModel,
+      this.organizerModel,
+      providerRole,
+      organizerId,
+      serviceId,
+      patientId,
+      updateData,
+    )
   }
 
-  // ✅ Cron job to delete expired events (Runs every night at 2 AM)
-  @Cron('0 2 * * *') // Cron syntax: 0 minute, 2 hour, every day
-  async deleteExpiredEvents() {
-    try {
-      const now = new Date()
-      const organizers = await this.organizerModel.find()
+  //   // ✅ Cron job to delete expired events (Runs every night at 2 AM)
+  //   @Cron('0 2 * * *') // Cron syntax: 0 minute, 2 hour, every day
+  //   async deleteExpiredEvents() {
+  //     try {
+  //       const now = new Date()
+  //       const organizers = await this.organizerModel.find()
 
-      for (const organizer of organizers) {
-        const initialEventCount = organizer.events.length
+  //       for (const organizer of organizers) {
+  //         const initialEventCount = organizer.events.length
 
-        // Remove events where endTime is in the past
-        organizer.events = organizer.events.filter((event) => new Date(event.endTime) > now)
+  //         // Remove events where endTime is in the past
+  //         organizer.events = organizer.events.filter((event) => new Date(event.endTime) > now)
 
-        if (organizer.events.length !== initialEventCount) {
-          await organizer.save()
-        }
-      }
+  //         if (organizer.events.length !== initialEventCount) {
+  //           await organizer.save()
+  //         }
+  //       }
 
-      console.log('Expired events deleted successfully')
-    } catch (error) {
-      console.error('Error deleting expired events:', error.message)
-    }
-  }
+  //       console.log('Expired events deleted successfully')
+  //     } catch (error) {
+  //       console.error('Error deleting expired events:', error.message)
+  //     }
+  //   }
 }

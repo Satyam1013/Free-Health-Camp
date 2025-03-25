@@ -7,7 +7,8 @@ import { Patient, PatientDocument } from 'src/patient/patient.schema'
 import { MobileValidationService } from 'src/mobile-validation/mobile-validation.service'
 import { CreateStaffDto, CreateVisitDetailDto, UpdateStaffDto, UpdateVisitDetailDto } from './visit-doctor.dto'
 import { PatientService } from 'src/patient/patient.service'
-import { BookingStatus } from 'src/common/common.types'
+import { updatePatientBooking } from 'src/common/update-patient-status'
+import { BookingStatus, UserRole } from 'src/common/common.types'
 
 @Injectable()
 export class VisitDoctorService {
@@ -175,32 +176,22 @@ export class VisitDoctorService {
     }
   }
 
-  async updatePatient(
+  async updatePatientStatus(
     visitDoctorId: Types.ObjectId,
+    providerRole: UserRole,
     serviceId: string,
     patientId: string,
     updateData: Partial<{ status?: BookingStatus; nextVisitDate?: Date }>,
   ) {
-    try {
-      // ✅ Find the patient
-      const patient = await this.patientModel.findById(patientId)
-      if (!patient) throw new BadRequestException('Patient not found')
-
-      // ✅ Find the booked event for this provider and service
-      const bookedEvent = patient.bookEvents.find(
-        (event) => event.providerId.equals(visitDoctorId) && event.serviceId.equals(serviceId),
-      )
-
-      if (!bookedEvent) throw new BadRequestException('No booking found for this service and provider')
-
-      // ✅ Update the booked event data (status, nextVisitDate, etc.)
-      Object.assign(bookedEvent, updateData)
-      await patient.save()
-
-      return { message: 'Patient status updated successfully', updatedBooking: bookedEvent }
-    } catch (error) {
-      throw new InternalServerErrorException(error.message || 'Something went wrong')
-    }
+    return updatePatientBooking(
+      this.patientModel,
+      this.visitDoctorModel,
+      providerRole,
+      visitDoctorId,
+      serviceId,
+      patientId,
+      updateData,
+    )
   }
 
   async getPatientsByStaff(staffId: Types.ObjectId) {

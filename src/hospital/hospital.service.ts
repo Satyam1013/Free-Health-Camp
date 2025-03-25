@@ -17,6 +17,7 @@ import { Staff } from 'src/common/common.schema'
 import { PatientService } from 'src/patient/patient.service'
 import { Patient, PatientDocument } from 'src/patient/patient.schema'
 import { BookingStatus, UserRole } from 'src/common/common.types'
+import { updatePatientBooking } from 'src/common/update-patient-status'
 
 @Injectable()
 export class HospitalService {
@@ -338,31 +339,21 @@ export class HospitalService {
     }
   }
 
-  async updatePatient(
+  async updatePatientStatus(
     hospitalId: Types.ObjectId,
+    providerRole: UserRole,
     serviceId: string,
     patientId: string,
     updateData: Partial<{ status?: BookingStatus }>,
   ) {
-    try {
-      // ✅ Find the patient
-      const patient = await this.patientModel.findById(patientId)
-      if (!patient) throw new BadRequestException('Patient not found')
-
-      // ✅ Find the booked event for this provider and service
-      const bookedEvent = patient.bookEvents.find(
-        (event) => event.providerId.equals(hospitalId) && event.serviceId.equals(serviceId),
-      )
-
-      if (!bookedEvent) throw new BadRequestException('No booking found for this service and provider')
-
-      // ✅ Update the booked event data (status, nextVisitDate, etc.)
-      Object.assign(bookedEvent, updateData)
-      await patient.save()
-
-      return { message: 'Patient status updated successfully', updatedBooking: bookedEvent }
-    } catch (error) {
-      throw new InternalServerErrorException(error.message || 'Something went wrong')
-    }
+    return updatePatientBooking(
+      this.patientModel,
+      this.hospitalModel,
+      providerRole,
+      hospitalId,
+      serviceId,
+      patientId,
+      updateData,
+    )
   }
 }

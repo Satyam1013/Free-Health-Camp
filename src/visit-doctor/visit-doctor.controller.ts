@@ -77,7 +77,7 @@ export class VisitDoctorController {
     @Body() updateData: Partial<{ status?: BookingStatus; nextVisitDate?: Date }>,
   ) {
     const visitDoctorId = req.user._id
-    return this.visitDoctorService.updatePatient(visitDoctorId, serviceId, patientId, updateData)
+    return this.visitDoctorService.updatePatientStatus(visitDoctorId, req.user.role, serviceId, patientId, updateData)
   }
 
   // 👨‍⚕️👩‍⚕️ Only Staff Related
