@@ -54,7 +54,7 @@ export class VisitDoctor extends BaseModel {
   feeBalance: number
 
   @Prop({ type: String, enum: PaidStatus, default: PaidStatus.PENDING })
-  paid: PaidStatus
+  paidStatus: PaidStatus
 
   @Prop({ type: [VisitSchema], default: [] })
   visitDetails: VisitDetails[]

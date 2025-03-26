@@ -23,7 +23,7 @@ export class Lab extends BaseModel {
   feeBalance: number
 
   @Prop({ type: String, enum: PaidStatus, default: PaidStatus.PENDING })
-  paid: PaidStatus
+  paidStatus: PaidStatus
 
   @Prop({ type: [AvailableServiceSchema], default: [] })
   availableServices: AvailableService[]

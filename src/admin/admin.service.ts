@@ -190,7 +190,7 @@ export class AdminService {
   }
 
   async updateVisitDoctorRevenue(visitDoctorId: string, updateData: { feeBalance?: number; paidStatus?: PaidStatus }) {
-    const visitDoctor = await this.visitDoctorModel.findOne({ visitDoctorId })
+    const visitDoctor = await this.visitDoctorModel.findById(visitDoctorId)
     if (!visitDoctor) {
       throw new NotFoundException('Visit Doctor not found')
     }
@@ -202,7 +202,7 @@ export class AdminService {
 
     // ✅ Update paidStatus
     if (updateData.paidStatus) {
-      visitDoctor.paid = updateData.paidStatus
+      visitDoctor.paidStatus = updateData.paidStatus
 
       // ✅ If paidStatus is PAID, reset feeBalance to 0
       if (updateData.paidStatus === PaidStatus.PAID) {
@@ -214,7 +214,7 @@ export class AdminService {
   }
 
   async updateLabRevenue(ladId: string, updateData: { feeBalance?: number; paidStatus?: PaidStatus }) {
-    const lab = await this.visitDoctorModel.findOne({ ladId })
+    const lab = await this.visitDoctorModel.findById(ladId)
     if (!lab) {
       throw new NotFoundException('Lab not found')
     }
@@ -226,7 +226,7 @@ export class AdminService {
 
     // ✅ Update paidStatus
     if (updateData.paidStatus) {
-      lab.paid = updateData.paidStatus
+      lab.paidStatus = updateData.paidStatus
 
       // ✅ If paidStatus is PAID, reset feeBalance to 0
       if (updateData.paidStatus === PaidStatus.PAID) {
@@ -238,7 +238,7 @@ export class AdminService {
   }
 
   async updateHospitalRevenue(hospitalId: string, updateData: { feeBalance?: number; paidStatus?: PaidStatus }) {
-    const hospital = await this.visitDoctorModel.findOne({ hospitalId })
+    const hospital = await this.visitDoctorModel.findById(hospitalId)
     if (!hospital) {
       throw new NotFoundException('Hospital not found')
     }
@@ -250,7 +250,7 @@ export class AdminService {
 
     // ✅ Update paidStatus
     if (updateData.paidStatus) {
-      hospital.paid = updateData.paidStatus
+      hospital.paidStatus = updateData.paidStatus
 
       // ✅ If paidStatus is PAID, reset feeBalance to 0
       if (updateData.paidStatus === PaidStatus.PAID) {

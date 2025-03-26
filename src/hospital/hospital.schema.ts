@@ -41,7 +41,7 @@ export class Hospital extends BaseModel {
   feeBalance: number
 
   @Prop({ type: String, enum: PaidStatus, default: PaidStatus.PENDING })
-  paid: PaidStatus
+  paidStatus: PaidStatus
 
   @Prop({ default: '09:00' }) // 9 AM
   shiftOneStartTime?: string

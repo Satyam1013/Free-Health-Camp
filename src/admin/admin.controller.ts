@@ -17,7 +17,7 @@ export class AdminController {
   }
 
   // ✅ Mark Visit as Completed and Update Revenue
-  @Patch('visit-doctor/:visitDoctorId')
+  @Patch('update-visit-doctor-fee/:visitDoctorId')
   async updateVisitDoctorRevenue(
     @Param('visitDoctorId') visitDoctorId: string,
     @Body() updateData: { feeBalance?: number; paidStatus?: PaidStatus },
@@ -25,7 +25,7 @@ export class AdminController {
     return await this.adminService.updateVisitDoctorRevenue(visitDoctorId, updateData)
   }
 
-  @Patch('update-lab-revenue/:ladId')
+  @Patch('update-lab-fee/:ladId')
   async updateLabRevenue(
     @Param('ladId') ladId: string,
     @Body() updateData: { feeBalance?: number; paidStatus?: PaidStatus },
@@ -33,7 +33,7 @@ export class AdminController {
     return await this.adminService.updateLabRevenue(ladId, updateData)
   }
 
-  @Patch('update-hospital-revenue/:hospitalId')
+  @Patch('update-hospital-fee/:hospitalId')
   async updateHospitalRevenue(
     @Param('hospitalId') hospitalId: string,
     @Body() updateData: { feeBalance?: number; paidStatus?: PaidStatus },
