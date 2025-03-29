@@ -368,4 +368,30 @@ export class AdminService {
       throw new InternalServerErrorException(error.message || 'Something went wrong')
     }
   }
+
+  async getPendingLabs() {
+    try {
+      const lab = await this.labModel.find({ paidStatus: PaidStatus.PENDING })
+      if (!lab) {
+        throw new NotFoundException('Lab not found')
+      }
+
+      return lab
+    } catch (error) {
+      throw new InternalServerErrorException(error.message || 'Something went wrong')
+    }
+  }
+
+  async getPendingHospitals() {
+    try {
+      const hospital = await this.hospitalModel.find({ paidStatus: PaidStatus.PENDING })
+      if (!hospital) {
+        throw new NotFoundException('Lab not found')
+      }
+
+      return hospital
+    } catch (error) {
+      throw new InternalServerErrorException(error.message || 'Something went wrong')
+    }
+  }
 }

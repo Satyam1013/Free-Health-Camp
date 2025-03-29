@@ -56,5 +56,14 @@ export class AdminController {
   async deleteHospital(@Param('hospitalId') hospitalId: string) {
     return await this.adminService.deleteHospital(hospitalId)
   }
+
+  @Get('get-pending-labs')
+  async getPendingLabs() {
+    return await this.adminService.getPendingLabs()
+  }
+
+  @Get('get-pending-hospitals')
+  async getPendingHospitals() {
+    return await this.adminService.getPendingHospitals()
+  }
 }
-// cron job delete if status is paid weekly me add karna hai, admin revenue lab ka status paid hai to delete
