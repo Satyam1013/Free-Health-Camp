@@ -7,6 +7,7 @@ import { Lab, LabDocument } from 'src/lab/lab.schema'
 import { Organizer, OrganizerDocument } from 'src/organizer/organizer.schema'
 import { Patient, PatientDocument } from 'src/patient/patient.schema'
 import { VisitDoctor, VisitDoctorDocument } from 'src/visit-doctor/visit-doctor.schema'
+import moment from 'moment'
 
 @Injectable()
 export class AdminService {
@@ -18,13 +19,59 @@ export class AdminService {
     @InjectModel(Patient.name) private patientModel: Model<PatientDocument>,
   ) {}
 
+  async updateWeeklyLabData() {
+    const startOfWeek = moment().startOf('week').toDate()
+
+    // Check if data already exists for this week
+    const existingData = await this.labModel.findOne({ 'weeklyData.week': startOfWeek })
+    if (existingData) return
+
+    const weeklyLabData = await this.labModel.aggregate([
+      {
+        $group: {
+          _id: null,
+          patientsBooked: { $sum: '$totalPatients' },
+          patientsCompleted: { $sum: '$completedPatients' },
+          patientsCancelled: { $sum: '$cancelledPatients' },
+          revenue: { $sum: '$adminRevenue' },
+          pendingRevenue: { $sum: '$feeBalance' },
+        },
+      },
+    ])
+
+    // Update the lab data with new weekly data
+    await this.labModel.updateMany({}, { $push: { weeklyData: { week: startOfWeek, ...weeklyLabData[0] } } })
+  }
+
+  async updateWeeklyHospitalData() {
+    const startOfWeek = moment().startOf('week').toDate()
+
+    // Check if data already exists for this week
+    const existingData = await this.hospitalModel.findOne({ 'weeklyData.week': startOfWeek })
+    if (existingData) return
+
+    const weeklyHospitalData = await this.hospitalModel.aggregate([
+      {
+        $group: {
+          _id: null,
+          patientsBooked: { $sum: '$totalPatients' },
+          patientsCompleted: { $sum: '$completedPatients' },
+          patientsCancelled: { $sum: '$cancelledPatients' },
+          revenue: { $sum: '$adminRevenue' },
+          pendingRevenue: { $sum: '$feeBalance' },
+        },
+      },
+    ])
+
+    // Update the hospital data with new weekly data
+    await this.hospitalModel.updateMany({}, { $push: { weeklyData: { week: startOfWeek, ...weeklyHospitalData[0] } } })
+  }
+
   async getDashboardStats() {
-    // Fetch total counts
     const totalHospitals = await this.hospitalModel.countDocuments()
     const totalLabs = await this.labModel.countDocuments()
     const totalEvents = await this.organizerModel.aggregate([{ $unwind: '$events' }, { $count: 'totalEvents' }])
 
-    // FreeCamp Data
     const totalPatientsBookedFreeCamp = await this.organizerModel.aggregate([
       { $unwind: '$events' },
       { $group: { _id: null, total: { $sum: '$events.totalPatients' } } },
@@ -40,7 +87,6 @@ export class AdminService {
         ? totalPatientsBookedFreeCamp[0].total - totalPatientsCompletedFreeCamp[0].total
         : 0
 
-    // VisitDoctor Data
     const totalVisitDetails = await this.visitDoctorModel.aggregate([
       { $unwind: '$visitDetails' },
       { $count: 'totalVisitDetails' },
@@ -67,7 +113,6 @@ export class AdminService {
       { $group: { _id: null, totalPending: { $sum: '$feeBalance' } } },
     ])
 
-    // Lab Data
     const totalPatientsBookedLab = await this.labModel.aggregate([
       { $group: { _id: null, total: { $sum: '$totalPatients' } } },
     ])
@@ -89,11 +134,17 @@ export class AdminService {
       { $group: { _id: null, totalPending: { $sum: '$feeBalance' } } },
     ])
 
-    // Weekly Data for Lab
+    // Ensure Weekly Data is Up-to-Date for Labs
+    const startOfWeek = moment().startOf('week').toDate()
+    const latestWeeklyLabData = await this.labModel.findOne({ 'weeklyData.week': startOfWeek })
+
+    if (!latestWeeklyLabData) {
+      await this.updateWeeklyLabData()
+    }
+
     const weeklyLabData = await this.labModel.aggregate([
-      {
-        $unwind: '$weeklyData',
-      },
+      { $unwind: '$weeklyData' },
+      { $match: { 'weeklyData.week': startOfWeek } },
       {
         $project: {
           week: '$weeklyData.week',
@@ -106,7 +157,28 @@ export class AdminService {
       },
     ])
 
-    // Hospital Data
+    // Ensure Weekly Data is Up-to-Date for Hospitals
+    const latestWeeklyHospitalData = await this.hospitalModel.findOne({ 'weeklyData.week': startOfWeek })
+
+    if (!latestWeeklyHospitalData) {
+      await this.updateWeeklyHospitalData()
+    }
+
+    const weeklyHospitalData = await this.hospitalModel.aggregate([
+      { $unwind: '$weeklyData' },
+      { $match: { 'weeklyData.week': startOfWeek } },
+      {
+        $project: {
+          week: '$weeklyData.week',
+          patientsBooked: '$weeklyData.patientsBooked',
+          patientsCompleted: '$weeklyData.patientsCompleted',
+          patientsCancelled: '$weeklyData.patientsCancelled',
+          revenue: '$weeklyData.revenue',
+          pendingRevenue: '$weeklyData.pendingRevenue',
+        },
+      },
+    ])
+
     const totalPatientsBookedHospital = await this.hospitalModel.aggregate([
       { $group: { _id: null, total: { $sum: '$totalPatients' } } },
     ])
@@ -128,24 +200,6 @@ export class AdminService {
       { $group: { _id: null, totalPending: { $sum: '$feeBalance' } } },
     ])
 
-    // Weekly Data for Hospital
-    const weeklyHospitalData = await this.hospitalModel.aggregate([
-      {
-        $unwind: '$weeklyData',
-      },
-      {
-        $project: {
-          week: '$weeklyData.week',
-          patientsBooked: '$weeklyData.patientsBooked',
-          patientsCompleted: '$weeklyData.patientsCompleted',
-          patientsCancelled: '$weeklyData.patientsCancelled',
-          revenue: '$weeklyData.revenue',
-          pendingRevenue: '$weeklyData.pendingRevenue',
-        },
-      },
-    ])
-
-    // Return structured data
     return {
       FreeCamp: {
         totalEvents: totalEvents.length > 0 ? totalEvents[0].totalEvents : 0,
