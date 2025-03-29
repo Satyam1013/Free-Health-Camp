@@ -70,28 +70,22 @@ export class AdminService {
       this.hospitalModel.aggregate([{ $group: { _id: null, totalPending: { $sum: '$feeBalance' } } }]),
       this.labModel.aggregate([
         { $unwind: '$weeklyData' },
-        { $match: { 'weeklyData.week': startOfWeek } },
+        { $match: { 'weeklyData.startDate': startOfWeek } },
         {
           $project: {
-            week: '$weeklyData.week',
-            patientsBooked: '$weeklyData.patientsBooked',
-            patientsCompleted: '$weeklyData.patientsCompleted',
-            patientsCancelled: '$weeklyData.patientsCancelled',
-            revenue: '$weeklyData.revenue',
+            startDate: '$weeklyData.startDate',
+            adminRevenue: '$weeklyData.adminRevenue',
             pendingRevenue: '$weeklyData.pendingRevenue',
           },
         },
       ]),
       this.hospitalModel.aggregate([
         { $unwind: '$weeklyData' },
-        { $match: { 'weeklyData.week': startOfWeek } },
+        { $match: { 'weeklyData.startDate': startOfWeek } },
         {
           $project: {
-            week: '$weeklyData.week',
-            patientsBooked: '$weeklyData.patientsBooked',
-            patientsCompleted: '$weeklyData.patientsCompleted',
-            patientsCancelled: '$weeklyData.patientsCancelled',
-            revenue: '$weeklyData.revenue',
+            startDate: '$weeklyData.startDate',
+            adminRevenue: '$weeklyData.adminRevenue',
             pendingRevenue: '$weeklyData.pendingRevenue',
           },
         },
