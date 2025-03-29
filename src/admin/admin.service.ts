@@ -19,64 +19,169 @@ export class AdminService {
   ) {}
 
   async getDashboardStats() {
+    // Fetch total counts
     const totalHospitals = await this.hospitalModel.countDocuments()
     const totalLabs = await this.labModel.countDocuments()
-    const totalVisitDoctors = await this.visitDoctorModel.countDocuments()
+    const totalEvents = await this.organizerModel.aggregate([{ $unwind: '$events' }, { $count: 'totalEvents' }])
 
-    // Total Events (Assuming events are stored in the Organizer model)
-    const totalEvents = await this.organizerModel.aggregate([
-      { $unwind: '$events' }, // If events are stored as an array inside Organizer
-      { $count: 'totalEvents' },
+    // FreeCamp Data
+    const totalPatientsBookedFreeCamp = await this.organizerModel.aggregate([
+      { $unwind: '$events' },
+      { $group: { _id: null, total: { $sum: '$events.totalPatients' } } },
     ])
 
-    // Total Visit Details (Assuming visitDetails are stored inside VisitDoctor model)
+    const totalPatientsCompletedFreeCamp = await this.organizerModel.aggregate([
+      { $unwind: '$events' },
+      { $group: { _id: null, total: { $sum: '$events.completedPatients' } } },
+    ])
+
+    const totalPatientsCancelledFreeCamp =
+      totalPatientsBookedFreeCamp.length > 0 && totalPatientsCompletedFreeCamp.length > 0
+        ? totalPatientsBookedFreeCamp[0].total - totalPatientsCompletedFreeCamp[0].total
+        : 0
+
+    // VisitDoctor Data
     const totalVisitDetails = await this.visitDoctorModel.aggregate([
       { $unwind: '$visitDetails' },
       { $count: 'totalVisitDetails' },
     ])
 
-    // Calculate Total Revenue (from VisitDoctors, Labs, and Hospitals)
+    const totalPatientsBookedVisitDoctor = await this.visitDoctorModel.aggregate([
+      { $group: { _id: null, total: { $sum: '$totalPatients' } } },
+    ])
+
+    const totalPatientsCompletedVisitDoctor = await this.visitDoctorModel.aggregate([
+      { $group: { _id: null, total: { $sum: '$completedPatients' } } },
+    ])
+
+    const totalPatientsCancelledVisitDoctor =
+      totalPatientsBookedVisitDoctor.length > 0 && totalPatientsCompletedVisitDoctor.length > 0
+        ? totalPatientsBookedVisitDoctor[0].total - totalPatientsCompletedVisitDoctor[0].total
+        : 0
+
     const visitDoctorRevenue = await this.visitDoctorModel.aggregate([
       { $group: { _id: null, totalRevenue: { $sum: '$adminRevenue' } } },
     ])
+
+    const visitDoctorPendingRevenue = await this.visitDoctorModel.aggregate([
+      { $group: { _id: null, totalPending: { $sum: '$feeBalance' } } },
+    ])
+
+    // Lab Data
+    const totalPatientsBookedLab = await this.labModel.aggregate([
+      { $group: { _id: null, total: { $sum: '$totalPatients' } } },
+    ])
+
+    const totalPatientsCompletedLab = await this.labModel.aggregate([
+      { $group: { _id: null, total: { $sum: '$completedPatients' } } },
+    ])
+
+    const totalPatientsCancelledLab =
+      totalPatientsBookedLab.length > 0 && totalPatientsCompletedLab.length > 0
+        ? totalPatientsBookedLab[0].total - totalPatientsCompletedLab[0].total
+        : 0
 
     const labRevenue = await this.labModel.aggregate([
       { $group: { _id: null, totalRevenue: { $sum: '$adminRevenue' } } },
     ])
 
+    const labPendingRevenue = await this.labModel.aggregate([
+      { $group: { _id: null, totalPending: { $sum: '$feeBalance' } } },
+    ])
+
+    // Weekly Data for Lab
+    const weeklyLabData = await this.labModel.aggregate([
+      {
+        $unwind: '$weeklyData',
+      },
+      {
+        $project: {
+          week: '$weeklyData.week',
+          patientsBooked: '$weeklyData.patientsBooked',
+          patientsCompleted: '$weeklyData.patientsCompleted',
+          patientsCancelled: '$weeklyData.patientsCancelled',
+          revenue: '$weeklyData.revenue',
+          pendingRevenue: '$weeklyData.pendingRevenue',
+        },
+      },
+    ])
+
+    // Hospital Data
+    const totalPatientsBookedHospital = await this.hospitalModel.aggregate([
+      { $group: { _id: null, total: { $sum: '$totalPatients' } } },
+    ])
+
+    const totalPatientsCompletedHospital = await this.hospitalModel.aggregate([
+      { $group: { _id: null, total: { $sum: '$completedPatients' } } },
+    ])
+
+    const totalPatientsCancelledHospital =
+      totalPatientsBookedHospital.length > 0 && totalPatientsCompletedHospital.length > 0
+        ? totalPatientsBookedHospital[0].total - totalPatientsCompletedHospital[0].total
+        : 0
+
     const hospitalRevenue = await this.hospitalModel.aggregate([
       { $group: { _id: null, totalRevenue: { $sum: '$adminRevenue' } } },
     ])
 
-    const totalRevenue =
-      (visitDoctorRevenue.length > 0 ? visitDoctorRevenue[0].totalRevenue : 0) +
-      (labRevenue.length > 0 ? labRevenue[0].totalRevenue : 0) +
-      (hospitalRevenue.length > 0 ? hospitalRevenue[0].totalRevenue : 0)
-
-    // Calculate Total Pending Revenue (same logic as above)
-    const visitDoctorPending = await this.visitDoctorModel.aggregate([
+    const hospitalPendingRevenue = await this.hospitalModel.aggregate([
       { $group: { _id: null, totalPending: { $sum: '$feeBalance' } } },
     ])
 
-    const labPending = await this.labModel.aggregate([{ $group: { _id: null, totalPending: { $sum: '$feeBalance' } } }])
-
-    const hospitalPending = await this.hospitalModel.aggregate([
-      { $group: { _id: null, totalPending: { $sum: '$feeBalance' } } },
+    // Weekly Data for Hospital
+    const weeklyHospitalData = await this.hospitalModel.aggregate([
+      {
+        $unwind: '$weeklyData',
+      },
+      {
+        $project: {
+          week: '$weeklyData.week',
+          patientsBooked: '$weeklyData.patientsBooked',
+          patientsCompleted: '$weeklyData.patientsCompleted',
+          patientsCancelled: '$weeklyData.patientsCancelled',
+          revenue: '$weeklyData.revenue',
+          pendingRevenue: '$weeklyData.pendingRevenue',
+        },
+      },
     ])
 
-    const totalPendingRevenue =
-      (visitDoctorPending.length > 0 ? visitDoctorPending[0].totalPending : 0) +
-      (labPending.length > 0 ? labPending[0].totalPending : 0) +
-      (hospitalPending.length > 0 ? hospitalPending[0].totalPending : 0)
-
+    // Return structured data
     return {
-      totalHospitals,
-      totalLabs,
-      totalVisitDoctors,
-      totalEvents: totalEvents.length > 0 ? totalEvents[0].totalEvents : 0,
-      totalVisitDetails: totalVisitDetails.length > 0 ? totalVisitDetails[0].totalVisitDetails : 0,
-      totalRevenue,
-      totalPendingRevenue,
+      FreeCamp: {
+        totalEvents: totalEvents.length > 0 ? totalEvents[0].totalEvents : 0,
+        totalPatientsBooked: totalPatientsBookedFreeCamp.length > 0 ? totalPatientsBookedFreeCamp[0].total : 0,
+        totalPatientsCompleted: totalPatientsCompletedFreeCamp.length > 0 ? totalPatientsCompletedFreeCamp[0].total : 0,
+        totalPatientsCancelled: totalPatientsCancelledFreeCamp,
+        adminRevenue: 0,
+        pendingRevenue: 0,
+      },
+      VisitDoctor: {
+        totalVisitDetails: totalVisitDetails.length > 0 ? totalVisitDetails[0].totalVisitDetails : 0,
+        totalPatientsBooked: totalPatientsBookedVisitDoctor.length > 0 ? totalPatientsBookedVisitDoctor[0].total : 0,
+        totalPatientsCompleted:
+          totalPatientsCompletedVisitDoctor.length > 0 ? totalPatientsCompletedVisitDoctor[0].total : 0,
+        totalPatientsCancelled: totalPatientsCancelledVisitDoctor,
+        adminRevenue: visitDoctorRevenue.length > 0 ? visitDoctorRevenue[0].totalRevenue : 0,
+        pendingRevenue: visitDoctorPendingRevenue.length > 0 ? visitDoctorPendingRevenue[0].totalPending : 0,
+      },
+      Lab: {
+        totalLab: totalLabs,
+        totalPatientsBooked: totalPatientsBookedLab.length > 0 ? totalPatientsBookedLab[0].total : 0,
+        totalPatientsCompleted: totalPatientsCompletedLab.length > 0 ? totalPatientsCompletedLab[0].total : 0,
+        totalPatientsCancelled: totalPatientsCancelledLab,
+        adminRevenue: labRevenue.length > 0 ? labRevenue[0].totalRevenue : 0,
+        pendingRevenue: labPendingRevenue.length > 0 ? labPendingRevenue[0].totalPending : 0,
+        weeklyData: weeklyLabData,
+      },
+      Hospital: {
+        totalHospital: totalHospitals,
+        totalPatientsBooked: totalPatientsBookedHospital.length > 0 ? totalPatientsBookedHospital[0].total : 0,
+        totalPatientsCompleted: totalPatientsCompletedHospital.length > 0 ? totalPatientsCompletedHospital[0].total : 0,
+        totalPatientsCancelled: totalPatientsCancelledHospital,
+        adminRevenue: hospitalRevenue.length > 0 ? hospitalRevenue[0].totalRevenue : 0,
+        pendingRevenue: hospitalPendingRevenue.length > 0 ? hospitalPendingRevenue[0].totalPending : 0,
+        weeklyData: weeklyHospitalData,
+      },
     }
   }
 

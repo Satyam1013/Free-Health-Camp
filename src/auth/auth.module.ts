@@ -10,6 +10,7 @@ import { PatientModule } from 'src/patient/patient.module'
 import { LabModule } from 'src/lab/lab.module'
 import { VisitDoctorModule } from 'src/visit-doctor/visit-doctor.module'
 import { MobileValidationModule } from 'src/mobile-validation/mobile-validation.module'
+import { AdminModule } from 'src/admin/admin.module'
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { MobileValidationModule } from 'src/mobile-validation/mobile-validation.
     forwardRef(() => LabModule),
     forwardRef(() => VisitDoctorModule),
     forwardRef(() => PatientModule),
+    forwardRef(() => AdminModule),
     MobileValidationModule,
   ],
   providers: [AuthService],

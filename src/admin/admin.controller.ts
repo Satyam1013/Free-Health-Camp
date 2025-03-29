@@ -1,8 +1,10 @@
-import { Body, Controller, Get, Param, Patch } from '@nestjs/common'
+import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common'
 import { AdminService } from './admin.service'
 import { PaidStatus } from 'src/common/common.types'
+import { AdminAuthGuard } from './admin.auth.guard'
 
 @Controller('admin')
+@UseGuards(AdminAuthGuard)
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
   // ✅ Fetch Admin Dashboard Data

@@ -10,8 +10,9 @@ import { Hospital, HospitalDocument } from '../hospital/hospital.schema'
 import { Patient, PatientDocument } from '../patient/patient.schema'
 import { MobileValidationService } from 'src/mobile-validation/mobile-validation.service'
 import { CreateUserDto } from './create-user.dto'
-import { LoginDto } from './login.dto'
+import { AdminLoginDto, LoginDto } from './login.dto'
 import { UserRole } from 'src/common/common.types'
+import { Admin } from 'src/admin/admin.schema'
 
 @Injectable()
 export class AuthService {
@@ -21,6 +22,7 @@ export class AuthService {
     @InjectModel(Lab.name) private labModel: Model<LabDocument>,
     @InjectModel(Hospital.name) private hospitalModel: Model<HospitalDocument>,
     @InjectModel(Patient.name) private patientModel: Model<PatientDocument>,
+    @InjectModel(Admin.name) private adminModel: Model<Admin>,
     private readonly mobileValidationService: MobileValidationService,
     private readonly jwtService: JwtService,
   ) {}
@@ -208,6 +210,34 @@ export class AuthService {
         return this.patientModel
       default:
         return null
+    }
+  }
+
+  async adminLogin(adminLoginDto: AdminLoginDto) {
+    try {
+      const { email, password } = adminLoginDto
+
+      // 🔍 Await the query to get the actual document
+      const admin = await this.adminModel.findOne({ email }).exec()
+
+      if (!admin) {
+        throw new UnauthorizedException('Invalid email or password')
+      }
+
+      // 🔹 Check if the password matches
+      const isPasswordMatch = await bcrypt.compare(password, admin.password)
+      if (!isPasswordMatch) {
+        throw new UnauthorizedException('Invalid email or password')
+      }
+
+      // 🔹 Generate JWT Token
+      const payload = { _id: admin._id, role: admin.role }
+      const access_token = this.jwtService.sign(payload)
+
+      return { access_token, admin }
+    } catch (error) {
+      console.error('Admin Login Error:', error.message || error)
+      throw new InternalServerErrorException('Admin login failed, please try again')
     }
   }
 }

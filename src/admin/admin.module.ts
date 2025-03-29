@@ -8,10 +8,11 @@ import { AuthModule } from 'src/auth/auth.module'
 import { AdminController } from './admin.controller'
 import { AdminService } from './admin.service'
 import { PatientModule } from 'src/patient/patient.module'
+import { Admin, AdminSchema } from './admin.schema'
 
 @Module({
   imports: [
-    MongooseModule.forFeature(),
+    MongooseModule.forFeature([{ name: Admin.name, schema: AdminSchema }]),
     forwardRef(() => OrganizerModule),
     forwardRef(() => HospitalModule),
     forwardRef(() => LabModule),
@@ -21,6 +22,6 @@ import { PatientModule } from 'src/patient/patient.module'
   ],
   controllers: [AdminController],
   providers: [AdminService],
-  exports: [MongooseModule],
+  exports: [AdminService, MongooseModule],
 })
 export class AdminModule {}

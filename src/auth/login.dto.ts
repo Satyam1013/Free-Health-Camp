@@ -8,3 +8,11 @@ export class LoginDto {
   @MinLength(4, { message: 'Password must be at least 4 characters long' })
   password: string
 }
+
+export class AdminLoginDto {
+  @IsString()
+  email: string
+
+  @IsString()
+  password: string
+}
