@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common'
 import { InjectModel } from '@nestjs/mongoose'
 import { Model } from 'mongoose'
 import { BookingStatus, PaidStatus } from 'src/common/common.types'
@@ -19,185 +19,83 @@ export class AdminService {
     @InjectModel(Patient.name) private patientModel: Model<PatientDocument>,
   ) {}
 
-  async updateWeeklyLabData() {
-    const startOfWeek = moment().startOf('week').toDate()
-
-    // Check if data already exists for this week
-    const existingData = await this.labModel.findOne({ 'weeklyData.week': startOfWeek })
-    if (existingData) return
-
-    const weeklyLabData = await this.labModel.aggregate([
-      {
-        $group: {
-          _id: null,
-          patientsBooked: { $sum: '$totalPatients' },
-          patientsCompleted: { $sum: '$completedPatients' },
-          patientsCancelled: { $sum: '$cancelledPatients' },
-          revenue: { $sum: '$adminRevenue' },
-          pendingRevenue: { $sum: '$feeBalance' },
-        },
-      },
-    ])
-
-    // Update the lab data with new weekly data
-    await this.labModel.updateMany({}, { $push: { weeklyData: { week: startOfWeek, ...weeklyLabData[0] } } })
-  }
-
-  async updateWeeklyHospitalData() {
-    const startOfWeek = moment().startOf('week').toDate()
-
-    // Check if data already exists for this week
-    const existingData = await this.hospitalModel.findOne({ 'weeklyData.week': startOfWeek })
-    if (existingData) return
-
-    const weeklyHospitalData = await this.hospitalModel.aggregate([
-      {
-        $group: {
-          _id: null,
-          patientsBooked: { $sum: '$totalPatients' },
-          patientsCompleted: { $sum: '$completedPatients' },
-          patientsCancelled: { $sum: '$cancelledPatients' },
-          revenue: { $sum: '$adminRevenue' },
-          pendingRevenue: { $sum: '$feeBalance' },
-        },
-      },
-    ])
-
-    // Update the hospital data with new weekly data
-    await this.hospitalModel.updateMany({}, { $push: { weeklyData: { week: startOfWeek, ...weeklyHospitalData[0] } } })
-  }
-
   async getDashboardStats() {
-    const totalHospitals = await this.hospitalModel.countDocuments()
-    const totalLabs = await this.labModel.countDocuments()
-    const totalEvents = await this.organizerModel.aggregate([{ $unwind: '$events' }, { $count: 'totalEvents' }])
-
-    const totalPatientsBookedFreeCamp = await this.organizerModel.aggregate([
-      { $unwind: '$events' },
-      { $group: { _id: null, total: { $sum: '$events.totalPatients' } } },
-    ])
-
-    const totalPatientsCompletedFreeCamp = await this.organizerModel.aggregate([
-      { $unwind: '$events' },
-      { $group: { _id: null, total: { $sum: '$events.completedPatients' } } },
-    ])
-
-    const totalPatientsCancelledFreeCamp =
-      totalPatientsBookedFreeCamp.length > 0 && totalPatientsCompletedFreeCamp.length > 0
-        ? totalPatientsBookedFreeCamp[0].total - totalPatientsCompletedFreeCamp[0].total
-        : 0
-
-    const totalVisitDetails = await this.visitDoctorModel.aggregate([
-      { $unwind: '$visitDetails' },
-      { $count: 'totalVisitDetails' },
-    ])
-
-    const totalPatientsBookedVisitDoctor = await this.visitDoctorModel.aggregate([
-      { $group: { _id: null, total: { $sum: '$totalPatients' } } },
-    ])
-
-    const totalPatientsCompletedVisitDoctor = await this.visitDoctorModel.aggregate([
-      { $group: { _id: null, total: { $sum: '$completedPatients' } } },
-    ])
-
-    const totalPatientsCancelledVisitDoctor =
-      totalPatientsBookedVisitDoctor.length > 0 && totalPatientsCompletedVisitDoctor.length > 0
-        ? totalPatientsBookedVisitDoctor[0].total - totalPatientsCompletedVisitDoctor[0].total
-        : 0
-
-    const visitDoctorRevenue = await this.visitDoctorModel.aggregate([
-      { $group: { _id: null, totalRevenue: { $sum: '$adminRevenue' } } },
-    ])
-
-    const visitDoctorPendingRevenue = await this.visitDoctorModel.aggregate([
-      { $group: { _id: null, totalPending: { $sum: '$feeBalance' } } },
-    ])
-
-    const totalPatientsBookedLab = await this.labModel.aggregate([
-      { $group: { _id: null, total: { $sum: '$totalPatients' } } },
-    ])
-
-    const totalPatientsCompletedLab = await this.labModel.aggregate([
-      { $group: { _id: null, total: { $sum: '$completedPatients' } } },
-    ])
-
-    const totalPatientsCancelledLab =
-      totalPatientsBookedLab.length > 0 && totalPatientsCompletedLab.length > 0
-        ? totalPatientsBookedLab[0].total - totalPatientsCompletedLab[0].total
-        : 0
-
-    const labRevenue = await this.labModel.aggregate([
-      { $group: { _id: null, totalRevenue: { $sum: '$adminRevenue' } } },
-    ])
-
-    const labPendingRevenue = await this.labModel.aggregate([
-      { $group: { _id: null, totalPending: { $sum: '$feeBalance' } } },
-    ])
-
-    // Ensure Weekly Data is Up-to-Date for Labs
     const startOfWeek = moment().startOf('week').toDate()
-    const latestWeeklyLabData = await this.labModel.findOne({ 'weeklyData.week': startOfWeek })
 
-    if (!latestWeeklyLabData) {
-      await this.updateWeeklyLabData()
-    }
-
-    const weeklyLabData = await this.labModel.aggregate([
-      { $unwind: '$weeklyData' },
-      { $match: { 'weeklyData.week': startOfWeek } },
-      {
-        $project: {
-          week: '$weeklyData.week',
-          patientsBooked: '$weeklyData.patientsBooked',
-          patientsCompleted: '$weeklyData.patientsCompleted',
-          patientsCancelled: '$weeklyData.patientsCancelled',
-          revenue: '$weeklyData.revenue',
-          pendingRevenue: '$weeklyData.pendingRevenue',
+    const [
+      totalHospitals,
+      totalLabs,
+      totalEvents,
+      totalPatientsBookedFreeCamp,
+      totalPatientsCompletedFreeCamp,
+      totalVisitDetails,
+      totalPatientsBookedVisitDoctor,
+      totalPatientsCompletedVisitDoctor,
+      visitDoctorRevenue,
+      visitDoctorPendingRevenue,
+      totalPatientsBookedLab,
+      totalPatientsCompletedLab,
+      labRevenue,
+      labPendingRevenue,
+      totalPatientsBookedHospital,
+      totalPatientsCompletedHospital,
+      hospitalRevenue,
+      hospitalPendingRevenue,
+      weeklyLabData,
+      weeklyHospitalData,
+    ] = await Promise.all([
+      this.hospitalModel.countDocuments(),
+      this.labModel.countDocuments(),
+      this.organizerModel.aggregate([{ $unwind: '$events' }, { $count: 'totalEvents' }]),
+      this.organizerModel.aggregate([
+        { $unwind: '$events' },
+        { $group: { _id: null, total: { $sum: '$events.totalPatients' } } },
+      ]),
+      this.organizerModel.aggregate([
+        { $unwind: '$events' },
+        { $group: { _id: null, total: { $sum: '$events.completedPatients' } } },
+      ]),
+      this.visitDoctorModel.aggregate([{ $unwind: '$visitDetails' }, { $count: 'totalVisitDetails' }]),
+      this.visitDoctorModel.aggregate([{ $group: { _id: null, total: { $sum: '$totalPatients' } } }]),
+      this.visitDoctorModel.aggregate([{ $group: { _id: null, total: { $sum: '$completedPatients' } } }]),
+      this.visitDoctorModel.aggregate([{ $group: { _id: null, totalRevenue: { $sum: '$adminRevenue' } } }]),
+      this.visitDoctorModel.aggregate([{ $group: { _id: null, totalPending: { $sum: '$feeBalance' } } }]),
+      this.labModel.aggregate([{ $group: { _id: null, total: { $sum: '$totalPatients' } } }]),
+      this.labModel.aggregate([{ $group: { _id: null, total: { $sum: '$completedPatients' } } }]),
+      this.labModel.aggregate([{ $group: { _id: null, totalRevenue: { $sum: '$adminRevenue' } } }]),
+      this.labModel.aggregate([{ $group: { _id: null, totalPending: { $sum: '$feeBalance' } } }]),
+      this.hospitalModel.aggregate([{ $group: { _id: null, total: { $sum: '$totalPatients' } } }]),
+      this.hospitalModel.aggregate([{ $group: { _id: null, total: { $sum: '$completedPatients' } } }]),
+      this.hospitalModel.aggregate([{ $group: { _id: null, totalRevenue: { $sum: '$adminRevenue' } } }]),
+      this.hospitalModel.aggregate([{ $group: { _id: null, totalPending: { $sum: '$feeBalance' } } }]),
+      this.labModel.aggregate([
+        { $unwind: '$weeklyData' },
+        { $match: { 'weeklyData.week': startOfWeek } },
+        {
+          $project: {
+            week: '$weeklyData.week',
+            patientsBooked: '$weeklyData.patientsBooked',
+            patientsCompleted: '$weeklyData.patientsCompleted',
+            patientsCancelled: '$weeklyData.patientsCancelled',
+            revenue: '$weeklyData.revenue',
+            pendingRevenue: '$weeklyData.pendingRevenue',
+          },
         },
-      },
-    ])
-
-    // Ensure Weekly Data is Up-to-Date for Hospitals
-    const latestWeeklyHospitalData = await this.hospitalModel.findOne({ 'weeklyData.week': startOfWeek })
-
-    if (!latestWeeklyHospitalData) {
-      await this.updateWeeklyHospitalData()
-    }
-
-    const weeklyHospitalData = await this.hospitalModel.aggregate([
-      { $unwind: '$weeklyData' },
-      { $match: { 'weeklyData.week': startOfWeek } },
-      {
-        $project: {
-          week: '$weeklyData.week',
-          patientsBooked: '$weeklyData.patientsBooked',
-          patientsCompleted: '$weeklyData.patientsCompleted',
-          patientsCancelled: '$weeklyData.patientsCancelled',
-          revenue: '$weeklyData.revenue',
-          pendingRevenue: '$weeklyData.pendingRevenue',
+      ]),
+      this.hospitalModel.aggregate([
+        { $unwind: '$weeklyData' },
+        { $match: { 'weeklyData.week': startOfWeek } },
+        {
+          $project: {
+            week: '$weeklyData.week',
+            patientsBooked: '$weeklyData.patientsBooked',
+            patientsCompleted: '$weeklyData.patientsCompleted',
+            patientsCancelled: '$weeklyData.patientsCancelled',
+            revenue: '$weeklyData.revenue',
+            pendingRevenue: '$weeklyData.pendingRevenue',
+          },
         },
-      },
-    ])
-
-    const totalPatientsBookedHospital = await this.hospitalModel.aggregate([
-      { $group: { _id: null, total: { $sum: '$totalPatients' } } },
-    ])
-
-    const totalPatientsCompletedHospital = await this.hospitalModel.aggregate([
-      { $group: { _id: null, total: { $sum: '$completedPatients' } } },
-    ])
-
-    const totalPatientsCancelledHospital =
-      totalPatientsBookedHospital.length > 0 && totalPatientsCompletedHospital.length > 0
-        ? totalPatientsBookedHospital[0].total - totalPatientsCompletedHospital[0].total
-        : 0
-
-    const hospitalRevenue = await this.hospitalModel.aggregate([
-      { $group: { _id: null, totalRevenue: { $sum: '$adminRevenue' } } },
-    ])
-
-    const hospitalPendingRevenue = await this.hospitalModel.aggregate([
-      { $group: { _id: null, totalPending: { $sum: '$feeBalance' } } },
+      ]),
     ])
 
     return {
@@ -205,7 +103,8 @@ export class AdminService {
         totalEvents: totalEvents.length > 0 ? totalEvents[0].totalEvents : 0,
         totalPatientsBooked: totalPatientsBookedFreeCamp.length > 0 ? totalPatientsBookedFreeCamp[0].total : 0,
         totalPatientsCompleted: totalPatientsCompletedFreeCamp.length > 0 ? totalPatientsCompletedFreeCamp[0].total : 0,
-        totalPatientsCancelled: totalPatientsCancelledFreeCamp,
+        totalPatientsCancelled:
+          (totalPatientsBookedFreeCamp[0]?.total || 0) - (totalPatientsCompletedFreeCamp[0]?.total || 0),
         adminRevenue: 0,
         pendingRevenue: 0,
       },
@@ -214,7 +113,8 @@ export class AdminService {
         totalPatientsBooked: totalPatientsBookedVisitDoctor.length > 0 ? totalPatientsBookedVisitDoctor[0].total : 0,
         totalPatientsCompleted:
           totalPatientsCompletedVisitDoctor.length > 0 ? totalPatientsCompletedVisitDoctor[0].total : 0,
-        totalPatientsCancelled: totalPatientsCancelledVisitDoctor,
+        totalPatientsCancelled:
+          (totalPatientsBookedVisitDoctor[0]?.total || 0) - (totalPatientsCompletedVisitDoctor[0]?.total || 0),
         adminRevenue: visitDoctorRevenue.length > 0 ? visitDoctorRevenue[0].totalRevenue : 0,
         pendingRevenue: visitDoctorPendingRevenue.length > 0 ? visitDoctorPendingRevenue[0].totalPending : 0,
       },
@@ -222,7 +122,7 @@ export class AdminService {
         totalLab: totalLabs,
         totalPatientsBooked: totalPatientsBookedLab.length > 0 ? totalPatientsBookedLab[0].total : 0,
         totalPatientsCompleted: totalPatientsCompletedLab.length > 0 ? totalPatientsCompletedLab[0].total : 0,
-        totalPatientsCancelled: totalPatientsCancelledLab,
+        totalPatientsCancelled: (totalPatientsBookedLab[0]?.total || 0) - (totalPatientsCompletedLab[0]?.total || 0),
         adminRevenue: labRevenue.length > 0 ? labRevenue[0].totalRevenue : 0,
         pendingRevenue: labPendingRevenue.length > 0 ? labPendingRevenue[0].totalPending : 0,
         weeklyData: weeklyLabData,
@@ -231,7 +131,8 @@ export class AdminService {
         totalHospital: totalHospitals,
         totalPatientsBooked: totalPatientsBookedHospital.length > 0 ? totalPatientsBookedHospital[0].total : 0,
         totalPatientsCompleted: totalPatientsCompletedHospital.length > 0 ? totalPatientsCompletedHospital[0].total : 0,
-        totalPatientsCancelled: totalPatientsCancelledHospital,
+        totalPatientsCancelled:
+          (totalPatientsBookedHospital[0]?.total || 0) - (totalPatientsCompletedHospital[0]?.total || 0),
         adminRevenue: hospitalRevenue.length > 0 ? hospitalRevenue[0].totalRevenue : 0,
         pendingRevenue: hospitalPendingRevenue.length > 0 ? hospitalPendingRevenue[0].totalPending : 0,
         weeklyData: weeklyHospitalData,
@@ -348,6 +249,72 @@ export class AdminService {
     }
   }
 
+  async updateLabRevenue(
+    labId: string,
+    updateData: { feeBalance?: number; paidStatus?: PaidStatus; serviceStop?: boolean },
+  ) {
+    const lab = await this.labModel.findById(labId)
+    if (!lab) {
+      throw new NotFoundException('Lab not found')
+    }
+
+    // ✅ Update feeBalance if provided
+    if (typeof updateData.feeBalance !== 'undefined') {
+      lab.feeBalance = updateData.feeBalance
+    }
+
+    // ✅ Update paidStatus if provided
+    if (updateData.paidStatus) {
+      lab.paidStatus = updateData.paidStatus
+
+      // ✅ If paidStatus is PAID, reset feeBalance to 0
+      if (updateData.paidStatus === PaidStatus.PAID) {
+        lab.feeBalance = 0
+      }
+    }
+
+    // ✅ Update serviceStop if provided
+    if (typeof updateData.serviceStop !== 'undefined') {
+      lab.serviceStop = updateData.serviceStop
+    }
+
+    await lab.save()
+
+    return { message: 'Lab revenue updated successfully' }
+  }
+
+  async updateHospitalRevenue(
+    hospitalId: string,
+    updateData: { feeBalance?: number; paidStatus?: PaidStatus; serviceStop?: boolean },
+  ) {
+    const hospital = await this.hospitalModel.findById(hospitalId)
+    if (!hospital) {
+      throw new NotFoundException('Hospital not found')
+    }
+
+    // ✅ Update feeBalance
+    if (typeof updateData.feeBalance !== 'undefined') {
+      hospital.feeBalance = updateData.feeBalance
+    }
+
+    // ✅ Update paidStatus
+    if (updateData.paidStatus) {
+      hospital.paidStatus = updateData.paidStatus
+
+      // ✅ If paidStatus is PAID, reset feeBalance to 0
+      if (updateData.paidStatus === PaidStatus.PAID) {
+        hospital.feeBalance = 0
+      }
+    }
+
+    // ✅ Update serviceStop if provided
+    if (typeof updateData.serviceStop !== 'undefined') {
+      hospital.serviceStop = updateData.serviceStop
+    }
+
+    await hospital.save()
+  }
+
   async updateVisitDoctorRevenue(visitDoctorId: string, updateData: { feeBalance?: number; paidStatus?: PaidStatus }) {
     const visitDoctor = await this.visitDoctorModel.findById(visitDoctorId)
     if (!visitDoctor) {
@@ -372,51 +339,42 @@ export class AdminService {
     await visitDoctor.save()
   }
 
-  async updateLabRevenue(ladId: string, updateData: { feeBalance?: number; paidStatus?: PaidStatus }) {
-    const lab = await this.visitDoctorModel.findById(ladId)
-    if (!lab) {
-      throw new NotFoundException('Lab not found')
-    }
-
-    // ✅ Update feeBalance
-    if (typeof updateData.feeBalance !== 'undefined') {
-      lab.feeBalance = updateData.feeBalance
-    }
-
-    // ✅ Update paidStatus
-    if (updateData.paidStatus) {
-      lab.paidStatus = updateData.paidStatus
-
-      // ✅ If paidStatus is PAID, reset feeBalance to 0
-      if (updateData.paidStatus === PaidStatus.PAID) {
-        lab.feeBalance = 0
+  async deleteVisitDoctor(visitDoctorId: string) {
+    try {
+      const visitDoctor = await this.visitDoctorModel.findByIdAndDelete(visitDoctorId)
+      if (!visitDoctor) {
+        throw new NotFoundException('Doctor not found')
       }
-    }
 
-    await lab.save()
+      return { message: 'Doctor deleted successfully' }
+    } catch (error) {
+      throw new InternalServerErrorException(error.message || 'Something went wrong')
+    }
   }
 
-  async updateHospitalRevenue(hospitalId: string, updateData: { feeBalance?: number; paidStatus?: PaidStatus }) {
-    const hospital = await this.visitDoctorModel.findById(hospitalId)
-    if (!hospital) {
-      throw new NotFoundException('Hospital not found')
-    }
-
-    // ✅ Update feeBalance
-    if (typeof updateData.feeBalance !== 'undefined') {
-      hospital.feeBalance = updateData.feeBalance
-    }
-
-    // ✅ Update paidStatus
-    if (updateData.paidStatus) {
-      hospital.paidStatus = updateData.paidStatus
-
-      // ✅ If paidStatus is PAID, reset feeBalance to 0
-      if (updateData.paidStatus === PaidStatus.PAID) {
-        hospital.feeBalance = 0
+  async deleteLab(labId: string) {
+    try {
+      const lab = await this.labModel.findByIdAndDelete(labId)
+      if (!lab) {
+        throw new NotFoundException('Lab not found')
       }
-    }
 
-    await hospital.save()
+      return { message: 'Lab deleted successfully' }
+    } catch (error) {
+      throw new InternalServerErrorException(error.message || 'Something went wrong')
+    }
+  }
+
+  async deleteHospital(hospitalId: string) {
+    try {
+      const hospital = await this.visitDoctorModel.findByIdAndDelete(hospitalId)
+      if (!hospital) {
+        throw new NotFoundException('Hospital not found')
+      }
+
+      return { message: 'Hospital deleted successfully' }
+    } catch (error) {
+      throw new InternalServerErrorException(error.message || 'Something went wrong')
+    }
   }
 }

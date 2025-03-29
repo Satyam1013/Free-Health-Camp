@@ -43,6 +43,18 @@ export class Hospital extends BaseModel {
   @Prop({ type: String, enum: PaidStatus, default: PaidStatus.PENDING })
   paidStatus: PaidStatus
 
+  @Prop([
+    {
+      adminRevenue: { type: Number, default: 0 },
+      pendingRevenue: { type: Number, default: 0 },
+      startDate: { type: Date, required: true },
+    },
+  ])
+  weeklyData: { adminRevenue: number; pendingRevenue: number; startDate: Date }
+
+  @Prop({ type: Boolean, default: false })
+  serviceStop: boolean
+
   @Prop({ default: '09:00' }) // 9 AM
   shiftOneStartTime?: string
 

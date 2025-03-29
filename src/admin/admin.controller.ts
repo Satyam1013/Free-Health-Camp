@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, UseGuards } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Patch, UseGuards } from '@nestjs/common'
 import { AdminService } from './admin.service'
 import { PaidStatus } from 'src/common/common.types'
 import { AdminAuthGuard } from './admin.auth.guard'
@@ -7,7 +7,7 @@ import { AdminAuthGuard } from './admin.auth.guard'
 @UseGuards(AdminAuthGuard)
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
-  // ✅ Fetch Admin Dashboard Data
+
   @Get('dashboard')
   async getDashboardStats() {
     return await this.adminService.getDashboardStats()
@@ -18,7 +18,6 @@ export class AdminController {
     return await this.adminService.getDashboardStatsCityWise(city)
   }
 
-  // ✅ Mark Visit as Completed and Update Revenue
   @Patch('update-visit-doctor-fee/:visitDoctorId')
   async updateVisitDoctorRevenue(
     @Param('visitDoctorId') visitDoctorId: string,
@@ -30,7 +29,7 @@ export class AdminController {
   @Patch('update-lab-fee/:ladId')
   async updateLabRevenue(
     @Param('ladId') ladId: string,
-    @Body() updateData: { feeBalance?: number; paidStatus?: PaidStatus },
+    @Body() updateData: { feeBalance?: number; paidStatus?: PaidStatus; serviceStop?: boolean },
   ) {
     return await this.adminService.updateLabRevenue(ladId, updateData)
   }
@@ -38,8 +37,24 @@ export class AdminController {
   @Patch('update-hospital-fee/:hospitalId')
   async updateHospitalRevenue(
     @Param('hospitalId') hospitalId: string,
-    @Body() updateData: { feeBalance?: number; paidStatus?: PaidStatus },
+    @Body() updateData: { feeBalance?: number; paidStatus?: PaidStatus; serviceStop?: boolean },
   ) {
     return await this.adminService.updateHospitalRevenue(hospitalId, updateData)
   }
+
+  @Delete('delete-visit-doctor/:visitDoctorId')
+  async deleteVisitDoctor(@Param('visitDoctorId') visitDoctorId: string) {
+    return await this.adminService.deleteVisitDoctor(visitDoctorId)
+  }
+
+  @Delete('delete-lab/:labId')
+  async deleteLab(@Param('labId') labId: string) {
+    return await this.adminService.deleteLab(labId)
+  }
+
+  @Delete('delete-hospital/:hospitalId')
+  async deleteHospital(@Param('hospitalId') hospitalId: string) {
+    return await this.adminService.deleteHospital(hospitalId)
+  }
 }
+// cron job delete if status is paid weekly me add karna hai, admin revenue lab ka status paid hai to delete

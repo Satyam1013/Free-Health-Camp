@@ -24,7 +24,7 @@ export async function updatePatientBooking(
 
     if (!bookedEvent) throw new BadRequestException('No booking found for this service and provider')
 
-    // ✅ If status is being updated to "completed", update adminRevenue & feeBalance
+    // ✅ If status is being updated to "completed", update adminRevenue, feeBalance & weeklyData
     if (updateData.status === BookingStatus.Completed) {
       const provider = await providerModel.findById(providerId)
       if (!provider) throw new BadRequestException('Provider not found')
@@ -47,7 +47,32 @@ export async function updatePatientBooking(
 
       // ✅ Update adminRevenue & feeBalance in the provider collection
       provider.adminRevenue = (provider.adminRevenue || 0) + adminRevenueIncrease
-      provider.feeBalance = (provider.feeBalance || 0) + adminRevenueIncrease // ✅ Updating feeBalance
+      provider.feeBalance = (provider.feeBalance || 0) + adminRevenueIncrease
+
+      // ✅ Only update weeklyData for Lab & Hospital
+      if ([UserRole.LAB, UserRole.HOSPITAL].includes(providerRole)) {
+        const today = new Date()
+        const startOfWeek = new Date(today)
+        startOfWeek.setDate(today.getDate() - today.getDay()) // Get start of the week (Sunday)
+
+        const existingWeek = provider.weeklyData.find(
+          (week) => new Date(week.startDate).toDateString() === startOfWeek.toDateString(),
+        )
+
+        if (existingWeek) {
+          // ✅ Update existing week's data
+          existingWeek.adminRevenue += adminRevenueIncrease
+          existingWeek.pendingRevenue += adminRevenueIncrease
+        } else {
+          // ✅ Create new entry for the week
+          provider.weeklyData.push({
+            startDate: startOfWeek,
+            adminRevenue: adminRevenueIncrease,
+            pendingRevenue: adminRevenueIncrease,
+          })
+        }
+      }
+
       await provider.save()
     }
 
