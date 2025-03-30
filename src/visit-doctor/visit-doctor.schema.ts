@@ -61,11 +61,3 @@ export class VisitDoctor extends BaseModel {
 }
 
 export const VisitDoctorSchema = SchemaFactory.createForClass(VisitDoctor)
-
-// 2000, 2000 admin ke feeBalance 0 krne ka update honga
-// add 20% of doctor fee when status is completed
-// patient ko service nhi dikhegi agr feeBalance 0 hai
-// feeBalance update -> admin
-// event -> count, visitDetails, labs, hospitals, revenue, feeBalance -> organizer name event count, patient count city wise
-// city specific event data
-// eventEnd time ke bad patient ko nhi dena hai

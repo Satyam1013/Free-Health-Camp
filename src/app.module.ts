@@ -9,13 +9,13 @@ import { PatientModule } from './patient/patient.module'
 import { VisitDoctorModule } from './visit-doctor/visit-doctor.module'
 import { ScheduleModule } from '@nestjs/schedule'
 import { AdminModule } from './admin/admin.module'
+import { CronService } from './common/cron-job'
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
-
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
@@ -33,5 +33,6 @@ import { AdminModule } from './admin/admin.module'
     VisitDoctorModule,
     PatientModule,
   ],
+  providers: [CronService],
 })
 export class AppModule {}

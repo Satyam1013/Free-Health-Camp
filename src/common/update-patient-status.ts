@@ -1,7 +1,7 @@
 import { BadRequestException, InternalServerErrorException } from '@nestjs/common'
 import { Types } from 'mongoose'
 import { PatientDocument } from 'src/patient/patient.schema'
-import { BookingStatus, UserRole } from './common.types'
+import { BookingStatus, PaidStatus, UserRole } from './common.types'
 
 export async function updatePatientBooking(
   patientModel: any,
@@ -45,9 +45,12 @@ export async function updatePatientBooking(
         }
       }
 
-      // ✅ Update adminRevenue & feeBalance in the provider collection
-      provider.adminRevenue = (provider.adminRevenue || 0) + adminRevenueIncrease
-      provider.feeBalance = (provider.feeBalance || 0) + adminRevenueIncrease
+      // ✅ Update adminRevenue, feeBalance & paidStatus only for Lab, Hospital, VisitDoctor
+      if ([UserRole.LAB, UserRole.HOSPITAL, UserRole.VISIT_DOCTOR].includes(providerRole)) {
+        provider.adminRevenue = (provider.adminRevenue || 0) + adminRevenueIncrease
+        provider.feeBalance = (provider.feeBalance || 0) + adminRevenueIncrease
+        provider.paidStatus = PaidStatus.PENDING
+      }
 
       // ✅ Only update weeklyData for Lab & Hospital
       if ([UserRole.LAB, UserRole.HOSPITAL].includes(providerRole)) {

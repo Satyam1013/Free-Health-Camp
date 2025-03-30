@@ -10,6 +10,7 @@ import { PatientModule } from 'src/patient/patient.module'
 import { OrganizerModule } from 'src/organizer/organizer.module'
 import { VisitDoctorModule } from 'src/visit-doctor/visit-doctor.module'
 import { LabModule } from 'src/lab/lab.module'
+import { CronService } from 'src/common/cron-job'
 
 @Module({
   imports: [
@@ -22,7 +23,7 @@ import { LabModule } from 'src/lab/lab.module'
     MobileValidationModule,
   ],
   controllers: [HospitalController],
-  providers: [HospitalService, PatientService],
+  providers: [HospitalService, PatientService, CronService],
   exports: [MongooseModule, HospitalService],
 })
 export class HospitalModule {}

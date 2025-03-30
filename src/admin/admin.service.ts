@@ -334,7 +334,7 @@ export class AdminService {
     try {
       const visitDoctor = await this.visitDoctorModel.findByIdAndDelete(visitDoctorId)
       if (!visitDoctor) {
-        throw new NotFoundException('Doctor not found')
+        throw new NotFoundException('Visit Doctor not found')
       }
 
       return { message: 'Doctor deleted successfully' }
@@ -386,7 +386,7 @@ export class AdminService {
     try {
       const hospital = await this.hospitalModel.find({ paidStatus: PaidStatus.PENDING })
       if (!hospital) {
-        throw new NotFoundException('Lab not found')
+        throw new NotFoundException('Hospital not found')
       }
 
       return hospital
