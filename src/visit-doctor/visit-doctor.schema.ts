@@ -56,6 +56,9 @@ export class VisitDoctor extends BaseModel {
   @Prop({ type: String, enum: PaidStatus, default: PaidStatus.PENDING })
   paidStatus: PaidStatus
 
+  @Prop({ type: Boolean, default: false })
+  serviceStop: boolean
+
   @Prop({ type: [VisitSchema], default: [] })
   visitDetails: VisitDetails[]
 }

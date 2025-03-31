@@ -306,7 +306,10 @@ export class AdminService {
     await hospital.save()
   }
 
-  async updateVisitDoctorRevenue(visitDoctorId: string, updateData: { feeBalance?: number; paidStatus?: PaidStatus }) {
+  async updateVisitDoctorRevenue(
+    visitDoctorId: string,
+    updateData: { feeBalance?: number; paidStatus?: PaidStatus; serviceStop?: boolean },
+  ) {
     const visitDoctor = await this.visitDoctorModel.findById(visitDoctorId)
     if (!visitDoctor) {
       throw new NotFoundException('Visit Doctor not found')
@@ -325,6 +328,11 @@ export class AdminService {
       if (updateData.paidStatus === PaidStatus.PAID) {
         visitDoctor.feeBalance = 0
       }
+    }
+
+    // ✅ Update serviceStop if provided
+    if (typeof updateData.serviceStop !== 'undefined') {
+      visitDoctor.serviceStop = updateData.serviceStop
     }
 
     await visitDoctor.save()
@@ -390,6 +398,19 @@ export class AdminService {
       }
 
       return hospital
+    } catch (error) {
+      throw new InternalServerErrorException(error.message || 'Something went wrong')
+    }
+  }
+
+  async getPendingVisitDoctors() {
+    try {
+      const visitDoctor = await this.visitDoctorModel.find({ paidStatus: PaidStatus.PENDING })
+      if (!visitDoctor) {
+        throw new NotFoundException('Visit Doctor not found')
+      }
+
+      return visitDoctor
     } catch (error) {
       throw new InternalServerErrorException(error.message || 'Something went wrong')
     }

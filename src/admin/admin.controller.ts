@@ -21,7 +21,7 @@ export class AdminController {
   @Patch('update-visit-doctor-fee/:visitDoctorId')
   async updateVisitDoctorRevenue(
     @Param('visitDoctorId') visitDoctorId: string,
-    @Body() updateData: { feeBalance?: number; paidStatus?: PaidStatus },
+    @Body() updateData: { feeBalance?: number; paidStatus?: PaidStatus; serviceStop?: boolean },
   ) {
     return await this.adminService.updateVisitDoctorRevenue(visitDoctorId, updateData)
   }
@@ -65,5 +65,10 @@ export class AdminController {
   @Get('get-pending-hospitals')
   async getPendingHospitals() {
     return await this.adminService.getPendingHospitals()
+  }
+
+  @Get('get-pending-visit-doctors')
+  async getPendingVisitDoctors() {
+    return await this.adminService.getPendingVisitDoctors()
   }
 }
