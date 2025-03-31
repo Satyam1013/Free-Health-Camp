@@ -21,6 +21,7 @@ export class AdminService {
 
   async getDashboardStats() {
     const startOfWeek = moment().startOf('week').toDate()
+    const endOfWeek = moment().endOf('week').toDate()
 
     const [
       totalHospitals,
@@ -70,7 +71,11 @@ export class AdminService {
       this.hospitalModel.aggregate([{ $group: { _id: null, totalPending: { $sum: '$feeBalance' } } }]),
       this.labModel.aggregate([
         { $unwind: '$weeklyData' },
-        { $match: { 'weeklyData.startDate': startOfWeek } },
+        {
+          $match: {
+            'weeklyData.startDate': { $gte: startOfWeek, $lte: endOfWeek },
+          },
+        },
         {
           $project: {
             startDate: '$weeklyData.startDate',
@@ -79,9 +84,14 @@ export class AdminService {
           },
         },
       ]),
+
       this.hospitalModel.aggregate([
         { $unwind: '$weeklyData' },
-        { $match: { 'weeklyData.startDate': startOfWeek } },
+        {
+          $match: {
+            'weeklyData.startDate': { $gte: startOfWeek, $lte: endOfWeek },
+          },
+        },
         {
           $project: {
             startDate: '$weeklyData.startDate',
