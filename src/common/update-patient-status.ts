@@ -31,8 +31,11 @@ export async function updatePatientBooking(
 
       let adminRevenueIncrease = 0
 
-      if ([UserRole.LAB, UserRole.HOSPITAL].includes(providerRole)) {
-        // ✅ For Lab & Hospital: Use availableServices fee
+      if (providerRole === UserRole.LAB) {
+        // ✅ For Lab: Fixed ₹50 per patient
+        adminRevenueIncrease = 50
+      } else if (providerRole === UserRole.HOSPITAL) {
+        // ✅ For Hospital: Use availableServices fee
         const service = provider.availableServices?.find((s) => s._id.equals(serviceId))
         if (service) {
           adminRevenueIncrease = service.fee * 0.2
@@ -56,7 +59,7 @@ export async function updatePatientBooking(
       if ([UserRole.LAB, UserRole.HOSPITAL].includes(providerRole)) {
         const today = new Date()
         const startOfWeek = new Date(today)
-        startOfWeek.setDate(today.getDate() - today.getDay()) // Get start of the week (Sunday)
+        startOfWeek.setDate(today.getDate() - today.getDay())
 
         const existingWeek = provider.weeklyData.find(
           (week) => new Date(week.startDate).toDateString() === startOfWeek.toDateString(),

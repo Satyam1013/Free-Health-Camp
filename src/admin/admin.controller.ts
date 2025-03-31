@@ -72,3 +72,4 @@ export class AdminController {
     return await this.adminService.getPendingVisitDoctors()
   }
 }
+// serviceStop true if endTime is over paidStatus Pending, feeBalance is > 0 then cron job

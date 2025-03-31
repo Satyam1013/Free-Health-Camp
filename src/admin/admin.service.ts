@@ -244,98 +244,110 @@ export class AdminService {
     labId: string,
     updateData: { feeBalance?: number; paidStatus?: PaidStatus; serviceStop?: boolean },
   ) {
-    const lab = await this.labModel.findById(labId)
-    if (!lab) {
-      throw new NotFoundException('Lab not found')
-    }
-
-    // ✅ Update feeBalance if provided
-    if (typeof updateData.feeBalance !== 'undefined') {
-      lab.feeBalance = updateData.feeBalance
-    }
-
-    // ✅ Update paidStatus if provided
-    if (updateData.paidStatus) {
-      lab.paidStatus = updateData.paidStatus
-
-      // ✅ If paidStatus is PAID, reset feeBalance to 0
-      if (updateData.paidStatus === PaidStatus.PAID) {
-        lab.feeBalance = 0
+    try {
+      const lab = await this.labModel.findById(labId)
+      if (!lab) {
+        throw new NotFoundException('Lab not found')
       }
+
+      // ✅ Update feeBalance if provided
+      if (typeof updateData.feeBalance !== 'undefined') {
+        lab.feeBalance = updateData.feeBalance
+      }
+
+      // ✅ Update paidStatus if provided
+      if (updateData.paidStatus) {
+        lab.paidStatus = updateData.paidStatus
+
+        // ✅ If paidStatus is PAID, reset feeBalance to 0
+        if (updateData.paidStatus === PaidStatus.PAID) {
+          lab.feeBalance = 0
+        }
+      }
+
+      // ✅ Update serviceStop if provided
+      if (typeof updateData.serviceStop !== 'undefined') {
+        lab.serviceStop = updateData.serviceStop
+      }
+
+      await lab.save()
+
+      return { message: 'Lab revenue updated successfully' }
+    } catch (error) {
+      throw new InternalServerErrorException(error.message || 'Something went wrong')
     }
-
-    // ✅ Update serviceStop if provided
-    if (typeof updateData.serviceStop !== 'undefined') {
-      lab.serviceStop = updateData.serviceStop
-    }
-
-    await lab.save()
-
-    return { message: 'Lab revenue updated successfully' }
   }
 
   async updateHospitalRevenue(
     hospitalId: string,
     updateData: { feeBalance?: number; paidStatus?: PaidStatus; serviceStop?: boolean },
   ) {
-    const hospital = await this.hospitalModel.findById(hospitalId)
-    if (!hospital) {
-      throw new NotFoundException('Hospital not found')
-    }
-
-    // ✅ Update feeBalance
-    if (typeof updateData.feeBalance !== 'undefined') {
-      hospital.feeBalance = updateData.feeBalance
-    }
-
-    // ✅ Update paidStatus
-    if (updateData.paidStatus) {
-      hospital.paidStatus = updateData.paidStatus
-
-      // ✅ If paidStatus is PAID, reset feeBalance to 0
-      if (updateData.paidStatus === PaidStatus.PAID) {
-        hospital.feeBalance = 0
+    try {
+      const hospital = await this.hospitalModel.findById(hospitalId)
+      if (!hospital) {
+        throw new NotFoundException('Hospital not found')
       }
-    }
 
-    // ✅ Update serviceStop if provided
-    if (typeof updateData.serviceStop !== 'undefined') {
-      hospital.serviceStop = updateData.serviceStop
-    }
+      // ✅ Update feeBalance
+      if (typeof updateData.feeBalance !== 'undefined') {
+        hospital.feeBalance = updateData.feeBalance
+      }
 
-    await hospital.save()
+      // ✅ Update paidStatus
+      if (updateData.paidStatus) {
+        hospital.paidStatus = updateData.paidStatus
+
+        // ✅ If paidStatus is PAID, reset feeBalance to 0
+        if (updateData.paidStatus === PaidStatus.PAID) {
+          hospital.feeBalance = 0
+        }
+      }
+
+      // ✅ Update serviceStop if provided
+      if (typeof updateData.serviceStop !== 'undefined') {
+        hospital.serviceStop = updateData.serviceStop
+      }
+
+      await hospital.save()
+    } catch (error) {
+      throw new InternalServerErrorException(error.message || 'Something went wrong')
+    }
   }
 
   async updateVisitDoctorRevenue(
     visitDoctorId: string,
     updateData: { feeBalance?: number; paidStatus?: PaidStatus; serviceStop?: boolean },
   ) {
-    const visitDoctor = await this.visitDoctorModel.findById(visitDoctorId)
-    if (!visitDoctor) {
-      throw new NotFoundException('Visit Doctor not found')
-    }
-
-    // ✅ Update feeBalance
-    if (typeof updateData.feeBalance !== 'undefined') {
-      visitDoctor.feeBalance = updateData.feeBalance
-    }
-
-    // ✅ Update paidStatus
-    if (updateData.paidStatus) {
-      visitDoctor.paidStatus = updateData.paidStatus
-
-      // ✅ If paidStatus is PAID, reset feeBalance to 0
-      if (updateData.paidStatus === PaidStatus.PAID) {
-        visitDoctor.feeBalance = 0
+    try {
+      const visitDoctor = await this.visitDoctorModel.findById(visitDoctorId)
+      if (!visitDoctor) {
+        throw new NotFoundException('Visit Doctor not found')
       }
-    }
 
-    // ✅ Update serviceStop if provided
-    if (typeof updateData.serviceStop !== 'undefined') {
-      visitDoctor.serviceStop = updateData.serviceStop
-    }
+      // ✅ Update feeBalance
+      if (typeof updateData.feeBalance !== 'undefined') {
+        visitDoctor.feeBalance = updateData.feeBalance
+      }
 
-    await visitDoctor.save()
+      // ✅ Update paidStatus
+      if (updateData.paidStatus) {
+        visitDoctor.paidStatus = updateData.paidStatus
+
+        // ✅ If paidStatus is PAID, reset feeBalance to 0
+        if (updateData.paidStatus === PaidStatus.PAID) {
+          visitDoctor.feeBalance = 0
+        }
+      }
+
+      // ✅ Update serviceStop if provided
+      if (typeof updateData.serviceStop !== 'undefined') {
+        visitDoctor.serviceStop = updateData.serviceStop
+      }
+
+      await visitDoctor.save()
+    } catch (error) {
+      throw new InternalServerErrorException(error.message || 'Something went wrong')
+    }
   }
 
   async deleteVisitDoctor(visitDoctorId: string) {
