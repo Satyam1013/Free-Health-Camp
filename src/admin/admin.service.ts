@@ -272,7 +272,7 @@ export class AdminService {
 
       await lab.save()
 
-      return { message: 'Lab revenue updated successfully' }
+      return { message: 'Lab revenue updated successfully', lab }
     } catch (error) {
       throw new InternalServerErrorException(error.message || 'Something went wrong')
     }
@@ -309,6 +309,8 @@ export class AdminService {
       }
 
       await hospital.save()
+
+      return { message: 'Hospital revenue updated successfully', hospital }
     } catch (error) {
       throw new InternalServerErrorException(error.message || 'Something went wrong')
     }
@@ -345,6 +347,8 @@ export class AdminService {
       }
 
       await visitDoctor.save()
+
+      return { message: 'Visit Doctor revenue updated successfully', visitDoctor }
     } catch (error) {
       throw new InternalServerErrorException(error.message || 'Something went wrong')
     }
