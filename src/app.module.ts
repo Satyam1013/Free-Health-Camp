@@ -10,6 +10,7 @@ import { VisitDoctorModule } from './visit-doctor/visit-doctor.module'
 import { ScheduleModule } from '@nestjs/schedule'
 import { AdminModule } from './admin/admin.module'
 import { CronService } from './common/cron-job'
+import { AppController } from './app.controller'
 
 @Module({
   imports: [
@@ -33,6 +34,7 @@ import { CronService } from './common/cron-job'
     VisitDoctorModule,
     PatientModule,
   ],
+  controllers: [AppController],
   providers: [CronService],
 })
 export class AppModule {}
